@@ -1236,11 +1236,11 @@ function panelGrow(){
   const ambTekst = (svetla?t.light_on:t.light_off)+' · '+Math.floor(casGame)+'h';
 
   let html = `<div class="panel">
-    <div class="ambient" style="background:${ambBg}">
+    <div class="ambient" id="amb-banner" style="background:${ambBg}">
       ${[[12,30,5],[28,65,7],[52,20,6],[71,55,8],[88,35,5.5]].map(([l,tp,d],i)=>
         `<div class="pravlivka" style="left:${l}%;top:${tp}%;animation:dustDrift ${d}s ease-in-out infinite alternate${i%2?'-reverse':''}"></div>`).join('')}
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="color:${ambIkona}"><circle cx="12" cy="10" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 20h5M10 22h4M10.5 15.5l-1 2.5h5l-1-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>${esc(ambTekst)}</span>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" id="amb-ikona" style="color:${ambIkona}"><circle cx="12" cy="10" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 20h5M10 22h4M10.5 15.5l-1 2.5h5l-1-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span id="amb-tekst">${esc(ambTekst)}</span>
     </div>`;
 
   // Дневни предизвици
@@ -1249,10 +1249,10 @@ function panelGrow(){
     <div class="kart-mreza" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
     ${s.predizvici.map(c=>{
       const napr = Math.min(c.cel, s.dnevno[c.kluc]||0);
-      return `<div class="kart" style="padding:10px 12px">
+      return `<div class="kart" data-predizvik="${esc(c.id)}" style="padding:10px 12px">
         <div style="display:flex;justify-content:space-between;gap:6px;font:600 11.5px Inter,sans-serif;margin-bottom:5px">
           <span>${esc(s.jazik==='mk'?c.mk:c.en)}</span>
-          <span style="color:oklch(50% 0.02 150);white-space:nowrap">${napr}/${c.cel}</span></div>
+          <span class="pr-broj" style="color:oklch(50% 0.02 150);white-space:nowrap">${napr}/${c.cel}</span></div>
         <div class="lenta-h"><i style="width:${Math.min(100,napr/c.cel*100)}%;background:${c.gotov?'oklch(60% 0.11 152)':'oklch(66% 0.15 55)'}"></i></div>
       </div>`;}).join('')}
     </div></div>`;
@@ -1299,7 +1299,7 @@ function panelGrow(){
       : stadium>=2 ? 'oklch(92% 0.06 152)' : stadium===1 ? 'oklch(93% 0.03 230)' : 'oklch(94% 0.015 90)';
     const badgeBoja = zrelo ? '#2a1a00'
       : stadium>=2 ? 'oklch(35% 0.08 152)' : stadium===1 ? 'oklch(38% 0.08 230)' : 'oklch(50% 0.02 150)';
-    html += `<div class="rast-kart">
+    html += `<div class="rast-kart" data-rast="${p.id}">
       <div class="rast-glava"><span class="rast-ime">${esc(imeSorta(x))}</span>
         <span class="badge" style="background:${badgeBg};color:${badgeBoja}">${esc(badge)}</span></div>
       <div class="rast-scena">
@@ -1349,11 +1349,11 @@ function kartickaSerija(b){
                  : vlaga>KONFIG.IDEAL_MAX ? t.hum_early
                  : vlaga>=KONFIG.IDEAL_MIN ? t.hum_ideal : t.hum_over;
     const mozе = b.vlaga<=KONFIG.VLAGA_TEGLI_MAX;
-    return `<div class="kart" style="display:flex;flex-direction:column;gap:8px">
+    return `<div class="kart" data-serija="${b.id}" style="display:flex;flex-direction:column;gap:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
         <span style="font:700 13px Outfit,sans-serif">${esc(imeSorta(x))}</span>
         <span class="pil">${masa} × · ${esc(t.hangs)}</span></div>
-      <div style="font:600 11px Inter,sans-serif;color:oklch(50% 0.02 150)">
+      <div class="ser-info" style="font:600 11px Inter,sans-serif;color:oklch(50% 0.02 150)">
         ${esc(t.hygro)}: <b style="color:${boja}">${vlaga}%</b> — ${esc(status)}<br>
         ${esc(t.day_n)} ${Math.floor(b.denovi)} · ${esc(t.pack_goal)}</div>
       <div class="lenta-h"><i style="width:${stegni((KONFIG.VLAGA_START-vlaga)/(KONFIG.VLAGA_START-KONFIG.VLAGA_MIN)*100,0,100)}%;background:oklch(66% 0.15 55)"></i></div>
@@ -1370,11 +1370,11 @@ function kartickaSerija(b){
   }
   const dZr = Math.floor(b.denoviZreenje);
   const gotovo = b.denoviZreenje >= KONFIG.ZREENJE_MIN;
-  return `<div class="kart" style="display:flex;flex-direction:column;gap:8px">
+  return `<div class="kart" data-serija="${b.id}" style="display:flex;flex-direction:column;gap:8px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
       <span style="font:700 13px Outfit,sans-serif">${esc(imeSorta(x))}</span>
       <span class="pil">${masa} × · ${esc(t.in_jars)}</span></div>
-    <div style="font:600 11px Inter,sans-serif;color:oklch(50% 0.02 150)">
+    <div class="ser-info" style="font:600 11px Inter,sans-serif;color:oklch(50% 0.02 150)">
       ${esc(sablon(t.cure_day, dZr))} · ${esc(t.packed_acc)} ${(b.tochnost*100).toFixed(0)}%<br>
       ${esc(t.burps)}: ${b.burpovi} ${esc(sablon(t.of_possible, Math.max(dZr+1,1)))}</div>
     <div class="lenta-h"><i style="width:${stegni(b.denoviZreenje/KONFIG.ZREENJE_MIN*100,0,100)}%;background:oklch(60% 0.11 152)"></i></div>
@@ -1534,7 +1534,7 @@ function panelDostignuvanja(){
     <div class="kart-mreza" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:22px">
       ${stat(fmt(s.statistika.vkupnoBerbi), t.st_harvests)}
       ${stat(fmt(s.statistika.vkupnoZaraboteno), t.st_earned)}
-      ${stat(fmtVreme(s.statistika.sekundiIgrano), t.st_playtime)}
+      ${stat('<span id="st-playtime">'+fmtVreme(s.statistika.sekundiIgrano)+'</span>', t.st_playtime)}
       ${stat(najdobra?esc(imeSorta(sorta(najdobra[0]))):'—', t.st_best)}
       ${stat(s.dostignuvanja.length+'/'+DOSTIGNUVANJA.length, t.st_unlocked)}
     </div>
@@ -1580,18 +1580,131 @@ function panelPrestiz(){
   </div>`;
 }
 
-let posledenPanelHtml = '';
+/**
+ * Прецртување: целосна замена на HTML САМО при структурна промена
+ * (нов елемент, ново копче, сменет badge...). Вредностите што се менуваат
+ * секоја секунда — ленти, проценти, SVG на растението — се ажурираат во
+ * место, за да не се голтне клик и да не трепка hover-состојбата.
+ */
+let posledenPotpis = '';
+function strukturenPotpis(){
+  const j = s.aktivnoJazice;
+  if (j==='grow'){
+    return JSON.stringify(['grow', s.jazik, s.aktivnaSoba,
+      SOBI.map(r=>[!!s.sobi[r.id].otklucena, s.sobi[r.id].lampa||0]),
+      s.pari >= ((LAMBI[(s.sobi[s.aktivnaSoba].lampa||0)+1]||{cena:Infinity}).cena),
+      s.rastenija.filter(p=>p.soba===s.aktivnaSoba).map(p=>{
+        const st = p.napredok>=1?4:Math.min(3,Math.floor(p.napredok*4));
+        return [p.id, st, p.voda<25||p.hrana<25||p.zdravje<50, (p.plovki||[]).length];
+      }),
+      s.predizvici.map(c=>c.gotov)]);
+  }
+  if (j==='drying') return JSON.stringify(['drying', s.jazik,
+    s.susara.filter(b=>b.faza==='sushenje').map(b=>[b.id, b.muvla, b.vlazenDen,
+      b.trebaVrtenje, b.vlaga<=KONFIG.VLAGA_TEGLI_MAX])]);
+  if (j==='curing') return JSON.stringify(['curing', s.jazik,
+    s.susara.filter(b=>b.faza==='zreenje').map(b=>[b.id, b.burpDostapen,
+      b.denoviZreenje>=KONFIG.ZREENJE_MIN])]);
+  if (j==='market') return JSON.stringify(['market', s.jazik,
+    Object.entries(s.zaliha).filter(([,n])=>n>0), s.naracki.map(n=>n.id),
+    s.prodazenBonus && s.prodazenBonus.preostanato, s.prestiz]);
+  if (j==='achievements') return JSON.stringify(['ach', s.jazik, s.dostignuvanja.length,
+    s.statistika.vkupnoBerbi, s.statistika.vkupnoZaraboteno, s.statistika.naracki,
+    s.statistika.hibridiOtkrieni, s.nivo]);
+  // genetics/staff/prestige: се цртаат при акции; јазикот е единствена тивка промена
+  return JSON.stringify([j, s.jazik, s.nivo, s.prestiz,
+    Object.values(s.personal), Object.values(s.sobi).map(r=>!!r.otklucena),
+    izborVkrstuvanje, s.pari>=700]);
+}
+
+function azurirajVoMesto(){
+  const j = s.aktivnoJazice;
+  if (j==='grow'){
+    const casGame = (s.sekVoDen/KONFIG.DEN_SEK)*24;
+    const svetla = casGame < 18;
+    const t=T();
+    const amb = document.getElementById('amb-banner');
+    if (amb){
+      amb.style.background = svetla
+        ? 'linear-gradient(120deg,#2a1f3d 0%,#3d2350 45%,#4a2a3d 100%)'
+        : 'linear-gradient(120deg,#0c1310 0%,#0a1512 60%,#0d1a14 100%)';
+      document.getElementById('amb-ikona').style.color = svetla?'#f9a8d4':'#4b5563';
+      document.getElementById('amb-tekst').textContent =
+        (svetla?t.light_on:t.light_off)+' · '+Math.floor(casGame)+'h';
+    }
+    document.querySelectorAll('[data-predizvik]').forEach(el=>{
+      const c = s.predizvici.find(x=>x.id===el.dataset.predizvik); if(!c) return;
+      const napr = Math.min(c.cel, s.dnevno[c.kluc]||0);
+      el.querySelector('.pr-broj').textContent = napr+'/'+c.cel;
+      el.querySelector('.lenta-h>i').style.width = Math.min(100,napr/c.cel*100)+'%';
+    });
+    document.querySelectorAll('[data-rast]').forEach(kart=>{
+      const p = s.rastenija.find(x=>x.id===+kart.dataset.rast); if(!p) return;
+      const x = sorta(p.sorta);
+      const zrelo = p.napredok>=1;
+      const scena = kart.querySelector('.rast-scena');
+      if (scena) scena.innerHTML =
+        `<div class="rast-sjaj" style="background:radial-gradient(circle,${esc(x.sjaj)},transparent 70%);opacity:${zrelo?.9:0}"></div>`
+        + svgRastenie(p)
+        + (p.plovki||[]).map(f=>`<div class="plovka" style="color:${esc(f.boja)}">${esc(f.tekst)}</div>`).join('')
+        + ((p.voda<25||p.hrana<25||p.zdravje<50)?'<div class="vnimanie"></div>':'');
+      const lenti = kart.querySelectorAll('.rast-lenta');
+      [[p.voda],[p.hrana],[p.zdravje]].forEach(([v],i)=>{
+        const l = lenti[i]; if(!l) return;
+        l.querySelector('.zica>i').style.width = Math.round(v)+'%';
+        l.querySelector('.zica>i').style.background = bojaZaPct(v);
+        l.querySelector('u').textContent = Math.round(v);
+      });
+    });
+    return;
+  }
+  if (j==='drying' || j==='curing'){
+    const t=T();
+    document.querySelectorAll('[data-serija]').forEach(kart=>{
+      const b = s.susara.find(x=>x.id===+kart.dataset.serija); if(!b) return;
+      const info = kart.querySelector('.ser-info');
+      const lenta = kart.querySelector('.lenta-h>i');
+      if (b.faza==='sushenje'){
+        const vlaga = Math.round(b.vlaga);
+        const boja = vlaga>KONFIG.MUVLA_PRAG ? '#ef4444'
+                   : vlaga>KONFIG.IDEAL_MAX ? '#f59e0b'
+                   : vlaga>=KONFIG.IDEAL_MIN ? '#22c55e' : '#60a5fa';
+        const status = vlaga>KONFIG.MUVLA_PRAG ? t.hum_danger
+                     : vlaga>KONFIG.VLAGA_TEGLI_MAX ? t.hum_wait
+                     : vlaga>KONFIG.IDEAL_MAX ? t.hum_early
+                     : vlaga>=KONFIG.IDEAL_MIN ? t.hum_ideal : t.hum_over;
+        if (info) info.innerHTML = `${esc(t.hygro)}: <b style="color:${boja}">${vlaga}%</b> — ${esc(status)}<br>`
+          + `${esc(t.day_n)} ${Math.floor(b.denovi)} · ${esc(t.pack_goal)}`;
+        if (lenta) lenta.style.width =
+          stegni((KONFIG.VLAGA_START-vlaga)/(KONFIG.VLAGA_START-KONFIG.VLAGA_MIN)*100,0,100)+'%';
+      } else {
+        const dZr = Math.floor(b.denoviZreenje);
+        if (info) info.innerHTML = `${esc(sablon(t.cure_day, dZr))} · ${esc(t.packed_acc)} ${(b.tochnost*100).toFixed(0)}%<br>`
+          + `${esc(t.burps)}: ${b.burpovi} ${esc(sablon(t.of_possible, Math.max(dZr+1,1)))}`;
+        if (lenta) lenta.style.width = stegni(b.denoviZreenje/KONFIG.ZREENJE_MIN*100,0,100)+'%';
+      }
+    });
+    return;
+  }
+  if (j==='achievements'){
+    const el = document.getElementById('st-playtime');
+    if (el) el.textContent = fmtVreme(s.statistika.sekundiIgrano);
+  }
+}
+
 function iscrtajSe(prisilno){
   osveziHud();
   osveziNav();
   const paneli = { grow:panelGrow, drying:panelSusenje, curing:panelZreenje,
     genetics:panelGenetika, market:panelPazar, staff:panelPersonal,
     achievements:panelDostignuvanja, prestige:panelPrestiz };
-  const fn = paneli[s.aktivnoJazice] || panelGrow;
-  const html = fn();
-  if (prisilno || html !== posledenPanelHtml){
-    posledenPanelHtml = html;
-    document.getElementById('glavno').innerHTML = html;
+  const potpis = strukturenPotpis();
+  if (prisilno || potpis !== posledenPotpis){
+    posledenPotpis = potpis;
+    const fn = paneli[s.aktivnoJazice] || panelGrow;
+    document.getElementById('glavno').innerHTML = fn();
+  } else {
+    azurirajVoMesto();
   }
 }
 
