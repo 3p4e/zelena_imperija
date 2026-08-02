@@ -1606,10 +1606,27 @@ function vchitaj(){
       muvla: false, imalaMuvla: false, izgubenoMasa: 0, vlazenDen: false,
       tochnostPakuvanje: 0, denoviZreenje: 0, burpovi: 0, burpDostapen: false
     }, x))
-    .map(x => { x.faza = (x.faza === "zreenje") ? "zreenje" : "sushenje";
-                x.vlaga = stegni(Number(x.vlaga) || KONFIG.VLAGA_MIN, KONFIG.VLAGA_MIN, KONFIG.VLAGA_START);
-                x.izgubenoMasa = stegni(Number(x.izgubenoMasa) || 0, 0, 0.6);
-                return x; });
+    .map(x => {
+      // Секое бројно поле мора да е конечен број — NaN во кое било од нив
+      // поминува низ NaN<3 споредбите како false и стигнува до квалитетот.
+      const broj = (v, def, min, max) =>
+        Number.isFinite(Number(v)) ? stegni(Number(v), min, max) : def;
+      x.faza = (x.faza === "zreenje") ? "zreenje" : "sushenje";
+      x.vlaga           = broj(x.vlaga, KONFIG.VLAGA_START, KONFIG.VLAGA_MIN, KONFIG.VLAGA_START);
+      x.izgubenoMasa    = broj(x.izgubenoMasa, 0, 0, 0.6);
+      x.denovi          = broj(x.denovi, 0, 0, 10000);
+      x.denoviZreenje   = broj(x.denoviZreenje, 0, 0, 10000);
+      x.vrtenja         = Math.floor(broj(x.vrtenja, 0, 0, 1000));
+      x.burpovi         = Math.floor(broj(x.burpovi, 0, 0, 1000));
+      x.tochnostPakuvanje = broj(x.tochnostPakuvanje, 0, 0, 1);
+      x.sledenoVrtenje  = broj(x.sledenoVrtenje, KONFIG.VRTENJE_INTERVAL, 0, 10000);
+      x.vrtenjeRok      = broj(x.vrtenjeRok, 0, 0, 10000);
+      x.prosekZdravje   = broj(x.prosekZdravje, 0, 0, 100);
+      x.deoviSoStetnik  = broj(x.deoviSoStetnik, 0, 0, 10000);
+      x.trebaVrtenje = !!x.trebaVrtenje; x.muvla = !!x.muvla;
+      x.imalaMuvla = !!x.imalaMuvla; x.vlazenDen = !!x.vlazenDen;
+      x.potkrateno = !!x.potkrateno; x.burpDostapen = !!x.burpDostapen;
+      return x; });
   sostojba.magacin = Array.isArray(s.magacin) ? s.magacin.filter(x =>
     x && najdiSorta(x.sorta) && Number.isFinite(x.grama) && Number.isFinite(x.ocenkaMult)) : [];
 
