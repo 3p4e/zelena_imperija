@@ -125,6 +125,8 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .stavka button{padding:7px;font-size:11.5px;font-weight:700;
   background:linear-gradient(135deg,var(--zelena-temna),#15803d);color:#04150b}
 .stavka button.sina{background:linear-gradient(135deg,var(--sina),#2563eb);color:#03142c}
+.stavka button.opasna{background:linear-gradient(135deg,var(--crvena),#dc2626);color:#2a0606}
+.stavka button.zlatna{background:linear-gradient(135deg,var(--zlato),#d97706);color:#2a1a00}
 .stavka .dve{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .prazno{color:var(--tekst-slab);font-size:12px;text-align:center;padding:26px 10px;line-height:1.6}
 
@@ -181,6 +183,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
       <button data-jaz="prodavnica" class="aktivno">Продавница</button>
       <button data-jaz="sushara">Сушара</button>
       <button data-jaz="magacin">Магацин</button>
+      <button data-jaz="prodazba">Пазар</button>
       <button data-jaz="nadgradbi">Надградби</button>
     </nav>
     <div class="sodrzina" id="sodrzina"></div>
@@ -238,7 +241,29 @@ const KONFIG = {
   SUSHARA_ZABRZUVANJE: 1.4,
   VLAZNO_VO_SUVO: 0.22,       // мокра маса → сува маса
   CENA_LABORATORIJA: 900, BONUS_LABORATORIJA: 1.18,
-  PAZAR_DRIFT: 0.03, PAZAR_MIN: 0.75, PAZAR_MAX: 1.35
+  PAZAR_DRIFT: 0.03, PAZAR_MIN: 0.75, PAZAR_MAX: 1.35,
+
+  // ── Сушење и зреење ──
+  // 3× побавно од порано: еден „ден на сушење" трае 3 игрални дена,
+  // за да има време за рачни проверки без трка со часовникот.
+  SUSHENJE_TEMPO: 1/3,
+  VLAGA_START: 75,            // влажност на свежа берба, %
+  VLAGA_PAD_DEN: 7.2,         // пад по ден на сушење
+  VLAGA_PAD_VLAZEN: 4.0,      // побавен пад во влажен ден
+  VLAGA_MIN: 6,
+  VLAGA_PAKUVANJE_MAX: 40,    // над ова е прерано за тегли
+  MUVLA_PRAG_VLAGA: 60,       // над оваа влажност демнее мувла
+  SANSA_MUVLA_DEN: 0.10,      // по ден на сушење, ×KLIMA_NAMALUVANJE со клима
+  MUVLA_ZAGUBA_DEN: 0.06,     // изгубена маса по ден со активна мувла
+  MUVLA_TROSHOK_CISTENJE: 0.08,
+  SANSA_VLAZEN_DEN: 0.10,     // шанса за влажен ден во просторијата
+  VRTENJE_INTERVAL: 3,        // на колку дена на сушење треба вртење
+  VRTENJE_ROK: 1,             // колку дена трае прозорецот за навремено вртење
+  VRTENJE_BONUS: 1.5,         // квалитетни поени по навремено вртење
+  ZREENJE_MIN_DENOVI: 3,      // минимум зреење пред магацин
+  BURP_BONUS: 1.2,            // квалитетни поени по бурпање (макс 6 бурпа)
+  TRIM_MASA: 0.94,            // прецизното подрежување троши малку маса...
+  TRIM_KVALITET: 6            // ...но носи чист бонус на квалитетот
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -270,7 +295,7 @@ const NADGRADBI = [
   {id:"klima", ime:"Клима-систем", cena:360000,
    opis:"Ја намалува веројатноста за штетници за 60%."},
   {id:"sushara", ime:"Професионална сушара", cena:300000,
-   opis:"Сушењето е 40% побрзо, а идеалниот период се проширува на 8–14 дена."},
+   opis:"Сушењето е 40% побрзо, а идеалниот појас за пакување се проширува на 8–20% влажност."},
   {id:"rabotnik", ime:"Најмен работник", cena:900000,
    opis:"Автоматски ѓубри кога хранливите материи ќе паднат под 40%."}
 ];
@@ -316,7 +341,17 @@ const TEKST = {
   sejvGreska:"Зачувувањето не успеа — играта продолжува во меморија.",
   vcitajGreska:"Оштетена зачувана игра — почнуваме одново.",
   starVerzija:"Зачуваната игра е од стара верзија — почнуваме одново.",
-  prezrelo:"Растението презрева — квалитетот паѓа!"
+  prezrelo:"Растението презрева — квалитетот паѓа!",
+  spakuvano:v=>`Спакувано во тегли на ${v}% влажност.`,
+  burpnato:"Теглите се проветрени (бурп).",
+  zavrteno:"Гранките се превртени.",
+  provetreno:"Сушарата е проветрена.",
+  muvlaNajdena:"Мувла во сушарата! Отстрани ја пред да го изеде приносот.",
+  muvlaOtstraneta:g=>`Мувлата е отстранета — жртвувани ${g} г.`,
+  vlazenDenPocna:"Влажен ден — сушењето успорува. Провери ја сушарата!",
+  trebaVrtenje:"Гранките во сушарата чекаат вртење.",
+  ranoZaTegli:"Сè уште е премногу влажно за тегли.",
+  ranoZaMagacin:d=>`Зреењето трае барем ${d} дена.`
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -452,14 +487,17 @@ function presmetajKvalitet(prosekZdravje, tochnostSushenje, genetika, lampaBonus
   return stegni(osnova + taban + oprema - kazna, 0, 100);
 }
 
-/** Претвора поминати денови сушење во точност 0–1 (види §5 од спецификацијата). */
-function tochnostOdSushenje(denovi, imaSushara){
-  const d1 = imaSushara ? 8 : 9;      // прв идеален ден
-  const d2 = imaSushara ? 14 : 12;    // последен идеален ден
-  if (denovi <  d1)     return 0.55;  // предвреме
-  if (denovi <= d2)     return 1.00;  // идеално
-  if (denovi <= d2 + 4) return 0.80;  // прифатливо
-  return 0.65;                        // пресушено
+/**
+ * Точност на сушењето од влажноста ВО МОМЕНТОТ НА ПАКУВАЊЕ во тегли.
+ * Професионалната сушара го проширува идеалниот појас.
+ */
+function tochnostOdVlaga(vlaga, imaSushara){
+  const idealMin = imaSushara ? 8 : 10;
+  const idealMax = imaSushara ? 20 : 16;
+  if (vlaga < idealMin - 3)  return 0.70;  // пресушено
+  if (vlaga <= idealMax)     return 1.00;  // идеално
+  if (vlaga <= idealMax + 9) return 0.85;  // уште влажно
+  return 0.65;                             // премногу рано
 }
 
 /** ТХЦ процент, изведен од квалитетот и генетиката. */
@@ -555,14 +593,70 @@ function tikni(){
   }
 
   // ── Сушара ────────────────────────────────────────────────
-  // Панелот се освежува само кога ќе се смени ЦЕЛ ден, инаку би се
-  // прецртувал 4 пати во секунда и постојано би го ресетирал скролот.
+  // Времето тече 3× побавно овде (SUSHENJE_TEMPO) — сушењето е фаза на
+  // нега со свои алатки, не чекање. Панелот се освежува само ако играчот
+  // токму сега ја гледа сушарата, за да не му го ресетира скролот.
   const brzina = sostojba.nadgradbi.sushara ? KONFIG.SUSHARA_ZABRZUVANJE : 1;
+  const tempo = delDena * brzina * KONFIG.SUSHENJE_TEMPO;
+  const klimaFaktor = sostojba.nadgradbi.klima ? KONFIG.KLIMA_NAMALUVANJE : 1;
+  let susharaSePromeni = false;
+
   for (const serija of sostojba.sushara){
-    const prethoden = Math.floor(serija.denovi);
-    serija.denovi += delDena * brzina;
-    if (Math.floor(serija.denovi) !== prethoden) panelValjaSe = true;
+    if (serija.faza === "sushenje"){
+      const prethoden = Math.floor(serija.denovi);
+      serija.denovi += tempo;
+      const novSusenDen = Math.floor(serija.denovi) !== prethoden;
+
+      // Влажноста паѓа; влажен ден во просторијата ја успорува
+      const pad = serija.vlazenDen ? KONFIG.VLAGA_PAD_VLAZEN : KONFIG.VLAGA_PAD_DEN;
+      serija.vlaga = Math.max(KONFIG.VLAGA_MIN, serija.vlaga - pad * tempo);
+
+      // Вртење на гранките: на секои VRTENJE_INTERVAL дена се отвора
+      // прозорец од VRTENJE_ROK ден — навременото вртење носи бонус.
+      if (serija.denovi >= serija.sledenoVrtenje && !serija.trebaVrtenje){
+        serija.trebaVrtenje = true;
+        serija.vrtenjeRok = serija.denovi + KONFIG.VRTENJE_ROK;
+        serija.sledenoVrtenje += KONFIG.VRTENJE_INTERVAL;
+        izvesti(TEKST.trebaVrtenje);
+        susharaSePromeni = true;
+      }
+      if (serija.trebaVrtenje && serija.denovi > serija.vrtenjeRok){
+        serija.trebaVrtenje = false;             // пропуштен прозорец
+        susharaSePromeni = true;
+      }
+
+      if (novSusenDen){
+        // Влажен ден во просторијата — бара рачно проветрување
+        if (!serija.vlazenDen &&
+            Math.random() < KONFIG.SANSA_VLAZEN_DEN * klimaFaktor){
+          serija.vlazenDen = true;
+          izvesti(TEKST.vlazenDenPocna, "greska");
+          susharaSePromeni = true;
+        }
+        // Мувла демнее додека влажноста е висока
+        if (!serija.muvla && serija.vlaga > KONFIG.MUVLA_PRAG_VLAGA &&
+            Math.random() < KONFIG.SANSA_MUVLA_DEN * klimaFaktor){
+          serija.muvla = true;
+          serija.imalaMuvla = true;
+          izvesti(TEKST.muvlaNajdena, "greska");
+          susharaSePromeni = true;
+        }
+        susharaSePromeni = true;
+      }
+      // Активната мувла јаде маса секој ден додека не се отстрани
+      if (serija.muvla)
+        serija.izgubenoMasa = Math.min(0.6, serija.izgubenoMasa + KONFIG.MUVLA_ZAGUBA_DEN * tempo);
+
+    } else {  // faza === "zreenje"
+      const prethoden = Math.floor(serija.denoviZreenje);
+      serija.denoviZreenje += tempo;
+      if (Math.floor(serija.denoviZreenje) !== prethoden){
+        serija.burpDostapen = true;              // нов ден → нов бурп
+        susharaSePromeni = true;
+      }
+    }
   }
+  if (susharaSePromeni && aktivnoJazice === "sushara") panelValjaSe = true;
 
   // ── Пазар — еднаш дневно ──────────────────────────────────
   if (novDen){
@@ -574,7 +668,8 @@ function tikni(){
     // Панелот се прецртува само ако играчот токму сега гледа цени —
     // инаку секое дневно поместување на пазарот му го ресетира скролот
     // на јазиче што воопшто не прикажува пазарни податоци.
-    if (aktivnoJazice === "prodavnica" || aktivnoJazice === "magacin") panelValjaSe = true;
+    if (aktivnoJazice === "prodavnica" || aktivnoJazice === "magacin" ||
+        aktivnoJazice === "prodazba") panelValjaSe = true;
   }
 
   // ── Зачувување ────────────────────────────────────────────
@@ -677,17 +772,47 @@ function tretiraj(indeks){
   iscrtajSe();
 }
 
-function oberi(indeks){
+/** Модал: како да се подреже бербата пред да влезе во сушарата. */
+function otvoriIzborTrim(indeks){
+  const r = sostojba.lei[indeks].rastenie; if (!r || r.faza !== "ZRELO") return;
+  const telo = document.getElementById("modal-telo");
+  document.getElementById("modal-naslov").textContent = "Како ќе ја подрежеш бербата?";
+  telo.innerHTML = `
+    <div class="stavka">
+      <div class="stavka-glava"><span class="stavka-ime">Прецизно подрежување</span></div>
+      <div class="stavka-opis">Внимателно се отстранува вишокот лисја.
+        −${Math.round((1 - KONFIG.TRIM_MASA) * 100)}% маса, но
+        +${KONFIG.TRIM_KVALITET} квалитет на крајот.</div>
+      <button onclick="oberi(${indeks}, true); zatvoriModal();">Подрежи прецизно</button>
+    </div>
+    <div class="stavka">
+      <div class="stavka-glava"><span class="stavka-ime">Брзо кастрење</span></div>
+      <div class="stavka-opis">Целата маса влегува во сушарата, без бонус.</div>
+      <button onclick="oberi(${indeks}, false); zatvoriModal();">Кастри брзо</button>
+    </div>`;
+  document.getElementById("modal").classList.add("otvoren");
+  zadnoFokusirano = document.activeElement;
+  const prvoKopce = telo.querySelector("button");
+  if (prvoKopce) prvoKopce.focus();
+}
+
+function oberi(indeks, precizno){
   const r = sostojba.lei[indeks].rastenie; if (!r || r.faza !== "ZRELO") return;
   const sorta = najdiSorta(r.sorta); if (!sorta) return;
 
   const prosekZdravje = r.brojTikovi > 0 ? r.zbirZdravje / r.brojTikovi : 0;
   const suvo   = presmetajPrinos(sorta, prosekZdravje, tekovnaLampa());
-  const vlazno = suvo / KONFIG.VLAZNO_VO_SUVO;
+  const vlazno = (suvo / KONFIG.VLAZNO_VO_SUVO) * (precizno ? KONFIG.TRIM_MASA : 1);
 
   sostojba.sushara.push({
     id: sledenId++, sorta: r.sorta,
     gramaVlazno: vlazno, denovi: 0,
+    faza: "sushenje", vlaga: KONFIG.VLAGA_START,
+    potkrateno: !!precizno,
+    vrtenja: 0, trebaVrtenje: false, vrtenjeRok: 0,
+    sledenoVrtenje: KONFIG.VRTENJE_INTERVAL,
+    muvla: false, imalaMuvla: false, izgubenoMasa: 0, vlazenDen: false,
+    tochnostPakuvanje: 0, denoviZreenje: 0, burpovi: 0, burpDostapen: false,
     prosekZdravje, deoviSoStetnik: r.deoviSoStetnik
   });
   sostojba.lei[indeks].rastenie = null;
@@ -702,19 +827,86 @@ function oberi(indeks){
   iscrtajSe();
 }
 
+/* ── Алатки во сушарата ── */
+function zavrti(serijaId){
+  const s = sostojba.sushara.find(x => x.id === serijaId);
+  if (!s || s.faza !== "sushenje" || !s.trebaVrtenje) return;
+  s.trebaVrtenje = false;
+  s.vrtenja++;
+  izvesti(TEKST.zavrteno);
+  panelValjaSe = true;
+  iscrtajSe();
+}
+
+function provetri(serijaId){
+  const s = sostojba.sushara.find(x => x.id === serijaId);
+  if (!s || !s.vlazenDen) return;
+  s.vlazenDen = false;
+  izvesti(TEKST.provetreno);
+  panelValjaSe = true;
+  iscrtajSe();
+}
+
+function otstraniMuvla(serijaId){
+  const s = sostojba.sushara.find(x => x.id === serijaId);
+  if (!s || !s.muvla) return;
+  const zrtva = s.gramaVlazno * KONFIG.MUVLA_TROSHOK_CISTENJE;
+  s.izgubenoMasa = Math.min(0.6, s.izgubenoMasa + KONFIG.MUVLA_TROSHOK_CISTENJE);
+  s.muvla = false;
+  izvesti(TEKST.muvlaOtstraneta(Math.round(zrtva)));
+  panelValjaSe = true;
+  iscrtajSe();
+}
+
+function spakuvajVoTegli(serijaId){
+  const s = sostojba.sushara.find(x => x.id === serijaId);
+  if (!s || s.faza !== "sushenje") return;
+  if (s.vlaga > KONFIG.VLAGA_PAKUVANJE_MAX){ izvesti(TEKST.ranoZaTegli, "greska"); return; }
+  s.tochnostPakuvanje = tochnostOdVlaga(s.vlaga, sostojba.nadgradbi.sushara);
+  s.faza = "zreenje";
+  s.denoviZreenje = 0;
+  s.burpovi = 0;
+  s.burpDostapen = true;         // првиот бурп е достапен веднаш
+  s.trebaVrtenje = false; s.vlazenDen = false; s.muvla = false;
+  izvesti(TEKST.spakuvano(Math.round(s.vlaga)));
+  panelValjaSe = true;
+  iscrtajSe();
+}
+
+function burpni(serijaId){
+  const s = sostojba.sushara.find(x => x.id === serijaId);
+  if (!s || s.faza !== "zreenje" || !s.burpDostapen) return;
+  s.burpDostapen = false;
+  s.burpovi++;
+  izvesti(TEKST.burpnato);
+  panelValjaSe = true;
+  iscrtajSe();
+}
+
 function zavrsiSushenje(serijaId){
   const idx = sostojba.sushara.findIndex(s => s.id === serijaId);
   if (idx === -1) return;
   const serija = sostojba.sushara[idx];
   const sorta = najdiSorta(serija.sorta); if (!sorta) return;
+  if (serija.faza !== "zreenje"){ izvesti(TEKST.ranoZaTegli, "greska"); return; }
+  if (serija.denoviZreenje < KONFIG.ZREENJE_MIN_DENOVI){
+    izvesti(TEKST.ranoZaMagacin(KONFIG.ZREENJE_MIN_DENOVI), "greska"); return;
+  }
 
-  const tochnost = tochnostOdSushenje(Math.floor(serija.denovi), sostojba.nadgradbi.sushara);
-  const kvalitet = presmetajKvalitet(
-    serija.prosekZdravje, tochnost, sorta.genetika,
+  // Основата ја дава формулата за квалитет; негата во сушарата се
+  // надградува врз неа: навремени вртења, редовни бурпови, прецизно
+  // подрежување — а мувлата (дури и отстранета) остава трага.
+  const osnova = presmetajKvalitet(
+    serija.prosekZdravje, serija.tochnostPakuvanje, sorta.genetika,
     tekovnaLampa().kvalitetBonus, Math.floor(serija.deoviSoStetnik)
   );
+  const negaBonus = serija.vrtenja * KONFIG.VRTENJE_BONUS
+                  + Math.min(serija.burpovi, 6) * KONFIG.BURP_BONUS
+                  + (serija.potkrateno ? KONFIG.TRIM_KVALITET : 0)
+                  - (serija.imalaMuvla ? 4 : 0);
+  const kvalitet = stegni(osnova + negaBonus, 0, 100);
   const ocenka = najdiOcenka(kvalitet);
-  const grama  = serija.gramaVlazno * KONFIG.VLAZNO_VO_SUVO;
+  const grama  = serija.gramaVlazno * (1 - serija.izgubenoMasa) * KONFIG.VLAZNO_VO_SUVO;
 
   sostojba.magacin.push({
     id: sledenId++, sorta: serija.sorta,
@@ -1065,7 +1257,7 @@ function iscrtajLeja(i){
 
   // Дугмиња
   let html = "";
-  if (zrela) html += `<button class="zlatna" onclick="oberi(${i})">Обери</button>`;
+  if (zrela) html += `<button class="zlatna" onclick="otvoriIzborTrim(${i})">Обери</button>`;
   html += `<button onclick="polej(${i})">Полеј</button>`;
   html += `<button onclick="nahrani(${i})">Ѓубри · ${KONFIG.CENA_HRANA}</button>`;
   if (r.stetnik){
@@ -1099,6 +1291,7 @@ function iscrtajPanel(){
   if      (aktivnoJazice === "prodavnica") el.innerHTML = panelProdavnica();
   else if (aktivnoJazice === "sushara")    el.innerHTML = panelSushara();
   else if (aktivnoJazice === "magacin")    el.innerHTML = panelMagacin();
+  else if (aktivnoJazice === "prodazba")   el.innerHTML = panelProdazba();
   else                                     el.innerHTML = panelNadgradbi();
 }
 
@@ -1132,40 +1325,90 @@ function panelSushara(){
     return `<div class="prazno">Сушарата е празна.<br>Обери зрело растение за да почнеш.</div>`;
 
   const imaSushara = sostojba.nadgradbi.sushara;
-  const d1 = imaSushara ? 8 : 9;
-  const d2 = imaSushara ? 14 : 12;
+  const idealMin = imaSushara ? 8 : 10;
+  const idealMax = imaSushara ? 20 : 16;
 
   return sostojba.sushara.map(s => {
     const sorta = najdiSorta(s.sorta);
-    const denovi = Math.floor(s.denovi);
-    const napredok = stegni(denovi / d2 * 100, 0, 100);
-    const status = denovi <  d1     ? "Прерано — почекај уште"
-                 : denovi <= d2     ? "Идеален момент за вадење"
-                 : denovi <= d2 + 4 ? "Уште е прифатливо"
-                 :                    "Пресушено — квалитетот падна";
+    const masa = Math.round(s.gramaVlazno * (1 - s.izgubenoMasa));
+
+    // ── Фаза 1: висечко сушење ──
+    if (s.faza === "sushenje"){
+      const vlaga = Math.round(s.vlaga);
+      const bojaVlaga = vlaga > KONFIG.MUVLA_PRAG_VLAGA ? "var(--crvena)"
+                      : vlaga > idealMax ? "var(--zlato)"
+                      : vlaga >= idealMin ? "var(--zelena)" : "var(--sina)";
+      const statusVlaga = vlaga > KONFIG.MUVLA_PRAG_VLAGA ? "опасно влажно — ризик од мувла"
+                        : vlaga > KONFIG.VLAGA_PAKUVANJE_MAX ? "се суши, почекај"
+                        : vlaga > idealMax ? "може во тегли, но уште е рано за идеално"
+                        : vlaga >= idealMin ? "ИДЕАЛНО за пакување!"
+                        : "пресушува — пакувај веднаш";
+      const mozeTegli = s.vlaga <= KONFIG.VLAGA_PAKUVANJE_MAX;
+
+      let alarmi = "";
+      if (s.muvla)
+        alarmi += `<button class="opasna" onclick="otstraniMuvla(${s.id})">Отстрани мувла · −${Math.round(KONFIG.MUVLA_TROSHOK_CISTENJE*100)}% маса</button>`;
+      if (s.vlazenDen)
+        alarmi += `<button class="opasna" onclick="provetri(${s.id})">Проветри — влажен ден</button>`;
+      if (s.trebaVrtenje)
+        alarmi += `<button class="zlatna" onclick="zavrti(${s.id})">Заврти ги гранките — сега!</button>`;
+
+      return `
+    <div class="stavka">
+      <div class="stavka-glava">
+        <span class="stavka-ime">${sorta ? sorta.ime : "?"}</span>
+        <span class="stavka-cena">${masa} г · виси</span>
+      </div>
+      <div class="stavka-opis">
+        Хигрометар: <b style="color:${bojaVlaga}">${vlaga}% влажност</b> — ${statusVlaga}<br>
+        Ден ${Math.floor(s.denovi)} · цел: спакувај на ${idealMin}–${idealMax}%
+      </div>
+      <div class="napredok"><i style="width:${stegni((KONFIG.VLAGA_START - vlaga) / (KONFIG.VLAGA_START - KONFIG.VLAGA_MIN) * 100, 0, 100)}%"></i></div>
+      <div class="stavka-opis">
+        СОП: ${s.potkrateno ? "✓ подрежано" : "✗ неподрежано"}
+        · вртења: ${s.vrtenja}${s.trebaVrtenje ? " (чека!)" : ""}
+        · мувла: ${s.muvla ? "АКТИВНА" : s.imalaMuvla ? "отстранета" : "нема"}
+        ${s.izgubenoMasa > 0 ? ` · загуба ${Math.round(s.izgubenoMasa * 100)}%` : ""}
+      </div>
+      ${alarmi}
+      <button ${mozeTegli ? "" : "disabled"} onclick="spakuvajVoTegli(${s.id})">
+        ${mozeTegli ? "Спакувај во тегли" : `Тегли под ${KONFIG.VLAGA_PAKUVANJE_MAX}% влажност`}
+      </button>
+    </div>`;
+    }
+
+    // ── Фаза 2: зреење во тегли ──
+    const dZr = Math.floor(s.denoviZreenje);
+    const gotovo = s.denoviZreenje >= KONFIG.ZREENJE_MIN_DENOVI;
     return `
     <div class="stavka">
       <div class="stavka-glava">
         <span class="stavka-ime">${sorta ? sorta.ime : "?"}</span>
-        <span class="stavka-cena">${Math.round(s.gramaVlazno)} г мокра маса</span>
+        <span class="stavka-cena">${masa} г · во тегли</span>
       </div>
       <div class="stavka-opis">
-        Ден ${denovi} од сушењето · идеално ${d1}–${d2}<br>${status}
+        Ден ${dZr} од зреењето · спакувано со точност ${(s.tochnostPakuvanje * 100).toFixed(0)}%<br>
+        Бурпања: ${s.burpovi} од ${Math.max(dZr + 1, 1)} можни — секое додава арома и квалитет.
       </div>
-      <div class="napredok"><i style="width:${napredok}%"></i></div>
-      <button onclick="zavrsiSushenje(${s.id})">Заврши го сушењето</button>
+      <div class="napredok"><i style="width:${stegni(s.denoviZreenje / KONFIG.ZREENJE_MIN_DENOVI * 100, 0, 100)}%"></i></div>
+      <div class="stavka-opis">
+        СОП: ${s.potkrateno ? "✓ подрежано" : "✗ неподрежано"}
+        · вртења ${s.vrtenja} · мувла: ${s.imalaMuvla ? "имаше" : "немаше"}
+      </div>
+      ${s.burpDostapen ? `<button class="zlatna" onclick="burpni(${s.id})">Бурпни ги теглите</button>` : ""}
+      <button ${gotovo ? "" : "disabled"} onclick="zavrsiSushenje(${s.id})">
+        ${gotovo ? "Заврши — во магацин" : `Зрее уште ${Math.max(0, Math.ceil(KONFIG.ZREENJE_MIN_DENOVI - s.denoviZreenje))} ден(а)`}
+      </button>
     </div>`;
   }).join("");
 }
 
 function panelMagacin(){
   if (!sostojba.magacin.length)
-    return `<div class="prazno">Магацинот е празен.<br>Заврши го сушењето за да добиеш производ.</div>`;
+    return `<div class="prazno">Магацинот е празен.<br>Заврши го зреењето за да добиеш производ.</div>`;
 
   return sostojba.magacin.map(p => {
     const sorta = najdiSorta(p.sorta);
-    const cena = cenaNaSerija(p);
-    const pazar = sostojba.pazar[p.sorta] || 1;
     return `
     <div class="stavka">
       <div class="stavka-glava">
@@ -1174,19 +1417,55 @@ function panelMagacin(){
       </div>
       <div class="stavka-opis">
         ${Math.round(p.grama)} г · квалитет ${Math.round(p.kvalitet)}/100
-        ${p.testirano ? ` · <b style="color:var(--violet)">${p.thc}% ТХЦ ✓</b>` : ""}<br>
-        Пазар ${pazar >= 1 ? "▲" : "▼"} ${(pazar * 100).toFixed(0)}%
-        · Вредност <b class="stavka-cena">${formatPari(cena)} ден</b>
+        ${p.testirano
+          ? ` · <b style="color:var(--violet)">${p.thc}% ТХЦ ✓ сертифицирано</b>`
+          : " · нетестирано"}<br>
+        Сертификатот додава +${Math.round((KONFIG.BONUS_LABORATORIJA - 1) * 100)}% на цената.
+        Продажбата е на јазичето „Пазар".
       </div>
-      <div class="dve">
-        <button class="sina" ${p.testirano ? "disabled" : ""}
-          onclick="testirajVoLaboratorija(${p.id})">
-          ${p.testirano ? "Анализирано ✓" : `Лаб. ${KONFIG.CENA_LABORATORIJA} ден`}
-        </button>
-        <button onclick="prodaj(${p.id})">Продај</button>
-      </div>
+      <button class="sina" ${p.testirano ? "disabled" : ""}
+        onclick="testirajVoLaboratorija(${p.id})">
+        ${p.testirano ? "Анализирано ✓" : `Лабораториска анализа · ${formatPari(KONFIG.CENA_LABORATORIJA)} ден`}
+      </button>
     </div>`;
   }).join("");
+}
+
+function panelProdazba(){
+  // Мини-берза: моментални цени по сорта, па понудите од магацинот.
+  let html = `<div class="stavka"><div class="stavka-glava">
+      <span class="stavka-ime">Берза денес</span></div><div class="stavka-opis">`;
+  html += SORTI.filter(s => sostojba.nivo >= s.nivo).map(s => {
+    const pazar = sostojba.pazar[s.id] || 1;
+    return `${s.ime}: <b style="color:${pazar >= 1 ? "var(--zelena)" : "var(--crvena)"}">` +
+           `${formatPari(s.cenaPoGram * pazar)} ден/г ${pazar >= 1 ? "▲" : "▼"}</b>`;
+  }).join("<br>");
+  html += `</div></div>`;
+
+  if (!sostojba.magacin.length)
+    return html + `<div class="prazno">Немаш производ за продажба.<br>Заврши зреење во сушарата.</div>`;
+
+  html += sostojba.magacin.map(p => {
+    const sorta = najdiSorta(p.sorta);
+    const pazar = sostojba.pazar[p.sorta] || 1;
+    const cena = cenaNaSerija(p);
+    return `
+    <div class="stavka">
+      <div class="stavka-glava">
+        <span class="stavka-ime">${sorta ? sorta.ime : "?"}</span>
+        <span class="oznaka ${p.klasa}">${p.ocenka}</span>
+      </div>
+      <div class="stavka-opis">
+        ${Math.round(p.grama)} г × ${formatPari((sorta ? sorta.cenaPoGram : 0) * pazar)} ден/г
+        × ${p.ocenkaMult.toFixed(1)} (оценка)${p.testirano ? ` × ${KONFIG.BONUS_LABORATORIJA} (сертификат)` : ""}<br>
+        Пазарот е ${pazar >= 1 ? "над" : "под"} просекот (${(pazar * 100).toFixed(0)}%) —
+        ${pazar >= 1.1 ? "одличен момент за продажба."
+         : pazar <= 0.9 ? "можеби почекај подобра цена." : "солиден момент."}
+      </div>
+      <button onclick="prodaj(${p.id})">Продај за ${formatPari(cena)} ден</button>
+    </div>`;
+  }).join("");
+  return html;
 }
 
 function panelNadgradbi(){
@@ -1315,8 +1594,22 @@ function vchitaj(){
   if (s.semki) for (const [id, n] of Object.entries(s.semki))
     if (najdiSorta(id) && Number.isFinite(n) && n > 0) sostojba.semki[id] = Math.floor(n);
 
-  sostojba.sushara = Array.isArray(s.sushara) ? s.sushara.filter(x =>
-    x && najdiSorta(x.sorta) && Number.isFinite(x.gramaVlazno) && Number.isFinite(x.denovi)) : [];
+  sostojba.sushara = (Array.isArray(s.sushara) ? s.sushara.filter(x =>
+    x && najdiSorta(x.sorta) && Number.isFinite(x.gramaVlazno) && Number.isFinite(x.denovi)) : [])
+    .map(x => Object.assign({
+      // Постари сејвови немаат полиња за влажност/зреење — дај им
+      // разумни почетни вредности изведени од поминатите денови.
+      faza: "sushenje",
+      vlaga: Math.max(KONFIG.VLAGA_MIN, KONFIG.VLAGA_START - KONFIG.VLAGA_PAD_DEN * x.denovi),
+      potkrateno: false, vrtenja: 0, trebaVrtenje: false, vrtenjeRok: 0,
+      sledenoVrtenje: KONFIG.VRTENJE_INTERVAL,
+      muvla: false, imalaMuvla: false, izgubenoMasa: 0, vlazenDen: false,
+      tochnostPakuvanje: 0, denoviZreenje: 0, burpovi: 0, burpDostapen: false
+    }, x))
+    .map(x => { x.faza = (x.faza === "zreenje") ? "zreenje" : "sushenje";
+                x.vlaga = stegni(Number(x.vlaga) || KONFIG.VLAGA_MIN, KONFIG.VLAGA_MIN, KONFIG.VLAGA_START);
+                x.izgubenoMasa = stegni(Number(x.izgubenoMasa) || 0, 0, 0.6);
+                return x; });
   sostojba.magacin = Array.isArray(s.magacin) ? s.magacin.filter(x =>
     x && najdiSorta(x.sorta) && Number.isFinite(x.grama) && Number.isFinite(x.ocenkaMult)) : [];
 
@@ -1382,9 +1675,10 @@ window.__test = {
   tikni,
   brzoNapred(n){ for (let i = 0; i < n; i++) tikni(); iscrtajSe(); },
   zasadiSemka, polej, nahrani, tretiraj, oberi,
+  zavrti, provetri, otstraniMuvla, spakuvajVoTegli, burpni,
   zavrsiSushenje, testirajVoLaboratorija, prodaj,
   kupiSeme, kupiLampa, kupiNadgradba, otkluchiLeja,
-  presmetajKvalitet, presmetajPrinos, tochnostOdSushenje, presmetajTHC,
+  presmetajKvalitet, presmetajPrinos, tochnostOdVlaga, presmetajTHC,
   novaIgra, vchitaj, zachuvaj,
   resetiraj(){ sostojba = novaIgra(); sledenId = 1; posetenoSushara = false; posetenoMagacin = false; panelValjaSe = true; iscrtajSe(); }
 };
