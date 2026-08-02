@@ -11,9 +11,37 @@
    ЗЕЛЕНА ИМПЕРИЈА — визуелен систем од Claude Design пакетот
    (светла oklch тема · Outfit/Inter · SVG иконографија)
    ═══════════════════════════════════════════════════════════════ */
+:root{
+  --pozadina:oklch(97% 0.015 95); --kart:#ffffff;
+  --rab:oklch(90% 0.02 90); --rab2:oklch(83% 0.02 90);
+  --tekst:oklch(27% 0.02 150); --tekst2:oklch(35% 0.02 150);
+  --t-slab:oklch(50% 0.02 150); --t-mnoguslab:oklch(58% 0.02 150);
+  --povrsina:oklch(94% 0.015 90); --povrsina2:oklch(96.5% 0.01 92);
+  --zica:oklch(92% 0.02 90);
+  --zelena:oklch(60% 0.11 152); --zelena-temna:oklch(38% 0.06 152);
+  --zelena-t:oklch(35% 0.08 152); --zelena-t2:oklch(45% 0.09 152);
+  --zelena-mek:oklch(92% 0.05 152); --zelena-mek-h:oklch(87% 0.06 152);
+  --sina-mek:oklch(93% 0.03 230); --sina-mek-h:oklch(89% 0.05 230); --sina-t:oklch(38% 0.08 230);
+  --crvena-mek:oklch(93% 0.04 25); --crvena-mek-h:oklch(89% 0.06 25); --crvena-t:oklch(45% 0.15 25);
+  --kilibar:oklch(66% 0.15 55);
+}
+[data-tema="temna"]{
+  --pozadina:oklch(17% 0.015 160); --kart:oklch(23% 0.018 160);
+  --rab:oklch(31% 0.02 160); --rab2:oklch(37% 0.02 160);
+  --tekst:oklch(92% 0.012 150); --tekst2:oklch(85% 0.015 150);
+  --t-slab:oklch(70% 0.015 150); --t-mnoguslab:oklch(60% 0.015 150);
+  --povrsina:oklch(28% 0.02 160); --povrsina2:oklch(25.5% 0.018 160);
+  --zica:oklch(31% 0.02 160);
+  --zelena-temna:oklch(46% 0.09 152);
+  --zelena-t:oklch(80% 0.1 152); --zelena-t2:oklch(75% 0.11 152);
+  --zelena-mek:oklch(32% 0.05 152); --zelena-mek-h:oklch(38% 0.07 152);
+  --sina-mek:oklch(32% 0.05 230); --sina-mek-h:oklch(38% 0.06 230); --sina-t:oklch(80% 0.08 230);
+  --crvena-mek:oklch(33% 0.06 25); --crvena-mek-h:oklch(39% 0.07 25); --crvena-t:oklch(78% 0.12 25);
+  --kilibar:oklch(72% 0.15 60);
+}
 *,*::before,*::after{box-sizing:border-box}
-body{margin:0;background:oklch(97% 0.015 95);font-family:Inter,system-ui,sans-serif;
-  color:oklch(27% 0.02 150);min-height:100vh}
+body{margin:0;background:var(--pozadina);font-family:Inter,system-ui,sans-serif;
+  color:var(--tekst);min-height:100vh;transition:background .3s,color .3s}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 button:disabled{cursor:not-allowed}
 ::-webkit-scrollbar{display:none}
@@ -33,41 +61,41 @@ button:disabled{cursor:not-allowed}
 }
 
 /* ── Заглавие ── */
-.zaglavje{position:sticky;top:0;z-index:30;background:#fff;
-  border-bottom:1px solid oklch(90% 0.02 90);padding:10px 18px;
+.zaglavje{position:sticky;top:0;z-index:30;background:var(--kart);
+  border-bottom:1px solid var(--rab);padding:10px 18px;
   display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .logo{font-family:Outfit,sans-serif;font-weight:800;font-size:18px;letter-spacing:.2px;
-  background:linear-gradient(90deg,oklch(38% 0.06 152),oklch(66% 0.15 55));
+  background:linear-gradient(90deg,var(--zelena-temna),var(--kilibar));
   -webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
-.jazik{display:flex;gap:2px;background:oklch(94% 0.015 90);border-radius:20px;padding:3px}
+.jazik{display:flex;gap:2px;background:var(--povrsina);border-radius:20px;padding:3px}
 .jazik button{padding:4px 10px;border-radius:16px;font:700 10.5px Inter,sans-serif;
-  color:oklch(50% 0.02 150);transition:background .2s,color .2s}
-.jazik button.aktivno{background:oklch(60% 0.11 152);color:#fff}
+  color:var(--t-slab);transition:background .2s,color .2s}
+.jazik button.aktivno{background:var(--zelena);color:#fff}
 .hud{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
-.chip{display:flex;align-items:center;gap:6px;background:oklch(94% 0.015 90);
+.chip{display:flex;align-items:center;gap:6px;background:var(--povrsina);
   border-radius:12px;padding:6px 11px}
 .chip b{font:800 14px Outfit,sans-serif;line-height:1.1;white-space:nowrap}
-.chip small{font:600 8px Inter,sans-serif;color:oklch(60% 0.02 150);
+.chip small{font:600 8px Inter,sans-serif;color:var(--t-mnoguslab);
   text-transform:uppercase;letter-spacing:.4px;display:block}
-.chip svg{color:oklch(66% 0.15 55);flex-shrink:0}
+.chip svg{color:var(--kilibar);flex-shrink:0}
 .chip.prestiz{background:linear-gradient(135deg,#16241c,#0c1310);
   border:1px solid rgba(251,191,36,.4)}
 .chip.prestiz b{color:#fbbf24}
-.xp-lenta{height:4px;background:oklch(88% 0.02 90);border-radius:2px;margin-top:3px;
+.xp-lenta{height:4px;background:var(--zica);border-radius:2px;margin-top:3px;
   overflow:hidden;min-width:64px}
 .xp-lenta>i{display:block;height:100%;background:oklch(55% 0.14 320);transition:width .4s ease}
 .okrugla{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;background:oklch(94% 0.015 90);color:oklch(40% 0.02 150);flex-shrink:0}
-.okrugla:hover{background:oklch(90% 0.02 90)}
+  justify-content:center;background:var(--povrsina);color:var(--tekst2);flex-shrink:0}
+.okrugla:hover{background:var(--rab)}
 
 /* ── Навигација ── */
-.navig{display:flex;justify-content:center;padding:7px 12px;background:#fff;
-  border-bottom:1px solid oklch(90% 0.02 90)}
+.navig{display:flex;justify-content:center;padding:7px 12px;background:var(--kart);
+  border-bottom:1px solid var(--rab)}
 .navig-vnatre{display:flex;gap:4px;max-width:1000px;width:100%;overflow-x:auto}
 .navig button{flex:1;min-width:70px;display:flex;flex-direction:column;align-items:center;
-  gap:3px;padding:8px 5px;border-radius:12px;color:oklch(45% 0.02 150);
+  gap:3px;padding:8px 5px;border-radius:12px;color:var(--t-slab);
   font:700 9.5px Inter,sans-serif;transition:background .2s,color .2s;white-space:nowrap;position:relative}
-.navig button.aktivno{background:oklch(60% 0.11 152);color:#fff}
+.navig button.aktivno{background:var(--zelena);color:#fff}
 .navig .tocka{position:absolute;top:5px;right:9px;width:7px;height:7px;border-radius:50%;
   background:#ef4444;display:none}
 .navig .tocka.vidliva{display:block}
@@ -76,7 +104,7 @@ main{animation:panelIn .35s ease both}
 .panel{max-width:1120px;margin:0 auto;padding:16px 18px 50px}
 .panel.tesen{max-width:940px}
 .naslov{font:800 18px Outfit,sans-serif;margin-bottom:4px}
-.podnaslov{font:500 12.5px Inter,sans-serif;color:oklch(50% 0.02 150);
+.podnaslov{font:500 12.5px Inter,sans-serif;color:var(--t-slab);
   margin-bottom:16px;max-width:560px;line-height:1.6}
 .sekcija{font:700 12px Outfit,sans-serif;text-transform:uppercase;letter-spacing:.3px;margin:0 0 8px}
 
@@ -89,36 +117,36 @@ main{animation:panelIn .35s ease both}
 .ambient svg{position:relative;flex-shrink:0;transition:color 1.5s ease}
 
 /* ── Картички ── */
-.kart{background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:14px;padding:14px}
+.kart{background:var(--kart);border:1px solid var(--rab);border-radius:14px;padding:14px}
 .kart-mreza{display:grid;gap:10px}
-.lenta-h{height:5px;background:oklch(92% 0.02 90);border-radius:3px;overflow:hidden}
+.lenta-h{height:5px;background:var(--zica);border-radius:3px;overflow:hidden}
 .lenta-h>i{display:block;height:100%;transition:width .4s ease}
 .badge{font:800 8.5px Inter,sans-serif;letter-spacing:.4px;padding:3px 8px;
   border-radius:20px;white-space:nowrap}
-.pil{font:800 10px Inter,sans-serif;background:oklch(92% 0.06 152);
-  color:oklch(35% 0.08 152);padding:5px 11px;border-radius:20px}
+.pil{font:800 10px Inter,sans-serif;background:var(--zelena-mek);
+  color:var(--zelena-t);padding:5px 11px;border-radius:20px}
 
 /* ── Копчиња ── */
 .k-primarno{padding:9px 14px;border-radius:10px;font:800 11px Outfit,sans-serif;
-  background:oklch(38% 0.06 152);color:#fff}
+  background:var(--zelena-temna);color:#fff}
 .k-primarno:disabled{opacity:.55}
 .k-sekundarno{padding:8px;font:700 10.5px Inter,sans-serif;border-radius:9px;
-  background:oklch(94% 0.015 90);color:oklch(30% 0.02 150)}
+  background:var(--povrsina);color:var(--tekst2)}
 .k-voda{padding:8px;font:700 10.5px Inter,sans-serif;border-radius:9px;
-  background:oklch(93% 0.03 230);color:oklch(38% 0.08 230)}
-.k-voda:hover{background:oklch(89% 0.05 230)}
+  background:var(--sina-mek);color:var(--sina-t)}
+.k-voda:hover{background:var(--sina-mek-h)}
 .k-hrana{padding:8px;font:700 10.5px Inter,sans-serif;border-radius:9px;
-  background:oklch(92% 0.04 152);color:oklch(35% 0.07 152)}
-.k-hrana:hover{background:oklch(87% 0.06 152)}
+  background:var(--zelena-mek);color:var(--zelena-t)}
+.k-hrana:hover{background:var(--zelena-mek-h)}
 .k-zlatno{padding:10px;font:800 11.5px Outfit,sans-serif;border-radius:10px;
   background:linear-gradient(135deg,oklch(70% 0.14 55),oklch(62% 0.15 40));color:#fff}
 .k-crveno{padding:9px;font:700 10.5px Inter,sans-serif;border-radius:10px;
-  background:oklch(93% 0.04 25);color:oklch(45% 0.15 25)}
-.k-crveno:hover{background:oklch(89% 0.06 25)}
+  background:var(--crvena-mek);color:var(--crvena-t)}
+.k-crveno:hover{background:var(--crvena-mek-h)}
 
 /* ── Растенија ── */
 .rast-mreza{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.rast-kart{background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:16px;
+.rast-kart{background:var(--kart);border:1px solid var(--rab);border-radius:16px;
   overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 18px rgba(0,0,0,.05);
   transition:transform .2s ease,box-shadow .2s ease}
 .rast-kart:hover{transform:translateY(-3px);
@@ -141,9 +169,9 @@ main{animation:panelIn .35s ease both}
   animation:floatUp 1.3s ease-out forwards;pointer-events:none}
 .rast-lenti{padding:9px 12px 0;display:flex;flex-direction:column;gap:4px}
 .rast-lenta{display:flex;align-items:center;gap:6px;font:600 9.5px Inter,sans-serif;
-  color:oklch(55% 0.02 150)}
+  color:var(--t-mnoguslab)}
 .rast-lenta svg{flex-shrink:0}
-.rast-lenta .zica{flex:1;height:5px;background:oklch(92% 0.02 90);border-radius:3px;overflow:hidden}
+.rast-lenta .zica{flex:1;height:5px;background:var(--zica);border-radius:3px;overflow:hidden}
 .rast-lenta .zica>i{display:block;height:100%;transition:width .4s ease,background .4s}
 .rast-lenta u{text-decoration:none;width:20px;text-align:right}
 .rast-akcii{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 12px 12px}
@@ -152,21 +180,21 @@ main{animation:panelIn .35s ease both}
   background:linear-gradient(115deg,transparent,rgba(255,255,255,.65),transparent);
   animation:shimmerSweep 2.6s ease-in-out infinite;pointer-events:none}
 .k-berba{width:100%;padding:10px;font:800 11.5px Outfit,sans-serif;border-radius:10px}
-.prazen-slot{min-height:288px;border:2px dashed oklch(85% 0.02 90);border-radius:16px;
-  display:flex;align-items:center;justify-content:center;background:oklch(97% 0.01 95);
-  color:oklch(60% 0.02 150);font:700 12.5px Outfit,sans-serif;
+.prazen-slot{min-height:288px;border:2px dashed var(--rab2);border-radius:16px;
+  display:flex;align-items:center;justify-content:center;background:var(--povrsina2);
+  color:var(--t-mnoguslab);font:700 12.5px Outfit,sans-serif;
   transition:background .2s,border-color .2s,color .2s}
-.prazen-slot:hover{background:oklch(94% 0.04 152);border-color:oklch(60% 0.11 152);
-  color:oklch(38% 0.06 152)}
+.prazen-slot:hover{background:var(--zelena-mek);border-color:var(--zelena);
+  color:var(--zelena-temna)}
 
 /* ── Соби ── */
 .sobi{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px}
 .soba{flex:none;display:flex;flex-direction:column;gap:3px;align-items:flex-start;
-  padding:10px 14px;border-radius:12px;min-width:160px;background:oklch(94% 0.015 90);
-  color:oklch(27% 0.02 150);transition:background .2s,color .2s;text-align:left}
-.soba.aktivna{background:oklch(38% 0.06 152);color:#fff}
-.soba.zakl{background:oklch(96% 0.01 90);color:oklch(55% 0.02 150);
-  border:1px dashed oklch(80% 0.02 90)}
+  padding:10px 14px;border-radius:12px;min-width:160px;background:var(--povrsina);
+  color:var(--tekst);transition:background .2s,color .2s;text-align:left}
+.soba.aktivna{background:var(--zelena-temna);color:#fff}
+.soba.zakl{background:var(--povrsina2);color:var(--t-mnoguslab);
+  border:1px dashed var(--rab2)}
 .soba b{font:700 12px Outfit,sans-serif}
 .soba span{font:600 10px Inter,sans-serif;opacity:.8;display:flex;align-items:center;gap:4px}
 
@@ -188,18 +216,18 @@ main{animation:panelIn .35s ease both}
 .pokrivka{position:fixed;inset:0;background:rgba(10,15,12,.6);backdrop-filter:blur(3px);
   z-index:80;display:none;align-items:center;justify-content:center;padding:20px}
 .pokrivka.otvorena{display:flex}
-.modal-bel{background:#fff;border-radius:20px;max-width:420px;width:100%;padding:26px;
+.modal-bel{background:var(--kart);border-radius:20px;max-width:420px;width:100%;padding:26px;
   animation:modalPop .3s ease both;box-shadow:0 30px 80px rgba(0,0,0,.4);
   max-height:80vh;overflow-y:auto}
 .modal-temен,.modal-temen{background:linear-gradient(160deg,#16241c,#0c1310);border-radius:20px;
   max-width:360px;width:100%;padding:28px;text-align:center;color:#e9f3ec;
   animation:modalPop .35s ease both;box-shadow:0 30px 80px rgba(0,0,0,.4)}
 .modal-naslov{font:800 16px Outfit,sans-serif;margin-bottom:8px}
-.modal-telo{font:500 13px Inter,sans-serif;color:oklch(45% 0.02 150);
+.modal-telo{font:500 13px Inter,sans-serif;color:var(--t-slab);
   line-height:1.6;margin-bottom:18px}
 .izbor-red{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;
-  background:oklch(97% 0.01 95);text-align:left;width:100%;margin-bottom:7px}
-.izbor-red:hover{background:oklch(93% 0.04 152)}
+  background:var(--povrsina2);text-align:left;width:100%;margin-bottom:7px}
+.izbor-red:hover{background:var(--zelena-mek)}
 .gtocka{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 </style>
 </head>
@@ -229,6 +257,10 @@ main{animation:panelIn .35s ease both}
     <button class="okrugla" id="k-zvuk" title="звук">
       <svg id="zvuk-on" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M17 8.5c1.2 1 1.2 5.9 0 7M19.5 6c2.3 2.2 2.3 9.7 0 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <svg id="zvuk-off" width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:none"><path d="M4 9v6h4l5 4V5L8 9H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M17 9l4 6M21 9l-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <button class="okrugla" id="k-tema" title="тема">
+      <svg id="tema-sonce" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg id="tema-mesecina" width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:none"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
     </button>
     <button class="okrugla" id="k-tutorial" title="?">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.3.9-1.3 1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r=".9" fill="currentColor"/></svg>
@@ -520,7 +552,7 @@ let audioCtx = null;
 
 function novaIgra(){
   return {
-    verzija: KONFIG.VERZIJA, jazik:'mk', zvuk:true,
+    verzija: KONFIG.VERZIJA, jazik:'mk', zvuk:true, tema:'svetla',
     aktivnoJazice:'grow', aktivnaSoba:'starter',
     pari: KONFIG.POCETNI_PARI, xp:0, nivo:1, prestiz:0,
     den:1, sekVoDen:0,
@@ -667,13 +699,13 @@ function otvoriIzborSorta(sobaId){
   otvoriModal(`<div class="modal-bel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font:800 15px Outfit,sans-serif">${esc(t.picker_title)}</div>
-      <button onclick="zatvoriModal()" style="font:700 11.5px Inter,sans-serif;color:oklch(55% 0.02 150)">${esc(t.close)}</button>
+      <button onclick="zatvoriModal()" style="font:700 11.5px Inter,sans-serif;color:var(--t-mnoguslab)">${esc(t.close)}</button>
     </div>
     ${otkrieniSorti().map(x=>`
       <button class="izbor-red" onclick="zasadi('${esc(sobaId)}','${esc(x.id)}')">
         <span class="gtocka" style="background:${esc(x.sjaj)}"></span>
         <span style="flex:1;font:700 12px Outfit,sans-serif">${esc(imeSorta(x))}</span>
-        <span style="font:700 9.5px Inter,sans-serif;color:oklch(55% 0.02 150)">T${x.tier}</span>
+        <span style="font:700 9.5px Inter,sans-serif;color:var(--t-mnoguslab)">T${x.tier}</span>
       </button>`).join('')}
   </div>`);
 }
@@ -716,11 +748,11 @@ function otvoriIzborTrim(id){
     <div class="modal-naslov">${esc(t.trim_q)}</div>
     <button class="izbor-red" onclick="oberi(${id},true)">
       <div><div style="font:700 12.5px Outfit,sans-serif">${esc(t.trim_precise)}</div>
-      <div style="font:500 11px Inter,sans-serif;color:oklch(50% 0.02 150)">${esc(t.trim_precise_d)}</div></div>
+      <div style="font:500 11px Inter,sans-serif;color:var(--t-slab)">${esc(t.trim_precise_d)}</div></div>
     </button>
     <button class="izbor-red" onclick="oberi(${id},false)">
       <div><div style="font:700 12.5px Outfit,sans-serif">${esc(t.trim_fast)}</div>
-      <div style="font:500 11px Inter,sans-serif;color:oklch(50% 0.02 150)">${esc(t.trim_fast_d)}</div></div>
+      <div style="font:500 11px Inter,sans-serif;color:var(--t-slab)">${esc(t.trim_fast_d)}</div></div>
     </button>
   </div>`);
 }
@@ -1010,7 +1042,7 @@ function otvoriPrestizPotvrda(){
     <div class="modal-naslov">${esc(t.pr_confirm_t)}</div>
     <div class="modal-telo">${esc(t.pr_confirm_b)}</div>
     <div style="display:flex;gap:8px">
-      <button onclick="zatvoriModal()" style="flex:1;padding:11px;border-radius:10px;background:oklch(94% 0.015 90);color:oklch(30% 0.02 150);font:700 11.5px Inter,sans-serif">${esc(t.pr_no)}</button>
+      <button onclick="zatvoriModal()" style="flex:1;padding:11px;border-radius:10px;background:var(--povrsina);color:var(--tekst2);font:700 11.5px Inter,sans-serif">${esc(t.pr_no)}</button>
       <button onclick="prerodiSe()" style="flex:1;padding:11px;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#d97706);color:#2a1a00;font:800 11.5px Outfit,sans-serif">${esc(t.pr_yes)}</button>
     </div>
   </div>`);
@@ -1041,12 +1073,12 @@ function tutorial(cekor){
   const posleden = cekor === cekori.length-1;
   otvoriModal(`<div class="modal-bel" style="align-self:flex-end;margin-bottom:24px">
     <div style="display:flex;gap:5px;margin-bottom:16px">
-      ${cekori.map((_,i)=>`<div style="height:5px;flex:1;border-radius:3px;background:${i<=cekor?'oklch(60% 0.11 152)':'oklch(90% 0.02 90)'}"></div>`).join('')}
+      ${cekori.map((_,i)=>`<div style="height:5px;flex:1;border-radius:3px;background:${i<=cekor?'var(--zelena)':'var(--rab)'}"></div>`).join('')}
     </div>
     <div style="font:800 17px Outfit,sans-serif;margin-bottom:8px">${esc(cekori[cekor][0])}</div>
     <div class="modal-telo">${esc(cekori[cekor][1])}</div>
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <button onclick="s.tutorial=false;zatvoriModal();iscrtajSe(true)" style="font:700 11px Inter,sans-serif;color:oklch(55% 0.02 150);padding:8px">${esc(t.tut_skip)}</button>
+      <button onclick="s.tutorial=false;zatvoriModal();iscrtajSe(true)" style="font:700 11px Inter,sans-serif;color:var(--t-mnoguslab);padding:8px">${esc(t.tut_skip)}</button>
       <button onclick="tutorial(${cekor+1})" class="k-primarno" style="padding:11px 24px;border-radius:12px;font:800 12px Outfit,sans-serif">${esc(posleden?t.tut_done:t.tut_next)}</button>
     </div>
   </div>`, true);
@@ -1172,6 +1204,12 @@ function osveziNav(){
   }).join('');
 }
 
+function primeniTema(){
+  document.documentElement.dataset.tema = s.tema==='temna' ? 'temna' : '';
+  document.getElementById('tema-sonce').style.display = s.tema==='temna' ? '' : 'none';
+  document.getElementById('tema-mesecina').style.display = s.tema==='temna' ? 'none' : '';
+}
+
 function osveziHud(){
   const t=T();
   document.getElementById('h-pari').textContent = fmt(prikazPari);
@@ -1252,8 +1290,8 @@ function panelGrow(){
       return `<div class="kart" data-predizvik="${esc(c.id)}" style="padding:10px 12px">
         <div style="display:flex;justify-content:space-between;gap:6px;font:600 11.5px Inter,sans-serif;margin-bottom:5px">
           <span>${esc(s.jazik==='mk'?c.mk:c.en)}</span>
-          <span class="pr-broj" style="color:oklch(50% 0.02 150);white-space:nowrap">${napr}/${c.cel}</span></div>
-        <div class="lenta-h"><i style="width:${Math.min(100,napr/c.cel*100)}%;background:${c.gotov?'oklch(60% 0.11 152)':'oklch(66% 0.15 55)'}"></i></div>
+          <span class="pr-broj" style="color:var(--t-slab);white-space:nowrap">${napr}/${c.cel}</span></div>
+        <div class="lenta-h"><i style="width:${Math.min(100,napr/c.cel*100)}%;background:${c.gotov?'var(--zelena)':'var(--kilibar)'}"></i></div>
       </div>`;}).join('')}
     </div></div>`;
 
@@ -1271,7 +1309,7 @@ function panelGrow(){
 
   const sobaDef = SOBI.find(r=>r.id===s.aktivnaSoba);
   if (sobaDef && sobaDef.laboratorija){
-    html += `<div class="kart" style="border-style:dashed;padding:30px;text-align:center;color:oklch(50% 0.02 150);font:600 12.5px Inter,sans-serif">
+    html += `<div class="kart" style="border-style:dashed;padding:30px;text-align:center;color:var(--t-slab);font:600 12.5px Inter,sans-serif">
       ${esc(t.breed_hint)} → ${esc(t.nav_genetics)}</div></div>`;
     return html;
   }
@@ -1282,7 +1320,7 @@ function panelGrow(){
   html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap">
     <div style="font:700 12.5px Outfit,sans-serif">${esc(t.lamp)}: ${esc(s.jazik==='mk'?lampa.imeMk:lampa.imeEn)}</div>
     <button class="k-primarno" onclick="nadgradiLampa()" ${!slednaLampa?'disabled':''}
-      style="${!slednaLampa||s.pari<slednaLampa.cena?'background:oklch(94% 0.015 90);color:oklch(60% 0.02 150)':''}">
+      style="${!slednaLampa||s.pari<slednaLampa.cena?'background:var(--povrsina);color:var(--t-mnoguslab)':''}">
       ${slednaLampa ? esc(t.lamp_upgrade)+' · '+fmtK(slednaLampa.cena) : esc(t.lamp_maxed)}</button>
   </div>`;
 
@@ -1296,9 +1334,9 @@ function panelGrow(){
     const vnimanie = p.voda<25 || p.hrana<25 || p.zdravje<50;
     const badge = t.badge[stadium];
     const badgeBg = zrelo ? 'linear-gradient(135deg,#fbbf24,#d97706)'
-      : stadium>=2 ? 'oklch(92% 0.06 152)' : stadium===1 ? 'oklch(93% 0.03 230)' : 'oklch(94% 0.015 90)';
+      : stadium>=2 ? 'var(--zelena-mek)' : stadium===1 ? 'var(--sina-mek)' : 'var(--povrsina)';
     const badgeBoja = zrelo ? '#2a1a00'
-      : stadium>=2 ? 'oklch(35% 0.08 152)' : stadium===1 ? 'oklch(38% 0.08 230)' : 'oklch(50% 0.02 150)';
+      : stadium>=2 ? 'var(--zelena-t)' : stadium===1 ? 'var(--sina-t)' : 'var(--t-slab)';
     html += `<div class="rast-kart" data-rast="${p.id}">
       <div class="rast-glava"><span class="rast-ime">${esc(imeSorta(x))}</span>
         <span class="badge" style="background:${badgeBg};color:${badgeBoja}">${esc(badge)}</span></div>
@@ -1322,7 +1360,7 @@ function panelGrow(){
         <button class="k-hrana" onclick="nahrani(${p.id})">${esc(t.feed)}</button>
         <div class="berba-obvivka">
           <button class="k-berba" ${zrelo?'':'disabled'} onclick="otvoriIzborTrim(${p.id})"
-            style="background:${zrelo?'linear-gradient(135deg,oklch(70% 0.14 55),oklch(62% 0.15 40))':'oklch(92% 0.01 90)'};color:${zrelo?'#fff':'oklch(60% 0.02 150)'}">
+            style="background:${zrelo?'linear-gradient(135deg,oklch(70% 0.14 55),oklch(62% 0.15 40))':'var(--povrsina)'};color:${zrelo?'#fff':'var(--t-mnoguslab)'}">
             ${esc(zrelo?t.harvest:t.growing)}</button>
           ${zrelo?'<div class="svetkanje"></div>':''}
         </div>
@@ -1353,11 +1391,11 @@ function kartickaSerija(b){
       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
         <span style="font:700 13px Outfit,sans-serif">${esc(imeSorta(x))}</span>
         <span class="pil">${masa} × · ${esc(t.hangs)}</span></div>
-      <div class="ser-info" style="font:600 11px Inter,sans-serif;color:oklch(50% 0.02 150)">
+      <div class="ser-info" style="font:600 11px Inter,sans-serif;color:var(--t-slab)">
         ${esc(t.hygro)}: <b style="color:${boja}">${vlaga}%</b> — ${esc(status)}<br>
         ${esc(t.day_n)} ${Math.floor(b.denovi)} · ${esc(t.pack_goal)}</div>
-      <div class="lenta-h"><i style="width:${stegni((KONFIG.VLAGA_START-vlaga)/(KONFIG.VLAGA_START-KONFIG.VLAGA_MIN)*100,0,100)}%;background:oklch(66% 0.15 55)"></i></div>
-      <div style="font:600 10px Inter,sans-serif;color:oklch(55% 0.02 150)">
+      <div class="lenta-h"><i style="width:${stegni((KONFIG.VLAGA_START-vlaga)/(KONFIG.VLAGA_START-KONFIG.VLAGA_MIN)*100,0,100)}%;background:var(--kilibar)"></i></div>
+      <div style="font:600 10px Inter,sans-serif;color:var(--t-mnoguslab)">
         ${esc(t.sop)}: ${esc(b.potkrateno?t.trimmed:t.untrimmed)} · ${esc(t.turns)}: ${b.vrtenja}${b.trebaVrtenje?' '+esc(t.waiting):''}
         · ${esc(t.mold)}: ${esc(b.muvla?t.mold_active:b.imalaMuvla?t.mold_removed:t.mold_none)}
         ${b.zaguba>0?` · ${esc(t.loss)} ${Math.round(b.zaguba*100)}%`:''}</div>
@@ -1374,11 +1412,11 @@ function kartickaSerija(b){
     <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
       <span style="font:700 13px Outfit,sans-serif">${esc(imeSorta(x))}</span>
       <span class="pil">${masa} × · ${esc(t.in_jars)}</span></div>
-    <div class="ser-info" style="font:600 11px Inter,sans-serif;color:oklch(50% 0.02 150)">
+    <div class="ser-info" style="font:600 11px Inter,sans-serif;color:var(--t-slab)">
       ${esc(sablon(t.cure_day, dZr))} · ${esc(t.packed_acc)} ${(b.tochnost*100).toFixed(0)}%<br>
       ${esc(t.burps)}: ${b.burpovi} ${esc(sablon(t.of_possible, Math.max(dZr+1,1)))}</div>
-    <div class="lenta-h"><i style="width:${stegni(b.denoviZreenje/KONFIG.ZREENJE_MIN*100,0,100)}%;background:oklch(60% 0.11 152)"></i></div>
-    <div style="font:600 10px Inter,sans-serif;color:oklch(55% 0.02 150)">
+    <div class="lenta-h"><i style="width:${stegni(b.denoviZreenje/KONFIG.ZREENJE_MIN*100,0,100)}%;background:var(--zelena)"></i></div>
+    <div style="font:600 10px Inter,sans-serif;color:var(--t-mnoguslab)">
       ${esc(t.sop)}: ${esc(b.potkrateno?t.trimmed:t.untrimmed)} · ${esc(t.turns)} ${b.vrtenja}
       · ${esc(t.mold)}: ${esc(b.imalaMuvla?t.mold_had:t.mold_none)}</div>
     ${b.burpDostapen?`<button class="k-zlatno" onclick="burpni(${b.id})">${esc(t.burp)}</button>`:''}
@@ -1395,7 +1433,7 @@ function panelSusenje(){
     <div class="podnaslov">${esc(t.dry_desc)}</div>
     ${serii.length
       ? `<div class="kart-mreza" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${serii.map(kartickaSerija).join('')}</div>`
-      : `<div class="kart" style="border-style:dashed;padding:26px;text-align:center;color:oklch(55% 0.02 150);font:600 12px Inter,sans-serif">${esc(t.dry_empty)}</div>`}
+      : `<div class="kart" style="border-style:dashed;padding:26px;text-align:center;color:var(--t-mnoguslab);font:600 12px Inter,sans-serif">${esc(t.dry_empty)}</div>`}
   </div>`;
 }
 function panelZreenje(){
@@ -1406,7 +1444,7 @@ function panelZreenje(){
     <div class="podnaslov">${esc(t.cure_desc)}</div>
     ${serii.length
       ? `<div class="kart-mreza" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${serii.map(kartickaSerija).join('')}</div>`
-      : `<div class="kart" style="border-style:dashed;padding:26px;text-align:center;color:oklch(55% 0.02 150);font:600 12px Inter,sans-serif">${esc(t.cure_empty)}</div>`}
+      : `<div class="kart" style="border-style:dashed;padding:26px;text-align:center;color:var(--t-mnoguslab);font:600 12px Inter,sans-serif">${esc(t.cure_empty)}</div>`}
   </div>`;
 }
 
@@ -1424,28 +1462,28 @@ function panelGenetika(){
         <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
           <span style="font:700 12px Outfit,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(imeSorta(x))}</span>
           <span class="gtocka" style="background:${esc(x.sjaj)}"></span></div>
-        <span style="font:600 10px Inter,sans-serif;color:oklch(52% 0.02 150)">
+        <span style="font:600 10px Inter,sans-serif;color:var(--t-slab)">
           ${otkl ? `Tier ${x.tier} · ${fmt(x.cena)} ден` : esc(t.locked_at)+' '+x.nivo}</span>
       </div>`;}).join('')}
     </div>
     <div class="kart" style="padding:18px">
       <div style="font:700 14px Outfit,sans-serif;margin-bottom:2px">${esc(t.breed_title)}</div>
       ${lab ? `
-        <div style="font:500 11.5px Inter,sans-serif;color:oklch(50% 0.02 150);margin:4px 0 12px">${esc(t.breed_hint)}</div>
+        <div style="font:500 11.5px Inter,sans-serif;color:var(--t-slab);margin:4px 0 12px">${esc(t.breed_hint)}</div>
         <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
         ${otkrieniSorti().map(x=>{
           const izbrano = izborVkrstuvanje.includes(x.id);
           return `<button onclick="izberiZaVkrstuvanje('${esc(x.id)}')"
             style="padding:7px 13px;border-radius:20px;font:700 10.5px Inter,sans-serif;
-            background:${izbrano?'oklch(38% 0.06 152)':'oklch(94% 0.015 90)'};
-            color:${izbrano?'#fff':'oklch(30% 0.02 150)'};
-            border:2px solid ${izbrano?'oklch(60% 0.11 152)':'transparent'}">${esc(imeSorta(x))}</button>`;}).join('')}
+            background:${izbrano?'var(--zelena-temna)':'var(--povrsina)'};
+            color:${izbrano?'#fff':'var(--tekst2)'};
+            border:2px solid ${izbrano?'var(--zelena)':'transparent'}">${esc(imeSorta(x))}</button>`;}).join('')}
         </div>
         <button class="k-primarno" onclick="vkrsti()"
           ${izborVkrstuvanje.length!==2||s.pari<700?'disabled':''}
           style="padding:11px 22px;border-radius:12px;font:800 12px Outfit,sans-serif">
           ${esc(t.breed_btn)} · 700 ден</button>`
-      : `<div style="display:flex;align-items:center;gap:8px;color:oklch(55% 0.02 150);font:600 11.5px Inter,sans-serif;background:oklch(96% 0.01 90);border-radius:10px;padding:13px;margin-top:6px">
+      : `<div style="display:flex;align-items:center;gap:8px;color:var(--t-mnoguslab);font:600 11.5px Inter,sans-serif;background:var(--povrsina2);border-radius:10px;padding:13px;margin-top:6px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2"/></svg>
           ${esc(t.breed_need_lab)}</div>`}
     </div>
@@ -1464,7 +1502,7 @@ function panelPazar(){
       <button class="k-primarno" onclick="prodajSe()">${esc(t.sell_all_inv)}</button>
     </div>`;
   if (!redovi.length)
-    html += `<div class="kart" style="border-style:dashed;padding:20px;text-align:center;color:oklch(55% 0.02 150);font:600 12px Inter,sans-serif;margin-bottom:22px">${esc(t.inventory_empty)}</div>`;
+    html += `<div class="kart" style="border-style:dashed;padding:20px;text-align:center;color:var(--t-mnoguslab);font:600 12px Inter,sans-serif;margin-bottom:22px">${esc(t.inventory_empty)}</div>`;
   else {
     html += `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:26px">`;
     for (const id of redovi){
@@ -1474,8 +1512,8 @@ function panelPazar(){
         <span class="gtocka" style="background:${esc(x.sjaj)}"></span>
         <div style="flex:1;min-width:110px">
           <div style="font:700 12px Outfit,sans-serif">${esc(imeSorta(x))}</div>
-          <div style="font:600 10px Inter,sans-serif;color:oklch(55% 0.02 150)">${kolku} × ${fmt(cena)} ден</div></div>
-        <div style="font:800 12.5px Outfit,sans-serif;color:oklch(38% 0.06 152);white-space:nowrap">${fmt(cena*kolku)} ден</div>
+          <div style="font:600 10px Inter,sans-serif;color:var(--t-mnoguslab)">${kolku} × ${fmt(cena)} ден</div></div>
+        <div style="font:800 12.5px Outfit,sans-serif;color:var(--zelena-temna);white-space:nowrap">${fmt(cena*kolku)} ден</div>
         <button class="k-sekundarno" style="padding:6px 11px;font-size:10px" onclick="prodaj('${esc(id)}',1)">${esc(t.sell_one)}</button>
         <button class="k-primarno" style="padding:6px 11px;font-size:10px" onclick="prodaj('${esc(id)}',${kolku})">${esc(t.sell_all)}</button>
       </div>`;
@@ -1484,7 +1522,7 @@ function panelPazar(){
   }
   html += `<div class="sekcija">${esc(t.orders)}</div>`;
   if (!s.naracki.length)
-    html += `<div class="kart" style="border-style:dashed;padding:20px;text-align:center;color:oklch(55% 0.02 150);font:600 12px Inter,sans-serif">${esc(t.orders_empty)}</div>`;
+    html += `<div class="kart" style="border-style:dashed;padding:20px;text-align:center;color:var(--t-mnoguslab);font:600 12px Inter,sans-serif">${esc(t.orders_empty)}</div>`;
   else {
     html += `<div class="kart-mreza" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">`;
     for (const n of s.naracki){
@@ -1492,10 +1530,10 @@ function panelPazar(){
       html += `<div class="kart">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
           <span style="font:700 12.5px Outfit,sans-serif">${esc(imeSorta(x))}</span>
-          <span style="font:600 9.5px Inter,sans-serif;color:oklch(55% 0.02 150)">${esc(t.expires)} ${n.istekuvaDen}</span></div>
-        <div style="font:600 10.5px Inter,sans-serif;color:oklch(50% 0.02 150);margin-bottom:4px">${esc(t.have)} ${ima}/${n.kolku}</div>
-        <div class="lenta-h" style="margin-bottom:8px"><i style="width:${Math.min(100,ima/n.kolku*100)}%;background:oklch(60% 0.11 152)"></i></div>
-        <div style="font:700 11px Inter,sans-serif;color:oklch(38% 0.06 152);margin-bottom:10px">${esc(t.reward)}: ${fmt(n.pari)} ден · +${n.xp} XP</div>
+          <span style="font:600 9.5px Inter,sans-serif;color:var(--t-mnoguslab)">${esc(t.expires)} ${n.istekuvaDen}</span></div>
+        <div style="font:600 10.5px Inter,sans-serif;color:var(--t-slab);margin-bottom:4px">${esc(t.have)} ${ima}/${n.kolku}</div>
+        <div class="lenta-h" style="margin-bottom:8px"><i style="width:${Math.min(100,ima/n.kolku*100)}%;background:var(--zelena)"></i></div>
+        <div style="font:700 11px Inter,sans-serif;color:var(--zelena-temna);margin-bottom:10px">${esc(t.reward)}: ${fmt(n.pari)} ден · +${n.xp} XP</div>
         <button class="k-primarno" style="width:100%" ${moze?'':'disabled'} onclick="ispolniNaracka(${n.id})">
           ${esc(moze?t.fulfill:t.not_enough)}</button>
       </div>`;
@@ -1515,8 +1553,8 @@ function panelPersonal(){
       const vraboten = s.personal[def.kluc];
       return `<div class="kart" style="padding:16px;display:flex;flex-direction:column;gap:8px">
         <div style="font:700 13.5px Outfit,sans-serif">${esc(s.jazik==='mk'?def.imeMk:def.imeEn)}</div>
-        <div style="font:500 11px Inter,sans-serif;color:oklch(50% 0.02 150);line-height:1.5">${esc(t.staff_opis[def.kluc])}</div>
-        <div style="font:600 10.5px Inter,sans-serif;color:oklch(55% 0.02 150)">${esc(t.wage)}: ${fmt(def.plata)} ден</div>
+        <div style="font:500 11px Inter,sans-serif;color:var(--t-slab);line-height:1.5">${esc(t.staff_opis[def.kluc])}</div>
+        <div style="font:600 10.5px Inter,sans-serif;color:var(--t-mnoguslab)">${esc(t.wage)}: ${fmt(def.plata)} ден</div>
         ${vraboten
           ? `<span class="pil" style="align-self:flex-start">✓ ${esc(t.hired)}</span>`
           : `<button class="k-primarno" ${s.pari<def.cena?'disabled':''} onclick="vraboti('${def.kluc}')">${esc(t.hire)} · ${fmtK(def.cena)}</button>`}
@@ -1528,7 +1566,7 @@ function panelPersonal(){
 function panelDostignuvanja(){
   const t=T();
   const najdobra = Object.entries(s.statistika.berbiPoSorta).sort((a,b)=>b[1]-a[1])[0];
-  const stat = (v,l)=>`<div class="kart" style="padding:12px"><div style="font:800 17px Outfit,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v}</div><div style="font:600 9px Inter,sans-serif;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.3px">${esc(l)}</div></div>`;
+  const stat = (v,l)=>`<div class="kart" style="padding:12px"><div style="font:800 17px Outfit,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v}</div><div style="font:600 9px Inter,sans-serif;color:var(--t-mnoguslab);text-transform:uppercase;letter-spacing:.3px">${esc(l)}</div></div>`;
   return `<div class="panel tesen">
     <div class="naslov">${esc(t.ach_title)}</div>
     <div class="kart-mreza" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:22px">
@@ -1547,11 +1585,11 @@ function panelDostignuvanja(){
           <span style="font:700 12.5px Outfit,sans-serif">${esc(s.jazik==='mk'?a.imeMk:a.imeEn)}</span>
           ${otkl?`<span style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#d97706);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2a1a00" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:''}
         </div>
-        <div style="font:500 11px Inter,sans-serif;color:oklch(50% 0.02 150);margin-bottom:8px;line-height:1.5">${esc(s.jazik==='mk'?a.opisMk:a.opisEn)}</div>
+        <div style="font:500 11px Inter,sans-serif;color:var(--t-slab);margin-bottom:8px;line-height:1.5">${esc(s.jazik==='mk'?a.opisMk:a.opisEn)}</div>
         ${otkl
-          ? `<div style="font:700 10px Inter,sans-serif;color:oklch(45% 0.09 152)">+${a.xp} XP</div>`
-          : `<div class="lenta-h" style="margin-bottom:4px"><i style="width:${Math.min(100,sega/a.cel*100)}%;background:oklch(66% 0.15 55)"></i></div>
-             <div style="font:600 9.5px Inter,sans-serif;color:oklch(58% 0.02 150)">${sega}/${a.cel}</div>`}
+          ? `<div style="font:700 10px Inter,sans-serif;color:var(--zelena-t2)">+${a.xp} XP</div>`
+          : `<div class="lenta-h" style="margin-bottom:4px"><i style="width:${Math.min(100,sega/a.cel*100)}%;background:var(--kilibar)"></i></div>
+             <div style="font:600 9.5px Inter,sans-serif;color:var(--t-mnoguslab)">${sega}/${a.cel}</div>`}
       </div>`;}).join('')}
     </div>
   </div>`;
@@ -1733,6 +1771,7 @@ function vchitaj(){
   s = svez;
   s.jazik = z.jazik==='en' ? 'en' : 'mk';
   s.zvuk = z.zvuk!==false;
+  s.tema = z.tema==='temna' ? 'temna' : 'svetla';
   s.aktivnoJazice = JAZICINJA.some(j=>j.id===z.aktivnoJazice) ? z.aktivnoJazice : 'grow';
   s.aktivnaSoba = SOBI.some(r=>r.id===z.aktivnaSoba) ? z.aktivnaSoba : 'starter';
   s.pari = broj(z.pari, KONFIG.POCETNI_PARI, 0, 1e12);
@@ -1816,6 +1855,10 @@ function vchitaj(){
 document.getElementById('jaz-mk').addEventListener('click', ()=>{ s.jazik='mk'; sfx('click'); iscrtajSe(true); });
 document.getElementById('jaz-en').addEventListener('click', ()=>{ s.jazik='en'; sfx('click'); iscrtajSe(true); });
 document.getElementById('k-zvuk').addEventListener('click', ()=>{ s.zvuk=!s.zvuk; sfx('click'); osveziHud(); });
+document.getElementById('k-tema').addEventListener('click', ()=>{
+  s.tema = s.tema==='temna' ? 'svetla' : 'temna';
+  primeniTema(); sfx('click'); zachuvaj();
+});
 document.getElementById('k-tutorial').addEventListener('click', ()=>{ s.tutorial=true; tutorial(0); });
 document.getElementById('pokrivka').addEventListener('click', e=>{
   if (e.target.id==='pokrivka' && !e.currentTarget.dataset.fiksno) zatvoriModal();
@@ -1828,6 +1871,7 @@ window.addEventListener('beforeunload', zachuvaj);
 
 const imaSejv = vchitaj();
 if (!imaSejv) novPredizvikDen();
+primeniTema();
 iscrtajSe(true);
 if (!imaSejv && s.tutorial) tutorial(0);
 
