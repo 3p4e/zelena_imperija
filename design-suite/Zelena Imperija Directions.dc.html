@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Space+Grotesk:wght@500;700;800&family=JetBrains+Mono:wght@500;700&family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#0b0f0d;font-family:Inter,system-ui,sans-serif}
+button{cursor:pointer}
+.dv-turn{padding:44px 48px 40px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#e8e4da;color:#14140f;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 14px/1.3 system-ui,sans-serif;color:#e8e4da}
+.dv-intro{font:400 13px/1.6 system-ui,sans-serif;color:rgba(232,228,218,.6);max-width:680px;margin:0 0 26px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(232,228,218,.12);color:#e8e4da;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:500 12px/1.3 system-ui,sans-serif;color:rgba(232,228,218,.75)}
+.dv-card{width:404px;max-width:100%;border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.dv-opt:target .dv-oid{background:#4ade80;color:#04150b}
+.dv-next{margin:30px 0 0;font:12px/1.6 system-ui,sans-serif;color:rgba(232,228,218,.45)}
+@keyframes leafSway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes glowPulse{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}}
+@keyframes shimmerSweep{0%{transform:translateX(-160%)}100%{transform:translateX(220%)}}
+</style>
+</helmet>
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Три насоки за модерна Зелена Империја</span></div>
+<p class="dv-intro">Ист HUD, иста леја, исто постигнување во сите три — само различна изведба, за лесна споредба. Избери насока, или мешaj: „<a class="dv-oid" href="#1a">1a</a> палета со лејаут од <a class="dv-oid" href="#1c">1c</a>".</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Midnight Greenhouse — рафиниран, премиум grow-room</div>
+<div class="dv-card" style="border-radius:18px">
+<div style="background:linear-gradient(180deg,#16241c 0%,#0c1310 60%);padding:20px;display:flex;flex-direction:column;gap:14px;font-family:Manrope,sans-serif;color:#e9f3ec">
+<div style="display:flex;align-items:center;gap:10px">
+<div style="font-size:15px;font-weight:800;letter-spacing:.4px;background:linear-gradient(90deg,#4ade80,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent">ЗЕЛЕНА ИМПЕРИЈА</div>
+<div style="margin-left:auto;display:flex;gap:2px;background:rgba(255,255,255,.06);border-radius:20px;padding:3px">
+<span style="padding:3px 9px;border-radius:16px;background:#4ade80;color:#04150b;font-size:10px;font-weight:800">MK</span>
+<span style="padding:3px 9px;border-radius:16px;color:rgba(233,243,236,.5);font-size:10px;font-weight:800">EN</span>
+</div>
+</div>
+<div style="display:flex;gap:8px">
+<div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:7px 10px">
+<div style="font-size:15px;font-weight:800">48,250</div><div style="font-size:9px;color:rgba(233,243,236,.5);text-transform:uppercase;letter-spacing:.5px">Денари</div>
+</div>
+<div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:7px 10px">
+<div style="font-size:15px;font-weight:800">7</div><div style="font-size:9px;color:rgba(233,243,236,.5);text-transform:uppercase;letter-spacing:.5px">Ниво</div>
+<div style="height:3px;background:rgba(0,0,0,.4);border-radius:2px;margin-top:3px;overflow:hidden"><div style="width:64%;height:100%;background:linear-gradient(90deg,#c084fc,#60a5fa)"></div></div>
+</div>
+<div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:7px 10px">
+<div style="font-size:15px;font-weight:800">23</div><div style="font-size:9px;color:rgba(233,243,236,.5);text-transform:uppercase;letter-spacing:.5px">Ден</div>
+</div>
+</div>
+<div style="position:relative;background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(251,191,36,.5);border-radius:14px;padding:12px;box-shadow:0 0 0 1px rgba(251,191,36,.15),0 8px 30px rgba(0,0,0,.4)">
+<div style="position:absolute;top:22px;left:22px;font-size:9px;font-weight:700;color:rgba(233,243,236,.6);background:rgba(0,0,0,.35);padding:2px 6px;border-radius:4px;z-index:2">ОХРИДСКИ КРИСТАЛ</div>
+<div style="position:absolute;top:22px;right:22px;font-size:9px;font-weight:800;letter-spacing:.4px;color:#2a1a00;background:#fbbf24;padding:2px 8px;border-radius:20px;z-index:2">ЗРЕЛО</div>
+<div style="height:150px;border-radius:9px;overflow:hidden;position:relative;background:linear-gradient(180deg,#0a1712 0%,#0e2318 66%,#2c2013 66%,#20160c 100%)">
+<div style="position:absolute;left:50%;top:44%;width:130px;height:130px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.4),transparent 70%);animation:glowPulse 3s ease-in-out infinite"></div>
+<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" style="position:absolute;inset:0;width:100%;height:100%">
+<path d="M32,120 L28,106 Q50,101 72,106 L68,120 Z" fill="#5a3a22"/>
+<ellipse cx="50" cy="106" rx="22" ry="4" fill="#3d2717"/>
+<g style="transform-origin:50% 100%;animation:leafSway 6s ease-in-out infinite alternate">
+<path d="M49,118 L51,118 L50.5,42 L49.5,42 Z" fill="#5a3a22"/>
+<g transform="translate(50,96)">
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#4ade80" transform="rotate(-55)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#4ade80" transform="rotate(-27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#4ade80" transform="scale(1.18)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#4ade80" transform="rotate(27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#4ade80" transform="rotate(55)"/>
+</g>
+<g transform="translate(50,70) scale(.65)">
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#6ee7a0" transform="rotate(-55)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#6ee7a0" transform="rotate(-27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#6ee7a0" transform="scale(1.18)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#6ee7a0" transform="rotate(27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#6ee7a0" transform="rotate(55)"/>
+</g>
+<g transform="translate(50,34)">
+<ellipse cx="0" cy="0" rx="7" ry="12" fill="#fbbf24"/>
+<ellipse cx="-8" cy="7" rx="5" ry="9" fill="#fbbf24" opacity=".85"/>
+<ellipse cx="8" cy="7" rx="5" ry="9" fill="#fbbf24" opacity=".85"/>
+<ellipse cx="0" cy="-13" rx="4.5" ry="8" fill="#fbbf24"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;margin-top:9px">
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(233,243,236,.55)"><span style="width:40px">Вода</span><span style="flex:1;height:5px;background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden"><span style="display:block;width:88%;height:100%;background:#60a5fa"></span></span><span style="width:22px;text-align:right">88</span></div>
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(233,243,236,.55)"><span style="width:40px">Храна</span><span style="flex:1;height:5px;background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden"><span style="display:block;width:82%;height:100%;background:#4ade80"></span></span><span style="width:22px;text-align:right">82</span></div>
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(233,243,236,.55)"><span style="width:40px">Здравје</span><span style="flex:1;height:5px;background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden"><span style="display:block;width:96%;height:100%;background:#4ade80"></span></span><span style="width:22px;text-align:right">96</span></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+<button style="padding:8px;font-size:11px;font-weight:700;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e9f3ec;font-family:inherit">Полеј</button>
+<button style="padding:8px;font-size:11px;font-weight:700;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e9f3ec;font-family:inherit">Ѓубри</button>
+<div style="grid-column:1/-1;position:relative;overflow:hidden;border-radius:8px">
+<button style="width:100%;padding:9px;font-size:12px;font-weight:800;border-radius:8px;border:none;background:linear-gradient(135deg,#fbbf24,#d97706);color:#2a1a00;font-family:inherit">Обери</button>
+<div style="position:absolute;top:0;left:0;width:36%;height:100%;background:linear-gradient(115deg,transparent,rgba(255,255,255,.6),transparent);animation:shimmerSweep 2.8s ease-in-out infinite"></div>
+</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px">
+<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#4ade80,#22c55e);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+<svg width="16" height="16" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#04150b" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div style="flex:1;min-width:0">
+<div style="font-size:12.5px;font-weight:700">Прва берба · Отклучено</div>
+<div style="font-size:10.5px;color:rgba(233,243,236,.5)">Обери го првото свое растение</div>
+</div>
+<div style="font-size:11px;font-weight:800;color:#c084fc;white-space:nowrap">+250 XP</div>
+</div>
+<div style="font-size:10.5px;line-height:1.6;color:rgba(233,243,236,.4)">Движење: лисјата се нишат бавно · златен сјај „дише" зад зрелите леи · „Обери" има светкав премин.</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Neon Grow Lab — футуристичка биотек-лабораторија</div>
+<div class="dv-card" style="border-radius:10px">
+<div style="position:relative;background:#0a0a0d;padding:20px;display:flex;flex-direction:column;gap:14px;font-family:'Space Grotesk',sans-serif;color:oklch(96% 0.01 260)">
+<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 22px);pointer-events:none"></div>
+<div style="position:relative;display:flex;align-items:center;gap:10px">
+<div style="font-size:15px;font-weight:800;letter-spacing:.6px;color:oklch(85% 0.24 150);text-shadow:0 0 14px oklch(85% 0.24 150 / .65)">ЗЕЛЕНА ИМПЕРИЈА</div>
+<div style="margin-left:auto;display:flex;gap:2px;border:1px solid oklch(85% 0.24 150 / .4);border-radius:4px;padding:2px">
+<span style="padding:3px 9px;border-radius:2px;background:oklch(85% 0.24 150);color:#04150b;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace">MK</span>
+<span style="padding:3px 9px;border-radius:2px;color:oklch(70% 0.03 260);font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace">EN</span>
+</div>
+</div>
+<div style="position:relative;display:flex;gap:8px">
+<div style="flex:1;background:rgba(255,255,255,.03);border:1px solid oklch(82% 0.14 220 / .35);border-radius:6px;padding:7px 10px">
+<div style="font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace;color:oklch(82% 0.14 220)">48,250</div><div style="font-size:9px;color:oklch(65% 0.02 260);text-transform:uppercase;letter-spacing:.5px">Денари</div>
+</div>
+<div style="flex:1;background:rgba(255,255,255,.03);border:1px solid oklch(72% 0.27 322 / .35);border-radius:6px;padding:7px 10px">
+<div style="font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace;color:oklch(72% 0.27 322)">7</div><div style="font-size:9px;color:oklch(65% 0.02 260);text-transform:uppercase;letter-spacing:.5px">Ниво</div>
+<div style="height:3px;background:rgba(0,0,0,.5);border-radius:1px;margin-top:3px;overflow:hidden"><div style="width:64%;height:100%;background:oklch(72% 0.27 322)"></div></div>
+</div>
+<div style="flex:1;background:rgba(255,255,255,.03);border:1px solid oklch(85% 0.24 150 / .35);border-radius:6px;padding:7px 10px">
+<div style="font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace;color:oklch(85% 0.24 150)">23</div><div style="font-size:9px;color:oklch(65% 0.02 260);text-transform:uppercase;letter-spacing:.5px">Ден</div>
+</div>
+</div>
+<div style="position:relative;background:rgba(255,255,255,.02);border:1px solid oklch(85% 0.24 150 / .55);border-radius:8px;padding:12px;box-shadow:0 0 24px oklch(85% 0.24 150 / .18),inset 0 0 30px rgba(0,0,0,.4)">
+<div style="position:absolute;top:22px;left:22px;font-size:9px;font-weight:700;color:oklch(80% 0.02 260);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:2px;z-index:2;font-family:'JetBrains Mono',monospace">ОХРИДСКИ КРИСТАЛ</div>
+<div style="position:absolute;top:22px;right:22px;font-size:9px;font-weight:800;letter-spacing:.4px;color:#04150b;background:oklch(85% 0.24 150);padding:2px 8px;border-radius:2px;z-index:2">ЗРЕЛО</div>
+<div style="height:150px;border-radius:4px;overflow:hidden;position:relative;background:linear-gradient(180deg,#050507 0%,#0a0f14 66%,#12100a 66%,#0a0806 100%)">
+<div style="position:absolute;left:50%;top:44%;width:140px;height:140px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,oklch(72% 0.27 322 / .4),transparent 70%);animation:glowPulse 3s ease-in-out infinite"></div>
+<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" style="position:absolute;inset:0;width:100%;height:100%">
+<path d="M32,120 L28,106 Q50,101 72,106 L68,120 Z" fill="oklch(28% 0.01 260)"/>
+<ellipse cx="50" cy="106" rx="22" ry="4" fill="oklch(20% 0.01 260)"/>
+<g style="transform-origin:50% 100%;animation:leafSway 6s ease-in-out infinite alternate">
+<path d="M49,118 L51,118 L50.5,42 L49.5,42 Z" fill="oklch(40% 0.05 150)"/>
+<g transform="translate(50,96)">
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(78% 0.22 155)" transform="rotate(-55)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(78% 0.22 155)" transform="rotate(-27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(78% 0.22 155)" transform="scale(1.18)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(78% 0.22 155)" transform="rotate(27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(78% 0.22 155)" transform="rotate(55)"/>
+</g>
+<g transform="translate(50,70) scale(.65)">
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(88% 0.18 150)" transform="rotate(-55)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(88% 0.18 150)" transform="rotate(-27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(88% 0.18 150)" transform="scale(1.18)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(88% 0.18 150)" transform="rotate(27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(88% 0.18 150)" transform="rotate(55)"/>
+</g>
+<g transform="translate(50,34)">
+<ellipse cx="0" cy="0" rx="7" ry="12" fill="oklch(75% 0.24 320)"/>
+<ellipse cx="-8" cy="7" rx="5" ry="9" fill="oklch(75% 0.24 320)" opacity=".85"/>
+<ellipse cx="8" cy="7" rx="5" ry="9" fill="oklch(75% 0.24 320)" opacity=".85"/>
+<ellipse cx="0" cy="-13" rx="4.5" ry="8" fill="oklch(75% 0.24 320)"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;margin-top:9px">
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:oklch(65% 0.02 260);font-family:'JetBrains Mono',monospace"><span style="width:40px">ВОДА</span><span style="flex:1;height:5px;background:rgba(0,0,0,.5);border-radius:1px;overflow:hidden"><span style="display:block;width:88%;height:100%;background:oklch(82% 0.14 220)"></span></span><span style="width:22px;text-align:right">88</span></div>
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:oklch(65% 0.02 260);font-family:'JetBrains Mono',monospace"><span style="width:40px">ХРАНА</span><span style="flex:1;height:5px;background:rgba(0,0,0,.5);border-radius:1px;overflow:hidden"><span style="display:block;width:82%;height:100%;background:oklch(85% 0.24 150)"></span></span><span style="width:22px;text-align:right">82</span></div>
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:oklch(65% 0.02 260);font-family:'JetBrains Mono',monospace"><span style="width:40px">ЗДРАВЈЕ</span><span style="flex:1;height:5px;background:rgba(0,0,0,.5);border-radius:1px;overflow:hidden"><span style="display:block;width:96%;height:100%;background:oklch(85% 0.24 150)"></span></span><span style="width:22px;text-align:right">96</span></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+<button style="padding:8px;font-size:11px;font-weight:700;border-radius:4px;border:1px solid oklch(82% 0.14 220 / .5);background:transparent;color:oklch(82% 0.14 220);font-family:inherit">ПОЛЕЈ</button>
+<button style="padding:8px;font-size:11px;font-weight:700;border-radius:4px;border:1px solid oklch(85% 0.24 150 / .5);background:transparent;color:oklch(85% 0.24 150);font-family:inherit">ЃУБРИ</button>
+<div style="grid-column:1/-1;position:relative;overflow:hidden;border-radius:4px">
+<button style="width:100%;padding:9px;font-size:12px;font-weight:800;letter-spacing:.3px;border-radius:4px;border:none;background:linear-gradient(135deg,oklch(85% 0.24 150),oklch(82% 0.14 220));color:#04150b;font-family:inherit">ОБЕРИ</button>
+<div style="position:absolute;top:0;left:0;width:36%;height:100%;background:linear-gradient(115deg,transparent,rgba(255,255,255,.7),transparent);animation:shimmerSweep 2.8s ease-in-out infinite"></div>
+</div>
+</div>
+</div>
+<div style="position:relative;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid oklch(72% 0.27 322 / .35);border-radius:6px;padding:10px 12px">
+<div style="width:34px;height:34px;border-radius:4px;border:1px solid oklch(82% 0.14 220 / .6);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+<svg width="16" height="16" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="oklch(82% 0.14 220)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div style="flex:1;min-width:0">
+<div style="font-size:12.5px;font-weight:700">Прва берба · Отклучено</div>
+<div style="font-size:10.5px;color:oklch(65% 0.02 260)">Обери го првото свое растение</div>
+</div>
+<div style="font-size:11px;font-weight:800;color:oklch(72% 0.27 322);white-space:nowrap;font-family:'JetBrains Mono',monospace">+250 XP</div>
+</div>
+<div style="position:relative;font-size:10.5px;line-height:1.6;color:oklch(55% 0.02 260)">Движење: HUD броевите чукаат како readout · неонски раб „дише" на зрелите леи · скенирачка линија поминува при секој tick.</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Daylight Botanica — светла, чиста и пријателска</div>
+<div class="dv-card" style="border-radius:22px">
+<div style="background:oklch(97% 0.01 90);padding:20px;display:flex;flex-direction:column;gap:14px;font-family:Inter,sans-serif;color:oklch(26% 0.02 150)">
+<div style="display:flex;align-items:center;gap:10px">
+<div style="font-size:16px;font-weight:700;font-family:Outfit,sans-serif;color:oklch(38% 0.06 152)">Зелена Империја</div>
+<div style="margin-left:auto;display:flex;gap:2px;background:oklch(93% 0.01 90);border-radius:20px;padding:3px">
+<span style="padding:3px 9px;border-radius:16px;background:oklch(62% 0.11 152);color:#fff;font-size:10px;font-weight:700">MK</span>
+<span style="padding:3px 9px;border-radius:16px;color:oklch(55% 0.02 150);font-size:10px;font-weight:700">EN</span>
+</div>
+</div>
+<div style="display:flex;gap:8px">
+<div style="flex:1;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.05);border-radius:12px;padding:8px 10px">
+<div style="font-size:15px;font-weight:700;font-family:Outfit,sans-serif">48,250</div><div style="font-size:9px;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.5px">Денари</div>
+</div>
+<div style="flex:1;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.05);border-radius:12px;padding:8px 10px">
+<div style="font-size:15px;font-weight:700;font-family:Outfit,sans-serif">7</div><div style="font-size:9px;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.5px">Ниво</div>
+<div style="height:3px;background:oklch(93% 0.01 90);border-radius:2px;margin-top:3px;overflow:hidden"><div style="width:64%;height:100%;background:oklch(52% 0.12 320)"></div></div>
+</div>
+<div style="flex:1;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.05);border-radius:12px;padding:8px 10px">
+<div style="font-size:15px;font-weight:700;font-family:Outfit,sans-serif">23</div><div style="font-size:9px;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.5px">Ден</div>
+</div>
+</div>
+<div style="position:relative;background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:16px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 26px rgba(0,0,0,.06)">
+<div style="position:absolute;top:22px;left:22px;font-size:9px;font-weight:700;color:oklch(45% 0.02 150);background:oklch(96% 0.01 90);padding:2px 7px;border-radius:20px;z-index:2">ОХРИДСКИ КРИСТАЛ</div>
+<div style="position:absolute;top:22px;right:22px;font-size:9px;font-weight:800;letter-spacing:.3px;color:#fff;background:oklch(70% 0.14 55);padding:2px 8px;border-radius:20px;z-index:2">ЗРЕЛО</div>
+<div style="height:150px;border-radius:11px;overflow:hidden;position:relative;background:linear-gradient(180deg,#eaf3ec 0%,#dcebe0 60%,#e8d9c4 60%,#dcc9a8 100%)">
+<div style="position:absolute;left:50%;top:44%;width:120px;height:120px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,oklch(78% 0.1 80 / .55),transparent 70%);animation:glowPulse 3s ease-in-out infinite"></div>
+<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" style="position:absolute;inset:0;width:100%;height:100%">
+<path d="M32,120 L28,106 Q50,101 72,106 L68,120 Z" fill="oklch(55% 0.08 55)"/>
+<ellipse cx="50" cy="106" rx="22" ry="4" fill="oklch(46% 0.07 55)"/>
+<g style="transform-origin:50% 100%;animation:leafSway 6s ease-in-out infinite alternate">
+<path d="M49,118 L51,118 L50.5,42 L49.5,42 Z" fill="oklch(45% 0.06 60)"/>
+<g transform="translate(50,96)">
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(60% 0.11 152)" transform="rotate(-55)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(60% 0.11 152)" transform="rotate(-27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(60% 0.11 152)" transform="scale(1.18)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(60% 0.11 152)" transform="rotate(27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(60% 0.11 152)" transform="rotate(55)"/>
+</g>
+<g transform="translate(50,70) scale(.65)">
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(72% 0.1 150)" transform="rotate(-55)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(72% 0.1 150)" transform="rotate(-27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(72% 0.1 150)" transform="scale(1.18)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(72% 0.1 150)" transform="rotate(27) scale(1.1)"/>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="oklch(72% 0.1 150)" transform="rotate(55)"/>
+</g>
+<g transform="translate(50,34)">
+<ellipse cx="0" cy="0" rx="7" ry="12" fill="oklch(78% 0.1 80)"/>
+<ellipse cx="-8" cy="7" rx="5" ry="9" fill="oklch(78% 0.1 80)" opacity=".85"/>
+<ellipse cx="8" cy="7" rx="5" ry="9" fill="oklch(78% 0.1 80)" opacity=".85"/>
+<ellipse cx="0" cy="-13" rx="4.5" ry="8" fill="oklch(78% 0.1 80)"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;margin-top:9px">
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:oklch(55% 0.02 150)"><span style="width:40px">Вода</span><span style="flex:1;height:5px;background:oklch(93% 0.01 90);border-radius:3px;overflow:hidden"><span style="display:block;width:88%;height:100%;background:oklch(68% 0.1 230)"></span></span><span style="width:22px;text-align:right">88</span></div>
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:oklch(55% 0.02 150)"><span style="width:40px">Храна</span><span style="flex:1;height:5px;background:oklch(93% 0.01 90);border-radius:3px;overflow:hidden"><span style="display:block;width:82%;height:100%;background:oklch(60% 0.11 152)"></span></span><span style="width:22px;text-align:right">82</span></div>
+<div style="display:flex;align-items:center;gap:6px;font-size:10px;color:oklch(55% 0.02 150)"><span style="width:40px">Здравје</span><span style="flex:1;height:5px;background:oklch(93% 0.01 90);border-radius:3px;overflow:hidden"><span style="display:block;width:96%;height:100%;background:oklch(60% 0.11 152)"></span></span><span style="width:22px;text-align:right">96</span></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+<button style="padding:9px;font-size:11px;font-weight:600;border-radius:20px;border:none;background:oklch(93% 0.03 230);color:oklch(38% 0.06 230);font-family:inherit">Полеј</button>
+<button style="padding:9px;font-size:11px;font-weight:600;border-radius:20px;border:none;background:oklch(92% 0.04 152);color:oklch(35% 0.07 152);font-family:inherit">Ѓубри</button>
+<div style="grid-column:1/-1;position:relative;overflow:hidden;border-radius:20px">
+<button style="width:100%;padding:10px;font-size:12px;font-weight:700;border-radius:20px;border:none;background:linear-gradient(135deg,oklch(70% 0.14 55),oklch(62% 0.15 40));color:#fff;font-family:inherit">Обери</button>
+<div style="position:absolute;top:0;left:0;width:36%;height:100%;background:linear-gradient(115deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmerSweep 2.8s ease-in-out infinite"></div>
+</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.05);border-radius:14px;padding:10px 12px">
+<div style="width:34px;height:34px;border-radius:50%;background:oklch(60% 0.11 152);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+<svg width="16" height="16" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div style="flex:1;min-width:0">
+<div style="font-size:12.5px;font-weight:700;font-family:Outfit,sans-serif">Прва берба · Отклучено</div>
+<div style="font-size:10.5px;color:oklch(55% 0.02 150)">Обери го првото свое растение</div>
+</div>
+<div style="font-size:11px;font-weight:800;color:oklch(52% 0.12 320);white-space:nowrap">+250 XP</div>
+</div>
+<div style="font-size:10.5px;line-height:1.6;color:oklch(58% 0.02 150)">Движење: лисјата се нишат нежно на дневна светлина · мек амбер сјај зад зрелите леи · копчињата пружаат мека еластична реакција.</div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Пробај: „продолжи со <a class="dv-oid" href="#1a">1a</a>" · „измешaj бои од <a class="dv-oid" href="#1b">1b</a> со лејаутот на <a class="dv-oid" href="#1c">1c</a>" · „сакам нови насоки"</p>
+</section>
+</x-dc>
+</body>
+</html>

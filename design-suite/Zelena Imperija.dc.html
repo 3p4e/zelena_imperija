@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:oklch(45% 0.1 152)}
+a:hover{color:oklch(35% 0.1 152)}
+::-webkit-scrollbar{display:none}
+@keyframes leafSway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes glowPulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes shimmerSweep{0%{transform:translateX(-160%)}100%{transform:translateX(220%)}}
+@keyframes floatUp{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-60px)}}
+@keyframes toastSlideIn{0%{opacity:0;transform:translateX(30px)}100%{opacity:1;transform:translateX(0)}}
+@keyframes modalPop{0%{opacity:0;transform:scale(.92)}100%{opacity:1;transform:scale(1)}}
+@keyframes ringPulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes spinPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes dustDrift{0%{transform:translate(0,0)}100%{transform:translate(6px,-14px)}}
+@keyframes panelIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+</style>
+</helmet>
+
+<sc-if value="{{ notLoaded }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#16241c,#0c1310);font-family:Inter,sans-serif">
+<div style="font-family:Outfit,sans-serif;font-weight:800;font-size:22px;letter-spacing:.3px;background:linear-gradient(90deg,#4ade80,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent;animation:spinPulse 1.4s ease-in-out infinite">ЗЕЛЕНА ИМПЕРИЈА</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ dataLoaded }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;background:oklch(97% 0.015 95);font-family:Inter,system-ui,sans-serif;color:oklch(27% 0.02 150);position:relative">
+
+<header style="position:sticky;top:0;z-index:30;background:#ffffff;border-bottom:1px solid oklch(90% 0.02 90);padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<div style="font-family:Outfit,sans-serif;font-weight:800;font-size:18px;letter-spacing:.2px;background:linear-gradient(90deg,oklch(38% 0.06 152),oklch(66% 0.15 55));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap">{{ t.app_name }}</div>
+<div style="display:flex;gap:2px;background:oklch(94% 0.015 90);border-radius:20px;padding:3px">
+<button onClick="{{ onSetLangMk }}" style="padding:4px 10px;border-radius:16px;font:700 10.5px Inter,sans-serif;background:{{ langMkStyle.bg }};color:{{ langMkStyle.color }};transition:background .2s,color .2s">MK</button>
+<button onClick="{{ onSetLangEn }}" style="padding:4px 10px;border-radius:16px;font:700 10.5px Inter,sans-serif;background:{{ langEnStyle.bg }};color:{{ langEnStyle.color }};transition:background .2s,color .2s">EN</button>
+</div>
+<div style="flex:1;min-width:6px"></div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+
+<div style="display:flex;align-items:center;gap:6px;background:oklch(94% 0.015 90);border-radius:12px;padding:6px 11px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="color:oklch(66% 0.15 55);flex-shrink:0"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 7v10M9.5 9.2c0-1.2 1.1-2.2 2.5-2.2s2.5 1 2.5 2.1c0 3-5 1.9-5 4.9 0 1.2 1.1 2.2 2.5 2.2s2.5-1 2.5-2.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+<div><div style="font:800 14px Outfit,sans-serif;line-height:1.1;white-space:nowrap">{{ moneyDisplay }}</div><div style="font:600 8px Inter,sans-serif;color:oklch(60% 0.02 150);text-transform:uppercase;letter-spacing:.4px">{{ t.stat_money }}</div></div>
+</div>
+
+<div style="display:flex;align-items:center;background:oklch(94% 0.015 90);border-radius:12px;padding:6px 11px;min-width:78px">
+<div style="width:100%">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px"><span style="font:800 14px Outfit,sans-serif">{{ levelDisplay }}</span><span style="font:600 8px Inter,sans-serif;color:oklch(60% 0.02 150);text-transform:uppercase;letter-spacing:.4px">{{ t.stat_level }}</span></div>
+<div style="height:4px;background:oklch(88% 0.02 90);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;background:oklch(55% 0.14 320);width:{{ xpPct }}%;transition:width .4s ease"></div></div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;gap:6px;background:oklch(94% 0.015 90);border-radius:12px;padding:6px 11px">
+<div><div style="font:800 14px Outfit,sans-serif;line-height:1.1">{{ dayDisplay }}</div><div style="font:600 8px Inter,sans-serif;color:oklch(60% 0.02 150);text-transform:uppercase;letter-spacing:.4px">{{ t.stat_day }}</div></div>
+</div>
+
+<sc-if value="{{ showPrestigeChip }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#16241c,#0c1310);border-radius:12px;padding:6px 11px;border:1px solid rgba(251,191,36,.4)">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="color:#fbbf24"><path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
+<div style="font:800 13px Outfit,sans-serif;color:#fbbf24">{{ prestigeDisplay }}</div>
+</div>
+</sc-if>
+
+<button onClick="{{ onToggleSound }}" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:oklch(94% 0.015 90);color:oklch(40% 0.02 150);flex-shrink:0" style-hover="background:oklch(90% 0.02 90)">
+<sc-if value="{{ soundOn }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M17 8.5c1.2 1 1.2 5.9 0 7M19.5 6c2.3 2.2 2.3 9.7 0 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg></sc-if>
+<sc-if value="{{ soundOff }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M17 9l4 6M21 9l-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></sc-if>
+</button>
+<button onClick="{{ onReplayTutorial }}" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:oklch(94% 0.015 90);color:oklch(40% 0.02 150);flex-shrink:0" style-hover="background:oklch(90% 0.02 90)">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.3.9-1.3 1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><circle cx="12" cy="17" r=".9" fill="currentColor"></circle></svg>
+</button>
+</div>
+</header>
+
+<nav style="display:flex;justify-content:center;padding:7px 12px;background:#fff;border-bottom:1px solid oklch(90% 0.02 90)">
+<div style="display:flex;gap:4px;max-width:840px;width:100%;overflow-x:auto">
+<button onClick="{{ onTabGrow }}" style="flex:1;min-width:76px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:12px;background:{{ navGrow.bg }};color:{{ navGrow.color }};font:700 9.5px Inter,sans-serif;transition:background .2s,color .2s;white-space:nowrap">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 20C3 15 4 6 13 4c7-1.6 8 4 7 9-1.5 7.5-9 8-14 7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M7 19C10 14 13 10 19 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+<span>{{ t.nav_grow }}</span>
+</button>
+<button onClick="{{ onTabGenetics }}" style="flex:1;min-width:76px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:12px;background:{{ navGenetics.bg }};color:{{ navGenetics.color }};font:700 9.5px Inter,sans-serif;transition:background .2s,color .2s;white-space:nowrap">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 3c0 5 10 5 10 9s-10 4-10 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="M17 3c0 5-10 5-10 9s10 4 10 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="M8 7h8M7.3 17h9.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>
+<span>{{ t.nav_genetics }}</span>
+</button>
+<button onClick="{{ onTabMarket }}" style="flex:1;min-width:76px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:12px;background:{{ navMarket.bg }};color:{{ navMarket.color }};font:700 9.5px Inter,sans-serif;transition:background .2s,color .2s;white-space:nowrap">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 8l9-5 9 5-9 5-9-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M3 8v9l9 5 9-5V8M12 13v9" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
+<span>{{ t.nav_market }}</span>
+</button>
+<button onClick="{{ onTabStaff }}" style="flex:1;min-width:76px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:12px;background:{{ navStaff.bg }};color:{{ navStaff.color }};font:700 9.5px Inter,sans-serif;transition:background .2s,color .2s;white-space:nowrap">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"></circle><circle cx="17" cy="9" r="2.6" stroke="currentColor" stroke-width="1.8"></circle><path d="M3 20c0-4 3-6 6-6s6 2 6 6M14.5 20c.3-3 1.8-5 4.7-5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+<span>{{ t.nav_staff }}</span>
+</button>
+<button onClick="{{ onTabAch }}" style="flex:1;min-width:76px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:12px;background:{{ navAch.bg }};color:{{ navAch.color }};font:700 9.5px Inter,sans-serif;transition:background .2s,color .2s;white-space:nowrap">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M7 5H4v2a4 4 0 0 0 4 4M17 5h3v2a4 4 0 0 1-4 4M12 14v3m-3 3h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+<span>{{ t.nav_achievements }}</span>
+</button>
+<button onClick="{{ onTabPrestige }}" style="flex:1;min-width:76px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border-radius:12px;background:{{ navPrestige.bg }};color:{{ navPrestige.color }};font:700 9.5px Inter,sans-serif;transition:background .2s,color .2s;white-space:nowrap">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+<span>{{ t.nav_prestige }}</span>
+</button>
+</div>
+</nav>
+
+<main key="{{ activeTab }}" style="animation:panelIn .35s ease both">
+
+<sc-if value="{{ isGrowTab }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1120px;margin:0 auto;padding:16px 18px 50px">
+
+<div style="position:relative;overflow:hidden;border-radius:16px;padding:14px 18px;margin-bottom:16px;background:{{ ambSky }};display:flex;align-items:center;gap:10px;transition:background 2s ease;min-height:20px">
+<div style="position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.35);left:12%;top:30%;animation:dustDrift 5s ease-in-out infinite alternate"></div>
+<div style="position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.3);left:28%;top:65%;animation:dustDrift 7s ease-in-out infinite alternate-reverse"></div>
+<div style="position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.25);left:52%;top:20%;animation:dustDrift 6s ease-in-out infinite alternate"></div>
+<div style="position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.3);left:71%;top:55%;animation:dustDrift 8s ease-in-out infinite alternate-reverse"></div>
+<div style="position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.2);left:88%;top:35%;animation:dustDrift 5.5s ease-in-out infinite alternate"></div>
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="color:{{ ambIconColor }};position:relative;flex-shrink:0;transition:color 1.5s ease"><circle cx="12" cy="10" r="6" stroke="currentColor" stroke-width="1.8"></circle><path d="M9.5 20h5M10 22h4M10.5 15.5l-1 2.5h5l-1-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<div style="position:relative;font:700 12px Inter,sans-serif;color:#e9f3ec">{{ ambLabel }}</div>
+</div>
+
+<div style="margin-bottom:18px">
+<div style="font:700 12.5px Outfit,sans-serif;color:oklch(27% 0.02 150);margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px">{{ t.challenges_title }}</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+<sc-for list="{{ challenges }}" as="ch" hint-placeholder-count="3">
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:12px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.04)">
+<div style="display:flex;justify-content:space-between;gap:6px;font:600 11.5px Inter,sans-serif;margin-bottom:5px"><span>{{ ch.label }}</span><span style="color:oklch(50% 0.02 150);white-space:nowrap">{{ ch.progress }}/{{ ch.goal }}</span></div>
+<div style="height:5px;background:oklch(92% 0.02 90);border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ ch.pct }}%;background:{{ ch.barColor }};transition:width .4s ease"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px">
+<sc-for list="{{ rooms }}" as="room" hint-placeholder-count="3">
+<button onClick="{{ room.onClick }}" style="flex:none;display:flex;flex-direction:column;gap:3px;align-items:flex-start;padding:10px 14px;border-radius:12px;min-width:160px;background:{{ room.bg }};color:{{ room.color }};border:{{ room.border }};transition:background .2s,color .2s">
+<span style="font:700 12px Outfit,sans-serif">{{ room.name }}</span>
+<sc-if value="{{ room.locked }}" hint-placeholder-val="{{ false }}">
+<span style="font:600 10px Inter,sans-serif;display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2"></path></svg>{{ t.room_locked_btn }} · {{ room.lockCostLabel }}</span>
+</sc-if>
+<sc-if value="{{ room.unlockedFlag }}" hint-placeholder-val="{{ true }}">
+<span style="font:600 10px Inter,sans-serif;opacity:.75">{{ t.room_capacity_prefix }}: {{ room.capLabel }}</span>
+</sc-if>
+</button>
+</sc-for>
+</div>
+
+<sc-if value="{{ isLabRoom }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px dashed oklch(80% 0.02 90);border-radius:14px;padding:30px;text-align:center;color:oklch(50% 0.02 150);font:600 12.5px Inter,sans-serif">{{ t.breed_hint }} → {{ t.nav_genetics }}</div>
+</sc-if>
+
+<sc-if value="{{ isPlantableRoom }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap">
+<div style="font:700 12.5px Outfit,sans-serif">{{ t.lamp_current }}: {{ lampLabel }}</div>
+<button onClick="{{ onUpgradeLamp }}" style="font:700 10.5px Inter,sans-serif;padding:7px 13px;border-radius:10px;background:{{ lampBtnBg }};color:{{ lampBtnColor }};opacity:{{ lampBtnOpacity }}">{{ lampBtnText }}</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px">
+<sc-for list="{{ viewPlants }}" as="p" hint-placeholder-count="4">
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 18px rgba(0,0,0,.05);transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-3px);box-shadow:0 6px 10px rgba(0,0,0,.06),0 16px 30px rgba(0,0,0,.09)">
+<div style="padding:11px 12px 0;display:flex;justify-content:space-between;align-items:center;gap:6px">
+<span style="font:700 11.5px Outfit,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span>
+<span style="font:800 8.5px Inter,sans-serif;letter-spacing:.4px;padding:3px 8px;border-radius:20px;white-space:nowrap;background:{{ p.badgeBg }};color:{{ p.badgeColor }}">{{ p.badgeText }}</span>
+</div>
+<div style="margin:10px 12px 0;height:150px;border-radius:11px;overflow:hidden;position:relative;background:linear-gradient(180deg,#16241c 0%,#0c1310 60%,#3d2717 60%,#20160c 100%)">
+<div style="position:absolute;left:50%;top:44%;width:120px;height:120px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,{{ p.glow }},transparent 70%);opacity:{{ p.glowOpacity }};transition:opacity .8s ease;animation:glowPulse 3s ease-in-out infinite"></div>
+<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax meet" style="position:absolute;inset:0;width:100%;height:100%">
+<path d="M32,120 L28,106 Q50,101 72,106 L68,120 Z" fill="#3d2717"></path>
+<ellipse cx="50" cy="106" rx="22" ry="4" fill="#20160c"></ellipse>
+<g style="transform-origin:50% 100%;animation:leafSway 6s ease-in-out infinite alternate">
+<g style="transform:scale({{ p.scale }});transform-origin:50% 100%;transition:transform .8s ease">
+<path d="M49,118 L51,118 L50.5,42 L49.5,42 Z" fill="#4a3018"></path>
+<g transform="translate(50,96)" style="opacity:{{ p.lowerOpacity }};transition:opacity .8s ease">
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#4ade80" transform="rotate(-38)"></path>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#4ade80" transform="scale(1.15)"></path>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#4ade80" transform="rotate(38)"></path>
+</g>
+<g transform="translate(50,68) scale(.62)" style="opacity:{{ p.midOpacity }};transition:opacity .8s ease">
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#6ee7a0" transform="rotate(-38)"></path>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#6ee7a0" transform="scale(1.15)"></path>
+<path d="M0,0 Q11,-25 0,-54 Q-11,-25 0,0 Z" fill="#6ee7a0" transform="rotate(38)"></path>
+</g>
+<g transform="translate(50,36)" style="opacity:{{ p.budOpacity }};transition:opacity .8s ease">
+<g style="transform:scale({{ p.budScale }});transition:transform .8s ease">
+<ellipse cx="0" cy="0" rx="7" ry="12" fill="{{ p.budColor }}"></ellipse>
+<ellipse cx="-7" cy="6" rx="5" ry="9" fill="{{ p.budColor }}" opacity="0.85"></ellipse>
+<ellipse cx="7" cy="6" rx="5" ry="9" fill="{{ p.budColor }}" opacity="0.85"></ellipse>
+</g>
+</g>
+</g>
+</g>
+</svg>
+<sc-for list="{{ p.floaters }}" as="fl" hint-placeholder-count="0">
+<div style="position:absolute;left:50%;top:40%;transform:translateX(-50%);font:800 15px Outfit,sans-serif;color:{{ fl.color }};text-shadow:0 1px 3px rgba(0,0,0,.5);animation:floatUp 1.3s ease-out forwards;pointer-events:none">{{ fl.text }}</div>
+</sc-for>
+<sc-if value="{{ p.needsAttention }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;border-radius:11px;border:2px solid #ef4444;animation:ringPulse 1.6s ease-in-out infinite;pointer-events:none"></div>
+</sc-if>
+</div>
+<div style="padding:9px 12px 0;display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;align-items:center;gap:6px;font:600 9.5px Inter,sans-serif;color:oklch(55% 0.02 150)">
+<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 3s7 8 7 13a7 7 0 1 1-14 0c0-5 7-13 7-13Z" stroke="currentColor" stroke-width="2"></path></svg>
+<span style="flex:1;height:5px;background:oklch(92% 0.02 90);border-radius:3px;overflow:hidden"><span style="display:block;height:100%;width:{{ p.waterPct }}%;background:{{ p.waterColor }};transition:width .4s ease"></span></span>
+<span style="width:20px;text-align:right">{{ p.waterPct }}</span>
+</div>
+<div style="display:flex;align-items:center;gap:6px;font:600 9.5px Inter,sans-serif;color:oklch(55% 0.02 150)">
+<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2c1 4-4 5-4 9a4 4 0 0 0 8 0c0-2-1-3-1-3s2 1 2 5a6 6 0 1 1-12 0C5 8 9 7 12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
+<span style="flex:1;height:5px;background:oklch(92% 0.02 90);border-radius:3px;overflow:hidden"><span style="display:block;height:100%;width:{{ p.foodPct }}%;background:{{ p.foodColor }};transition:width .4s ease"></span></span>
+<span style="width:20px;text-align:right">{{ p.foodPct }}</span>
+</div>
+<div style="display:flex;align-items:center;gap:6px;font:600 9.5px Inter,sans-serif;color:oklch(55% 0.02 150)">
+<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 20s-7-4.5-9.5-9C1 8 2.5 4 6.5 4c2 0 3.5 1.2 4.5 2.5C12 5.2 13.5 4 15.5 4 19.5 4 21 8 19.5 11 17 15.5 12 20 12 20Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
+<span style="flex:1;height:5px;background:oklch(92% 0.02 90);border-radius:3px;overflow:hidden"><span style="display:block;height:100%;width:{{ p.healthPct }}%;background:{{ p.healthColor }};transition:width .4s ease"></span></span>
+<span style="width:20px;text-align:right">{{ p.healthPct }}</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 12px 12px">
+<button onClick="{{ p.onWater }}" style="padding:8px;font:700 10.5px Inter,sans-serif;border-radius:9px;background:oklch(93% 0.03 230);color:oklch(38% 0.08 230)" style-hover="background:oklch(89% 0.05 230)">{{ t.plant_water }}</button>
+<button onClick="{{ p.onFeed }}" style="padding:8px;font:700 10.5px Inter,sans-serif;border-radius:9px;background:oklch(92% 0.04 152);color:oklch(35% 0.07 152)" style-hover="background:oklch(87% 0.06 152)">{{ t.plant_feed }}</button>
+<div style="grid-column:1/-1;position:relative;overflow:hidden;border-radius:10px">
+<button onClick="{{ p.onHarvest }}" disabled="{{ p.harvestDisabled }}" style="width:100%;padding:10px;font:800 11.5px Outfit,sans-serif;border-radius:10px;border:none;background:{{ p.harvestBg }};color:{{ p.harvestColor }};opacity:{{ p.harvestOpacity }}">{{ p.harvestLabel }}</button>
+<sc-if value="{{ p.canHarvest }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:0;left:0;width:36%;height:100%;background:linear-gradient(115deg,transparent,rgba(255,255,255,.65),transparent);animation:shimmerSweep 2.6s ease-in-out infinite;pointer-events:none"></div>
+</sc-if>
+</div>
+</div>
+</div>
+</sc-for>
+<sc-for list="{{ emptySlots }}" as="slot" hint-placeholder-count="0">
+<button onClick="{{ slot.onClick }}" style="min-height:288px;border:2px dashed oklch(85% 0.02 90);border-radius:16px;display:flex;align-items:center;justify-content:center;background:oklch(97% 0.01 95);color:oklch(60% 0.02 150);font:700 12.5px Outfit,sans-serif;transition:background .2s,border-color .2s,color .2s" style-hover="background:oklch(94% 0.04 152);border-color:oklch(60% 0.11 152);color:oklch(38% 0.06 152)">{{ t.empty_slot_cta }}</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isGeneticsTab }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:940px;margin:0 auto;padding:16px 18px 50px">
+<div style="font:800 18px Outfit,sans-serif;margin-bottom:4px">{{ t.genetics_title }}</div>
+<div style="font:500 12.5px Inter,sans-serif;color:oklch(50% 0.02 150);margin-bottom:16px;max-width:560px;line-height:1.6">{{ t.genetics_desc }}</div>
+<div style="font:700 12px Outfit,sans-serif;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">{{ t.discovered_heading }}</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:24px">
+<sc-for list="{{ strainRows }}" as="s" hint-placeholder-count="8">
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;gap:5px;opacity:{{ s.rowOpacity }}">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><span style="font:700 12px Outfit,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</span><span style="width:9px;height:9px;border-radius:50%;background:{{ s.glow }};flex-shrink:0"></span></div>
+<sc-if value="{{ s.locked }}" hint-placeholder-val="{{ false }}">
+<span style="font:600 10px Inter,sans-serif;color:oklch(58% 0.02 150);display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2"></path></svg>{{ t.locked_prefix }} {{ s.unlockLevel }}</span>
+</sc-if>
+<sc-if value="{{ s.unlockedFlag }}" hint-placeholder-val="{{ true }}">
+<span style="font:600 10px Inter,sans-serif;color:oklch(50% 0.02 150)">Tier {{ s.tier }} · {{ s.priceLabel }} ден</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:16px;padding:18px">
+<div style="font:700 14px Outfit,sans-serif;margin-bottom:2px">{{ t.breed_title }}</div>
+<sc-if value="{{ labUnlocked }}" hint-placeholder-val="{{ false }}">
+<div style="font:500 11.5px Inter,sans-serif;color:oklch(50% 0.02 150);margin:4px 0 12px">{{ t.breed_hint }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
+<sc-for list="{{ breedOptions }}" as="b" hint-placeholder-count="6">
+<button onClick="{{ b.onClick }}" style="padding:7px 13px;border-radius:20px;font:700 10.5px Inter,sans-serif;background:{{ b.bg }};color:{{ b.color }};border:{{ b.border }};transition:background .2s,color .2s">{{ b.name }}</button>
+</sc-for>
+</div>
+<button onClick="{{ onBreedClick }}" disabled="{{ breedDisabled }}" style="padding:11px 22px;border-radius:12px;border:none;font:800 12px Outfit,sans-serif;background:{{ breedBtnBg }};color:{{ breedBtnColor }};opacity:{{ breedBtnOpacity }}">{{ t.breed_button }} · {{ breedCostLabel }} ден</button>
+</sc-if>
+<sc-if value="{{ labLocked }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:8px;color:oklch(55% 0.02 150);font:600 11.5px Inter,sans-serif;background:oklch(96% 0.01 90);border-radius:10px;padding:13px;margin-top:6px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2"></path></svg>
+{{ t.breed_need_lab }}
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMarketTab }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:940px;margin:0 auto;padding:16px 18px 50px">
+<div style="font:800 18px Outfit,sans-serif;margin-bottom:14px">{{ t.market_title }}</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">
+<div style="font:700 12px Outfit,sans-serif;text-transform:uppercase;letter-spacing:.3px">{{ t.inventory_heading }}</div>
+<sc-if value="{{ hasSellBoost }}" hint-placeholder-val="{{ false }}"><span style="font:700 10px Inter,sans-serif;background:linear-gradient(135deg,#fbbf24,#d97706);color:#2a1a00;padding:3px 9px;border-radius:20px">{{ sellBoostLabel }}</span></sc-if>
+<button onClick="{{ onSellAllInventory }}" style="font:700 10.5px Inter,sans-serif;padding:7px 13px;border-radius:10px;background:oklch(38% 0.06 152);color:#fff">{{ t.sell_all_inventory_btn }}</button>
+</div>
+<sc-if value="{{ inventoryEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px dashed oklch(85% 0.02 90);border-radius:12px;padding:20px;text-align:center;color:oklch(55% 0.02 150);font:600 12px Inter,sans-serif;margin-bottom:22px">{{ t.inventory_empty }}</div></sc-if>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:26px">
+<sc-for list="{{ inventoryRows }}" as="inv" hint-placeholder-count="0">
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:12px;padding:10px 13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<span style="width:8px;height:8px;border-radius:50%;background:{{ inv.glow }};flex-shrink:0"></span>
+<div style="flex:1;min-width:110px"><div style="font:700 12px Outfit,sans-serif">{{ inv.name }}</div><div style="font:600 10px Inter,sans-serif;color:oklch(55% 0.02 150)">{{ inv.qty }} × {{ inv.unitPrice }} ден</div></div>
+<div style="font:800 12.5px Outfit,sans-serif;color:oklch(38% 0.06 152);white-space:nowrap">{{ inv.totalValue }} ден</div>
+<button onClick="{{ inv.onSellOne }}" style="font:700 10px Inter,sans-serif;padding:6px 11px;border-radius:8px;background:oklch(94% 0.015 90);color:oklch(30% 0.02 150)">{{ t.sell_one_btn }}</button>
+<button onClick="{{ inv.onSellAll }}" style="font:700 10px Inter,sans-serif;padding:6px 11px;border-radius:8px;background:oklch(38% 0.06 152);color:#fff">{{ t.sell_all_btn }}</button>
+</div>
+</sc-for>
+</div>
+
+<div style="font:700 12px Outfit,sans-serif;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">{{ t.orders_heading }}</div>
+<sc-if value="{{ ordersEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px dashed oklch(85% 0.02 90);border-radius:12px;padding:20px;text-align:center;color:oklch(55% 0.02 150);font:600 12px Inter,sans-serif">{{ t.orders_empty }}</div></sc-if>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+<sc-for list="{{ orderRows }}" as="o" hint-placeholder-count="0">
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:14px;padding:14px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font:700 12.5px Outfit,sans-serif">{{ o.strainName }}</span><span style="font:600 9.5px Inter,sans-serif;color:oklch(55% 0.02 150)">{{ o.expiresLabel }}</span></div>
+<div style="font:600 10.5px Inter,sans-serif;color:oklch(50% 0.02 150);margin-bottom:4px">{{ t.order_have_prefix }} {{ o.haveQty }}/{{ o.qty }}</div>
+<div style="height:5px;background:oklch(92% 0.02 90);border-radius:3px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:{{ o.pct }}%;background:oklch(60% 0.11 152);transition:width .4s ease"></div></div>
+<div style="font:700 11px Inter,sans-serif;color:oklch(38% 0.06 152);margin-bottom:10px">{{ t.order_reward_prefix }}: {{ o.rewardMoney }} ден · +{{ o.rewardXp }} XP</div>
+<button onClick="{{ o.onFulfill }}" disabled="{{ o.fulfillDisabled }}" style="width:100%;padding:9px;border-radius:10px;font:800 11px Outfit,sans-serif;background:oklch(38% 0.06 152);color:#fff;opacity:{{ o.fulfillOpacity }}">{{ o.fulfillLabel }}</button>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isStaffTab }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:940px;margin:0 auto;padding:16px 18px 50px">
+<div style="font:800 18px Outfit,sans-serif;margin-bottom:4px">{{ t.staff_title }}</div>
+<div style="font:500 12.5px Inter,sans-serif;color:oklch(50% 0.02 150);margin-bottom:18px">{{ t.staff_desc }}</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+<sc-for list="{{ staffRows }}" as="st" hint-placeholder-count="4">
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+<div style="font:700 13.5px Outfit,sans-serif">{{ st.name }}</div>
+<div style="font:500 11px Inter,sans-serif;color:oklch(50% 0.02 150);line-height:1.5">{{ st.desc }}</div>
+<div style="font:600 10.5px Inter,sans-serif;color:oklch(55% 0.02 150)">{{ t.staff_wage_prefix }}: {{ st.wage }} ден</div>
+<sc-if value="{{ st.hired }}" hint-placeholder-val="{{ false }}"><span style="align-self:flex-start;font:800 10px Inter,sans-serif;background:oklch(92% 0.06 152);color:oklch(35% 0.08 152);padding:5px 11px;border-radius:20px">✓ {{ t.staff_hired_label }}</span></sc-if>
+<sc-if value="{{ st.notHired }}" hint-placeholder-val="{{ true }}"><button onClick="{{ st.onHire }}" disabled="{{ st.hireDisabled }}" style="padding:9px;border-radius:10px;font:800 11px Outfit,sans-serif;background:oklch(38% 0.06 152);color:#fff;opacity:{{ st.hireOpacity }}">{{ t.staff_hire_btn }} · {{ st.costLabel }}</button></sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAchTab }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:940px;margin:0 auto;padding:16px 18px 50px">
+<div style="font:800 18px Outfit,sans-serif;margin-bottom:14px">{{ t.achievements_title }}</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px">
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:12px;padding:12px"><div style="font:800 17px Outfit,sans-serif">{{ statHarvests }}</div><div style="font:600 9px Inter,sans-serif;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.3px">{{ t.stat_harvests_label }}</div></div>
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:12px;padding:12px"><div style="font:800 17px Outfit,sans-serif">{{ statEarned }}</div><div style="font:600 9px Inter,sans-serif;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.3px">{{ t.stat_earned_label }}</div></div>
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:12px;padding:12px"><div style="font:800 17px Outfit,sans-serif">{{ statPlaytime }}</div><div style="font:600 9px Inter,sans-serif;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.3px">{{ t.stat_playtime_label }}</div></div>
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:12px;padding:12px"><div style="font:800 17px Outfit,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ statBestStrain }}</div><div style="font:600 9px Inter,sans-serif;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.3px">{{ t.stat_best_strain_label }}</div></div>
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:12px;padding:12px"><div style="font:800 17px Outfit,sans-serif">{{ statAchCount }}</div><div style="font:600 9px Inter,sans-serif;color:oklch(55% 0.02 150);text-transform:uppercase;letter-spacing:.3px">{{ t.stat_unlocked_label }}</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
+<sc-for list="{{ achievementRows }}" as="a" hint-placeholder-count="6">
+<div style="background:#fff;border:1px solid oklch(90% 0.02 90);border-radius:14px;padding:14px;opacity:{{ a.rowOpacity }}">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px">
+<span style="font:700 12.5px Outfit,sans-serif">{{ a.name }}</span>
+<sc-if value="{{ a.unlocked }}" hint-placeholder-val="{{ false }}"><span style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#d97706);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2a1a00" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></sc-if>
+</div>
+<div style="font:500 11px Inter,sans-serif;color:oklch(50% 0.02 150);margin-bottom:8px;line-height:1.5">{{ a.desc }}</div>
+<sc-if value="{{ a.showProgress }}" hint-placeholder-val="{{ true }}">
+<div style="height:5px;background:oklch(92% 0.02 90);border-radius:3px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:{{ a.pct }}%;background:oklch(66% 0.15 55);transition:width .4s ease"></div></div>
+<div style="font:600 9.5px Inter,sans-serif;color:oklch(58% 0.02 150)">{{ a.current }}/{{ a.goal }}</div>
+</sc-if>
+<sc-if value="{{ a.unlocked }}" hint-placeholder-val="{{ false }}"><div style="font:700 10px Inter,sans-serif;color:oklch(45% 0.09 152)">+{{ a.rewardXp }} XP</div></sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPrestigeTab }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:640px;margin:0 auto;padding:16px 18px 50px">
+<div style="background:linear-gradient(160deg,#16241c 0%,#0c1310 70%);border-radius:20px;padding:32px 26px;color:#e9f3ec;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)">
+<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#d97706);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="color:#2a1a00"><path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+</div>
+<div style="font:800 19px Outfit,sans-serif;margin-bottom:8px">{{ t.prestige_title }}</div>
+<div style="font:500 12.5px Inter,sans-serif;color:rgba(233,243,236,.7);max-width:400px;margin:0 auto 20px;line-height:1.6">{{ t.prestige_desc }}</div>
+<div style="display:flex;justify-content:center;gap:30px;margin-bottom:22px">
+<div><div style="font:800 22px Outfit,sans-serif;color:#fbbf24">{{ prestigePoints }}</div><div style="font:600 9px Inter,sans-serif;text-transform:uppercase;letter-spacing:.4px;color:rgba(233,243,236,.55)">{{ t.prestige_points_label }}</div></div>
+<div><div style="font:800 22px Outfit,sans-serif;color:#fbbf24">{{ prestigeMultLabel }}</div><div style="font:600 9px Inter,sans-serif;text-transform:uppercase;letter-spacing:.4px;color:rgba(233,243,236,.55)">{{ t.prestige_mult_label }}</div></div>
+</div>
+<sc-if value="{{ canPrestige }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onPrestigeClick }}" style="padding:13px 28px;border-radius:14px;border:none;font:800 13px Outfit,sans-serif;background:linear-gradient(135deg,#fbbf24,#d97706);color:#2a1a00">{{ t.prestige_btn }}</button></sc-if>
+<sc-if value="{{ cannotPrestige }}" hint-placeholder-val="{{ true }}"><div style="font:600 11.5px Inter,sans-serif;color:rgba(233,243,236,.5)">{{ t.prestige_locked_prefix }} {{ prestigeReqLevel }}</div></sc-if>
+</div>
+</div>
+</sc-if>
+
+</main>
+
+<div style="position:fixed;top:64px;right:14px;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:290px">
+<sc-for list="{{ toasts }}" as="ts" hint-placeholder-count="0">
+<div style="background:#16241c;color:#e9f3ec;border:1px solid rgba(251,191,36,.5);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);animation:toastSlideIn .4s ease both">
+<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#d97706);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#2a1a00" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+<div><div style="font:700 8.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.4px;color:#fbbf24">{{ t.toast_heading }}</div><div style="font:700 12.5px Outfit,sans-serif">{{ ts.name }}</div></div>
+</div>
+</sc-for>
+</div>
+
+<sc-if value="{{ hasActiveEvent }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(10,15,12,.6);backdrop-filter:blur(3px);z-index:80;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="background:#fff;border-radius:20px;max-width:400px;width:100%;padding:26px;animation:modalPop .3s ease both;box-shadow:0 30px 80px rgba(0,0,0,.4)">
+<div style="font:800 16px Outfit,sans-serif;margin-bottom:8px">{{ activeEvent.title }}</div>
+<div style="font:500 13px Inter,sans-serif;color:oklch(45% 0.02 150);line-height:1.6;margin-bottom:18px">{{ activeEvent.desc }}</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ activeEvent.choices }}" as="c" hint-placeholder-count="2">
+<button onClick="{{ c.onClick }}" style="padding:12px;border-radius:12px;font:700 12px Inter,sans-serif;background:oklch(94% 0.015 90);color:oklch(27% 0.02 150);text-align:left" style-hover="background:oklch(90% 0.04 152)">{{ c.label }}</button>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showPlantPicker }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(10,15,12,.55);z-index:85;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="background:#fff;border-radius:18px;max-width:420px;width:100%;padding:22px;max-height:70vh;display:flex;flex-direction:column;animation:modalPop .3s ease both">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+<div style="font:800 15px Outfit,sans-serif">{{ t.picker_title }}</div>
+<button onClick="{{ onClosePicker }}" style="font:700 11.5px Inter,sans-serif;color:oklch(55% 0.02 150)">{{ t.common_close }}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px;overflow-y:auto">
+<sc-for list="{{ pickerStrains }}" as="ps" hint-placeholder-count="4">
+<button onClick="{{ ps.onClick }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:oklch(97% 0.01 95);text-align:left" style-hover="background:oklch(93% 0.04 152)">
+<span style="width:9px;height:9px;border-radius:50%;background:{{ ps.glow }};flex-shrink:0"></span>
+<span style="flex:1;font:700 12px Outfit,sans-serif">{{ ps.name }}</span>
+<span style="font:700 9.5px Inter,sans-serif;color:oklch(55% 0.02 150)">{{ ps.tierLabel }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasBreedResult }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(10,15,12,.6);z-index:95;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="background:linear-gradient(160deg,#16241c,#0c1310);border-radius:20px;max-width:360px;width:100%;padding:28px;text-align:center;color:#e9f3ec;animation:modalPop .35s ease both;box-shadow:0 30px 80px rgba(0,0,0,.4)">
+<div style="font:700 10.5px Inter,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:#fbbf24;margin-bottom:12px">{{ t.breed_result_title }}</div>
+<div style="width:70px;height:70px;border-radius:50%;margin:0 auto 14px;background:radial-gradient(circle,{{ breedResult.glow }},transparent 72%)"></div>
+<div style="font:800 18px Outfit,sans-serif;margin-bottom:4px">{{ breedResult.name }}</div>
+<div style="font:600 11px Inter,sans-serif;color:rgba(233,243,236,.6);margin-bottom:22px">Tier {{ breedResult.tier }} · {{ breedResult.price }} ден</div>
+<button onClick="{{ onCloseBreedResult }}" style="padding:11px 26px;border-radius:12px;border:none;font:800 12px Outfit,sans-serif;background:linear-gradient(135deg,#fbbf24,#d97706);color:#2a1a00">{{ t.breed_result_cta }}</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showRebirthConfirm }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(10,15,12,.6);backdrop-filter:blur(3px);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="background:#fff;border-radius:18px;max-width:380px;width:100%;padding:24px;animation:modalPop .3s ease both">
+<div style="font:800 16px Outfit,sans-serif;margin-bottom:8px">{{ t.prestige_confirm_title }}</div>
+<div style="font:500 12px Inter,sans-serif;color:oklch(45% 0.02 150);line-height:1.6;margin-bottom:18px">{{ t.prestige_confirm_body }}</div>
+<div style="display:flex;gap:8px">
+<button onClick="{{ onCancelRebirth }}" style="flex:1;padding:11px;border-radius:10px;background:oklch(94% 0.015 90);color:oklch(30% 0.02 150);font:700 11.5px Inter,sans-serif">{{ t.prestige_confirm_no }}</button>
+<button onClick="{{ onConfirmRebirth }}" style="flex:1;padding:11px;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#d97706);color:#2a1a00;font:800 11.5px Outfit,sans-serif">{{ t.prestige_confirm_yes }}</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showTutorial }}" hint-placeholder-val="{{ true }}">
+<div style="position:fixed;inset:0;background:rgba(10,15,12,.55);backdrop-filter:blur(2px);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:20px">
+<div style="background:#fff;border-radius:20px;max-width:420px;width:100%;padding:26px;margin-bottom:24px;animation:modalPop .35s ease both;box-shadow:0 30px 80px rgba(0,0,0,.4)">
+<div style="display:flex;gap:5px;margin-bottom:16px">
+<sc-for list="{{ tutStep.dots }}" as="dot" hint-placeholder-count="7">
+<div style="height:5px;flex:1;border-radius:3px;background:{{ dot.dotColor }};transition:background .3s ease"></div>
+</sc-for>
+</div>
+<div style="font:800 17px Outfit,sans-serif;margin-bottom:8px">{{ tutStep.title }}</div>
+<div style="font:500 13px Inter,sans-serif;color:oklch(45% 0.02 150);line-height:1.6;margin-bottom:22px">{{ tutStep.body }}</div>
+<div style="display:flex;justify-content:space-between;align-items:center">
+<button onClick="{{ onTutSkip }}" style="font:700 11px Inter,sans-serif;color:oklch(55% 0.02 150);padding:8px">{{ t.tut_skip }}</button>
+<button onClick="{{ onTutNext }}" style="padding:11px 24px;border-radius:12px;border:none;font:800 12px Outfit,sans-serif;background:oklch(38% 0.06 152);color:#fff">{{ tutStep.nextLabel }}</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startingMoney&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:500,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:100,&quot;max&quot;:5000,&quot;step&quot;:50,&quot;section&quot;:&quot;Balance&quot;},&quot;dayLengthSec&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:120,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:60,&quot;max&quot;:300,&quot;step&quot;:10,&quot;unit&quot;:&quot;s&quot;,&quot;section&quot;:&quot;Balance&quot;},&quot;decaySpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0.5,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;section&quot;:&quot;Balance&quot;}}">
+class Component extends DCLogic {
+  state = {
+    dataLoaded: false,
+    lang: 'mk', soundOn: true,
+    activeTab: 'grow', activeRoomId: 'starter',
+    money: 500, displayMoney: 500,
+    xp: 0, displayXp: 0, level: 1,
+    prestige: 0,
+    day: 1, secIntoDay: 0,
+    rooms: { starter:{unlocked:true,lampTier:0}, greenhouse:{unlocked:false,lampTier:0}, breeding_lab:{unlocked:false} },
+    plants: [], nextPlantId: 1,
+    inventory: {},
+    customStrains: [],
+    discoveredIds: [],
+    staff: { waterer:false, feeder:false, harvester:false, trader:false },
+    achievementsUnlocked: [],
+    toasts: [], nextToastId: 1,
+    orders: [], nextOrderId: 1, nextEventCheckIn: 60,
+    dayCounters: { harvest:0, earned:0, water:0, feed:0, sold:0, orders:0 },
+    challenges: [],
+    stats: { totalHarvests:0, lifetimeMoneyEarned:0, totalWatered:0, totalFed:0, hybridsDiscovered:0, staffHiredCount:0, ordersCompleted:0, prestigeCount:0, playSeconds:0, harvestsByStrain:{} },
+    activeEvent: null, sellBoost: null,
+    showPlantPicker: null,
+    breedSelection: [],
+    breedResult: null,
+    showRebirthConfirm: false,
+    showTutorial: true, tutorialStep: 0,
+  };
+
+  componentDidMount(){
+    import('./game-data.js').then(mod => {
+      this.data = mod;
+      this.loadSave();
+      this.startTimers();
+    });
+  }
+  componentWillUnmount(){
+    clearInterval(this._tickId);
+    cancelAnimationFrame(this._rafId);
+  }
+  startTimers(){
+    this._tickId = setInterval(() => this.tick(), 1000);
+    const raf = () => { this.tweenCounters(); this._rafId = requestAnimationFrame(raf); };
+    raf();
+  }
+
+  loadSave(){
+    try {
+      const raw = localStorage.getItem('zi_v2_save');
+      if (raw) {
+        const saved = JSON.parse(raw);
+        this.setState({ ...saved, dataLoaded:true, displayMoney: saved.money, displayXp: saved.xp, toasts:[], activeEvent:null, breedResult:null, showPlantPicker:null, showRebirthConfirm:false });
+        return;
+      }
+    } catch(e) {}
+    this.initNewGame();
+  }
+  initNewGame(){
+    const startMoney = this.props.startingMoney ?? 500;
+    this.setState({ dataLoaded:true, discoveredIds: [], money: startMoney, displayMoney: startMoney });
+    this.rerollChallenges();
+  }
+  writeSave(){
+    const s = this.state;
+    const toSave = { lang:s.lang, soundOn:s.soundOn, money:s.money, xp:s.xp, level:s.level, prestige:s.prestige, day:s.day, secIntoDay:s.secIntoDay, rooms:s.rooms, plants:s.plants, nextPlantId:s.nextPlantId, inventory:s.inventory, customStrains:s.customStrains, discoveredIds:s.discoveredIds, staff:s.staff, achievementsUnlocked:s.achievementsUnlocked, orders:s.orders, nextOrderId:s.nextOrderId, dayCounters:s.dayCounters, challenges:s.challenges, stats:s.stats, showTutorial:false };
+    try { localStorage.setItem('zi_v2_save', JSON.stringify(toSave)); } catch(e) {}
+  }
+
+  t(key){ return (this.data.STR[this.state.lang]||this.data.STR.mk)[key] || key; }
+  scheduleAchCheck(){ setTimeout(() => this.checkAchievements(), 0); }
+
+  ensureAudio(){
+    if (!this._actx) { try { this._actx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {} }
+    if (this._actx && this._actx.state==='suspended') this._actx.resume();
+  }
+  sfx(kind){
+    if (!this.state.soundOn) return;
+    this.ensureAudio();
+    if (!this._actx) return;
+    const ctx = this._actx, now = ctx.currentTime;
+    const seq = {
+      click:[[600,0.06]], water:[[520,0.07],[420,0.09]], feed:[[660,0.06],[780,0.08]],
+      harvest:[[523,0.09],[659,0.09],[784,0.09],[1046,0.14]],
+      levelup:[[523,0.12],[659,0.12],[784,0.22]],
+      achievement:[[784,0.08],[988,0.08],[1175,0.2]],
+      error:[[160,0.18]],
+    }[kind] || [[440,0.08]];
+    let tt = now;
+    seq.forEach(([freq,dur]) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = kind==='error' ? 'sawtooth' : 'sine';
+      osc.frequency.setValueAtTime(freq, tt);
+      gain.gain.setValueAtTime(0, tt);
+      gain.gain.linearRampToValueAtTime(kind==='error'?0.05:0.08, tt+0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, tt+dur);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(tt); osc.stop(tt+dur+0.02);
+      tt += dur*0.85;
+    });
+  }
+
+  tweenCounters(){
+    if (!this.state.dataLoaded) return;
+    const s = this.state;
+    let changed = false;
+    if (Math.abs(s.displayMoney - s.money) > 0.5) { this.state.displayMoney += (s.money - s.displayMoney) * 0.18; changed = true; }
+    else if (s.displayMoney !== s.money) { this.state.displayMoney = s.money; changed = true; }
+    if (Math.abs(s.displayXp - s.xp) > 0.5) { this.state.displayXp += (s.xp - s.displayXp) * 0.18; changed = true; }
+    else if (s.displayXp !== s.xp) { this.state.displayXp = s.xp; changed = true; }
+    if (changed) this.forceUpdate();
+  }
+
+  addMoney(amount){
+    const s = this.state;
+    const money = s.money + amount;
+    const stats = {...s.stats};
+    const dayCounters = {...s.dayCounters};
+    if (amount > 0) { stats.lifetimeMoneyEarned += amount; dayCounters.earned += amount; }
+    this.setState({ money, stats, dayCounters });
+    this.scheduleAchCheck();
+  }
+  addXp(amount){
+    let level = this.state.level, xp = this.state.xp + amount, leveled = false;
+    while (xp >= this.data.xpToNext(level)) { xp -= this.data.xpToNext(level); level++; leveled = true; }
+    this.setState({ xp, level });
+    if (leveled) this.sfx('levelup');
+    this.scheduleAchCheck();
+  }
+  sellPriceMult(){ return 1 + this.state.prestige*0.05; }
+
+  allStrains(){ return [...this.data.STRAINS, ...this.state.customStrains]; }
+  strainById(id){ return this.allStrains().find(x=>x.id===id) || {nameMk:'—',nameEn:'—',glow:'#999',price:0,tier:1}; }
+  isUnlocked(strain){ return this.state.level >= strain.unlockLevel; }
+  unlockedStrains(){ return this.allStrains().filter(s=>this.isUnlocked(s)); }
+  discoveredStrains(){ return this.allStrains().filter(s => this.isUnlocked(s) && (!s.hybrid || this.state.discoveredIds.includes(s.id))); }
+
+  roomDef(id){ return this.data.ROOM_TYPES.find(r=>r.id===id); }
+  roomState(id){ return this.state.rooms[id]; }
+  lampTier(roomId){ const rs = this.roomState(roomId); return this.data.LAMP_TIERS[(rs && rs.lampTier) || 0]; }
+  plantsInRoom(id){ return this.state.plants.filter(p=>p.roomId===id); }
+
+  switchTab(id){ this.sfx('click'); this.setState({ activeTab:id }); }
+  switchRoom(id){
+    const rs = this.roomState(id);
+    if (!rs || !rs.unlocked) { this.tryUnlockRoom(id); return; }
+    this.sfx('click');
+    this.setState({ activeRoomId:id });
+  }
+  tryUnlockRoom(id){
+    const def = this.roomDef(id);
+    if (this.state.level < def.unlockLevel || this.state.money < def.unlockCost) { this.sfx('error'); return; }
+    const rooms = {...this.state.rooms, [id]:{ unlocked:true, lampTier:0 }};
+    this.addMoney(-def.unlockCost);
+    this.setState({ rooms, activeRoomId:id });
+    this.sfx('achievement');
+    this.scheduleAchCheck();
+  }
+  upgradeLamp(){
+    const roomId = this.state.activeRoomId, rs = this.roomState(roomId);
+    const next = this.data.LAMP_TIERS[rs.lampTier+1];
+    if (!next || this.state.money < next.cost) { this.sfx('error'); return; }
+    this.addMoney(-next.cost);
+    const rooms = {...this.state.rooms, [roomId]:{...rs, lampTier: rs.lampTier+1}};
+    this.setState({ rooms });
+    this.sfx('achievement');
+  }
+
+  openPlantPicker(roomId){ this.sfx('click'); this.setState({ showPlantPicker: roomId }); }
+  closePlantPicker(){ this.setState({ showPlantPicker: null }); }
+  plantSeedDirect(roomId, strainId){
+    const id = this.state.nextPlantId;
+    const plant = { id, roomId, strainId, water:100, food:100, health:100, progress:0 };
+    this.setState({ plants:[...this.state.plants, plant], nextPlantId:id+1 });
+  }
+  plantSeed(strainId){
+    const roomId = this.state.showPlantPicker;
+    if (!roomId) return;
+    this.plantSeedDirect(roomId, strainId);
+    this.setState({ showPlantPicker:null });
+    this.sfx('click');
+  }
+  addFloater(plantId, text, color){
+    const plants = this.state.plants.map(p => p.id===plantId ? {...p, floaters:[...(p.floaters||[]), {id: Math.random(), text, color}]} : p);
+    this.setState({ plants });
+    setTimeout(() => {
+      const plants2 = this.state.plants.map(p => p.id===plantId ? {...p, floaters:(p.floaters||[]).slice(1)} : p);
+      this.setState({ plants: plants2 });
+    }, 1200);
+  }
+  waterPlant(id){
+    const plants = this.state.plants.map(p => p.id===id ? {...p, water: Math.min(100, p.water+40)} : p);
+    this.setState({ plants, stats: {...this.state.stats, totalWatered: this.state.stats.totalWatered+1}, dayCounters: {...this.state.dayCounters, water: this.state.dayCounters.water+1} });
+    this.addFloater(id, '+wтр', '#60a5fa');
+    this.sfx('water');
+    this.scheduleAchCheck();
+  }
+  feedPlant(id){
+    const plants = this.state.plants.map(p => p.id===id ? {...p, food: Math.min(100, p.food+40)} : p);
+    this.setState({ plants, stats: {...this.state.stats, totalFed: this.state.stats.totalFed+1}, dayCounters: {...this.state.dayCounters, feed: this.state.dayCounters.feed+1} });
+    this.addFloater(id, '+хрн', '#4ade80');
+    this.sfx('feed');
+    this.scheduleAchCheck();
+  }
+  harvestPlant(id){
+    const plant = this.state.plants.find(p=>p.id===id);
+    if (!plant || plant.progress < 1) return;
+    const strain = this.strainById(plant.strainId);
+    const lamp = this.lampTier(plant.roomId);
+    const healthMult = 0.5 + (plant.health/100)*0.5;
+    const units = Math.max(1, Math.round(strain.yield * lamp.yieldMult * healthMult));
+    const inv = {...this.state.inventory, [strain.id]: (this.state.inventory[strain.id]||0) + units };
+    const stats = {...this.state.stats};
+    stats.totalHarvests += 1;
+    stats.harvestsByStrain = {...stats.harvestsByStrain, [strain.id]: (stats.harvestsByStrain[strain.id]||0)+1 };
+    const plants = this.state.plants.filter(p=>p.id!==id);
+    const dayCounters = {...this.state.dayCounters, harvest: this.state.dayCounters.harvest+1};
+    this.setState({ inventory: inv, stats, plants, dayCounters });
+    this.addXp(Math.round(units*3));
+    this.sfx('harvest');
+    this.scheduleAchCheck();
+  }
+
+  toggleBreedSelect(id){
+    let sel = [...this.state.breedSelection];
+    if (sel.includes(id)) sel = sel.filter(x=>x!==id);
+    else { if (sel.length>=2) sel.shift(); sel.push(id); }
+    this.setState({ breedSelection: sel });
+    this.sfx('click');
+  }
+  breedCost(){ return 700; }
+  confirmBreed(){
+    const sel = this.state.breedSelection;
+    if (sel.length !== 2 || this.state.money < this.breedCost()) { this.sfx('error'); return; }
+    const a = this.strainById(sel[0]), b = this.strainById(sel[1]);
+    const hybrid = this.data.makeHybrid(a, b, Math.floor(Math.random()*997));
+    const already = this.allStrains().some(x=>x.id===hybrid.id);
+    this.addMoney(-this.breedCost());
+    if (!already) {
+      this.setState({ customStrains:[...this.state.customStrains, hybrid], discoveredIds:[...this.state.discoveredIds, hybrid.id], breedSelection: [], breedResult: hybrid, stats: {...this.state.stats, hybridsDiscovered: this.state.stats.hybridsDiscovered+1} });
+    } else {
+      this.setState({ discoveredIds: this.state.discoveredIds.includes(hybrid.id)?this.state.discoveredIds:[...this.state.discoveredIds, hybrid.id], breedSelection: [], breedResult: hybrid });
+    }
+    this.sfx('achievement');
+    this.scheduleAchCheck();
+  }
+  closeBreedResult(){ this.setState({ breedResult:null }); }
+
+  currentSellPrice(strain){
+    let mult = this.sellPriceMult();
+    if (this.state.sellBoost && this.state.sellBoost.remaining>0) mult *= this.state.sellBoost.mult;
+    return Math.round(strain.price*mult);
+  }
+  sellUnits(strainId, qty){
+    const have = this.state.inventory[strainId]||0;
+    qty = Math.min(qty, have);
+    if (qty<=0) return;
+    const strain = this.strainById(strainId);
+    let total = 0;
+    let boost = this.state.sellBoost ? {...this.state.sellBoost} : null;
+    for (let i=0;i<qty;i++){
+      let mult = this.sellPriceMult();
+      if (boost && boost.remaining>0) { mult *= boost.mult; boost.remaining--; }
+      total += strain.price*mult;
+    }
+    const inv = {...this.state.inventory, [strainId]: have-qty };
+    const dayCounters = {...this.state.dayCounters, sold: this.state.dayCounters.sold+qty};
+    this.setState({ inventory: inv, dayCounters, sellBoost: boost && boost.remaining>0 ? boost : null });
+    this.addMoney(Math.round(total));
+    this.sfx('click');
+  }
+  sellAllInventory(){
+    Object.keys(this.state.inventory).forEach(id => { if (this.state.inventory[id]>0) this.sellUnits(id, this.state.inventory[id]); });
+  }
+  fulfillOrder(orderId){
+    const order = this.state.orders.find(o=>o.id===orderId);
+    if (!order) return;
+    const have = this.state.inventory[order.strainId]||0;
+    if (have < order.qty) { this.sfx('error'); return; }
+    const inv = {...this.state.inventory, [order.strainId]: have-order.qty };
+    const orders = this.state.orders.filter(o=>o.id!==orderId);
+    const stats = {...this.state.stats, ordersCompleted: this.state.stats.ordersCompleted+1};
+    const dayCounters = {...this.state.dayCounters, orders: this.state.dayCounters.orders+1};
+    this.setState({ inventory: inv, orders, stats, dayCounters });
+    this.addMoney(order.rewardMoney);
+    this.addXp(order.rewardXp);
+    this.sfx('harvest');
+    this.scheduleAchCheck();
+  }
+  maybeGenerateOrder(){
+    if (this.state.orders.length >= 3 || Math.random() > 0.14) return;
+    const pool = this.unlockedStrains();
+    if (!pool.length) return;
+    const strain = pool[Math.floor(Math.random()*pool.length)];
+    const qty = 5 + Math.floor(Math.random()*15);
+    const order = { id: this.state.nextOrderId, strainId: strain.id, qty, rewardMoney: Math.round(qty*strain.price*1.4), rewardXp: qty*3, expiresAtDay: this.state.day+2+Math.floor(Math.random()*2) };
+    this.setState({ orders:[...this.state.orders, order], nextOrderId: this.state.nextOrderId+1 });
+  }
+
+  hireStaff(key){
+    const def = this.data.STAFF_TYPES.find(s=>s.key===key);
+    if (this.state.staff[key] || this.state.money < def.cost) { this.sfx('error'); return; }
+    this.addMoney(-def.cost);
+    const staff = {...this.state.staff, [key]: true};
+    const stats = {...this.state.stats, staffHiredCount: this.state.stats.staffHiredCount+1};
+    this.setState({ staff, stats });
+    this.sfx('achievement');
+    this.scheduleAchCheck();
+  }
+  staffAutomation(dt){
+    this._staffAcc = this._staffAcc || {};
+    const s = this.state;
+    this.data.STAFF_TYPES.forEach(def => {
+      if (!s.staff[def.key]) return;
+      this._staffAcc[def.key] = (this._staffAcc[def.key]||0) + dt;
+      if (this._staffAcc[def.key] < def.everySec) return;
+      this._staffAcc[def.key] = 0;
+      if (def.key === 'waterer') { const target = this.state.plants.find(p=>p.water<50); if (target) this.waterPlant(target.id); }
+      else if (def.key === 'feeder') { const target = this.state.plants.find(p=>p.food<50); if (target) this.feedPlant(target.id); }
+      else if (def.key === 'harvester') { const target = this.state.plants.find(p=>p.progress>=1); if (target) { const roomId=target.roomId, strainId=target.strainId; this.harvestPlant(target.id); this.plantSeedDirect(roomId, strainId); } }
+      else if (def.key === 'trader') {
+        const fulfillable = this.state.orders.find(o => (this.state.inventory[o.strainId]||0) >= o.qty);
+        if (fulfillable) this.fulfillOrder(fulfillable.id);
+        else { const keys = Object.keys(this.state.inventory).filter(k=>this.state.inventory[k]>0); if (keys.length) this.sellUnits(keys[0], 1); }
+      }
+    });
+  }
+
+  rerollChallenges(){
+    const pool = [...this.data.CHALLENGE_POOL];
+    const picks = [];
+    while (picks.length<3 && pool.length) { const i = Math.floor(Math.random()*pool.length); picks.push(pool.splice(i,1)[0]); }
+    const challenges = picks.map(tpl => { const goal = tpl.min + Math.floor(Math.random()*(tpl.max-tpl.min+1)); return { id: tpl.id, key: tpl.key, goal, rewardMoney: tpl.rewardMoney, rewardXp: tpl.rewardXp, labelMk: tpl.labelMk(goal), labelEn: tpl.labelEn(goal), done:false }; });
+    this.setState({ challenges, dayCounters: { harvest:0, earned:0, water:0, feed:0, sold:0, orders:0 } });
+  }
+  checkChallenges(){
+    const dc = this.state.dayCounters;
+    let changed = false;
+    const challenges = this.state.challenges.map(c => {
+      if (c.done) return c;
+      const progress = dc[c.key] || 0;
+      if (progress >= c.goal) { changed = true; return {...c, done:true}; }
+      return c;
+    });
+    if (changed) {
+      this.setState({ challenges });
+      challenges.forEach(c => { if (c.done && !c._claimed) { c._claimed = true; this.addMoney(c.rewardMoney); this.addXp(c.rewardXp); } });
+    }
+  }
+
+  statValue(key){
+    const s = this.state;
+    if (key==='greenhouseUnlocked') return s.rooms.greenhouse && s.rooms.greenhouse.unlocked ? 1 : 0;
+    if (key==='breedingLabUnlocked') return s.rooms.breeding_lab && s.rooms.breeding_lab.unlocked ? 1 : 0;
+    if (key==='level') return s.level;
+    if (key==='prestigeCount') return s.stats.prestigeCount;
+    return s.stats[key] || 0;
+  }
+  checkAchievements(){
+    const unlocked = new Set(this.state.achievementsUnlocked);
+    const gained = [];
+    this.data.ACHIEVEMENTS.forEach(a => { if (!unlocked.has(a.id) && this.statValue(a.statKey) >= a.value) { unlocked.add(a.id); gained.push(a); } });
+    if (gained.length) {
+      const xpGain = gained.reduce((sum,a)=>sum+a.rewardXp,0);
+      const toasts = [...this.state.toasts];
+      let nextId = this.state.nextToastId;
+      gained.forEach(a => toasts.push({ id: nextId++, name: this.state.lang==='mk'?a.nameMk:a.nameEn }));
+      this.setState({ achievementsUnlocked:[...unlocked], toasts, nextToastId: nextId });
+      this.addXp(xpGain);
+      this.sfx('achievement');
+      toasts.forEach(ts => setTimeout(() => { this.setState({ toasts: this.state.toasts.filter(x=>x.id!==ts.id) }); }, 4200));
+    }
+    this.checkChallenges();
+  }
+
+  canPrestige(){ return this.state.level >= 10; }
+  doRebirth(){
+    if (!this.canPrestige()) return;
+    const gained = Math.floor(this.state.level/2) + Math.floor(this.state.stats.lifetimeMoneyEarned/5000);
+    const startMoney = this.props.startingMoney ?? 500;
+    this.setState({
+      money: startMoney, displayMoney: startMoney, xp:0, level:1, plants:[], inventory:{}, customStrains: this.state.customStrains,
+      discoveredIds: [],
+      rooms: { starter:{unlocked:true,lampTier:0}, greenhouse:{unlocked:false,lampTier:0}, breeding_lab:{unlocked:false} },
+      staff: { waterer:false, feeder:false, harvester:false, trader:false },
+      orders: [], activeRoomId:'starter',
+      prestige: this.state.prestige+gained,
+      stats: {...this.state.stats, prestigeCount: this.state.stats.prestigeCount+1},
+      showRebirthConfirm: false,
+    });
+    this.sfx('levelup');
+    this.scheduleAchCheck();
+  }
+
+  triggerRandomEvent(){
+    const pool = this.data.EVENT_POOL;
+    const ev = pool[Math.floor(Math.random()*pool.length)];
+    this.setState({ activeEvent: ev, nextEventCheckIn: 100+Math.floor(Math.random()*80) });
+  }
+  resolveEventChoice(choice){
+    if (choice.type==='money' || choice.type==='moneyRisk') { const amt = choice.min + Math.random()*(choice.max-choice.min); this.addMoney(Math.round(amt)); }
+    else if (choice.type==='sellBoost') { this.setState({ sellBoost: { mult: choice.mult, remaining: choice.count } }); }
+    else if (choice.type==='healthHit') {
+      const dmg = choice.min + Math.random()*(choice.max-choice.min);
+      const plants = this.state.plants;
+      if (plants.length) { const idx = Math.floor(Math.random()*plants.length); const updated = plants.map((p,i)=> i===idx ? {...p, health: Math.max(0,p.health-dmg)} : p); this.setState({ plants: updated }); }
+    }
+    else if (choice.type==='freeSeed') {
+      if (choice.cost>0) { if (this.state.money<choice.cost) { this.sfx('error'); this.setState({activeEvent:null}); return; } this.addMoney(-choice.cost); }
+      const locked = this.allStrains().filter(s=>!this.state.discoveredIds.includes(s.id) && !s.hybrid ? this.state.level < s.unlockLevel : !this.state.discoveredIds.includes(s.id));
+      if (locked.length) { const pick = locked[Math.floor(Math.random()*locked.length)]; this.setState({ discoveredIds:[...this.state.discoveredIds, pick.id] }); }
+    }
+    else if (choice.type==='sellAllBonus') {
+      const s = this.state;
+      let total = 0;
+      Object.keys(s.inventory).forEach(id => { const strain = this.strainById(id); total += (s.inventory[id]||0)*strain.price*choice.mult*this.sellPriceMult(); });
+      this.setState({ inventory:{} });
+      this.addMoney(Math.round(total));
+    }
+    this.setState({ activeEvent:null });
+    this.sfx('click');
+  }
+
+  tutNext(){
+    if (this.state.tutorialStep >= 6) { this.setState({ showTutorial:false }); this.addMoney(300); }
+    else this.setState({ tutorialStep: this.state.tutorialStep+1 });
+    this.sfx('click');
+  }
+  tutSkip(){ this.setState({ showTutorial:false }); this.sfx('click'); }
+  replayTutorial(){ this.setState({ showTutorial:true, tutorialStep:0 }); }
+
+  tick(){
+    if (!this.state.dataLoaded) return;
+    const dt = 1;
+    const decaySpeed = this.props.decaySpeed ?? 1;
+    const plants = this.state.plants.map(p => {
+      const strain = this.strainById(p.strainId);
+      const lamp = this.lampTier(p.roomId);
+      let water = Math.max(0, p.water - (100/45)*dt*decaySpeed);
+      let food = Math.max(0, p.food - (100/75)*dt*decaySpeed);
+      let health = p.health;
+      if (water<20 || food<20) health = Math.max(0, health-1.5*dt);
+      else if (water>50 && food>50) health = Math.min(100, health+0.8*dt);
+      const stressMult = health<40 ? 0.5 : 1;
+      const growSec = Math.max(20, strain.growSec*lamp.growMult);
+      let progress = p.progress;
+      if (water>0 && food>0) progress = Math.min(1, progress + (dt/growSec)*stressMult);
+      return {...p, water, food, health, progress};
+    });
+    this.setState({ plants });
+
+    this.staffAutomation(dt);
+
+    const DAY_LEN = this.props.dayLengthSec ?? 120;
+    let secIntoDay = this.state.secIntoDay + dt;
+    if (secIntoDay >= DAY_LEN) {
+      secIntoDay = 0;
+      const day = this.state.day+1;
+      const orders = this.state.orders.filter(o=>o.expiresAtDay>day);
+      this.setState({ day, orders });
+      this.rerollChallenges();
+    }
+    this.setState({ secIntoDay, stats: {...this.state.stats, playSeconds: this.state.stats.playSeconds+dt} });
+
+    this.maybeGenerateOrder();
+
+    const nextEventCheckIn = this.state.nextEventCheckIn - dt;
+    if (nextEventCheckIn <= 0 && !this.state.activeEvent && !this.state.showTutorial) this.triggerRandomEvent();
+    else this.setState({ nextEventCheckIn });
+
+    this._saveAcc = (this._saveAcc||0)+dt;
+    if (this._saveAcc >= 8) { this._saveAcc = 0; this.writeSave(); }
+  }
+
+  renderVals(){
+    const s = this.state;
+    if (!s.dataLoaded || !this.data) return { dataLoaded:false, notLoaded:true };
+    const d = this.data;
+    const t = d.STR[s.lang] || d.STR.mk;
+    const lang = s.lang;
+    const nm = (strain) => lang==='mk' ? strain.nameMk : strain.nameEn;
+
+    const xpNeed = d.xpToNext(s.level);
+    const xpPct = Math.max(2, Math.min(100, (s.displayXp/xpNeed)*100));
+    const navDef = (id) => ({ bg: s.activeTab===id ? 'oklch(60% 0.11 152)' : 'transparent', color: s.activeTab===id ? '#ffffff' : 'oklch(45% 0.02 150)' });
+
+    const DAY_LEN = this.props.dayLengthSec ?? 120;
+    const gameHour = (s.secIntoDay/DAY_LEN)*24;
+    const lightsOn = gameHour < 18;
+    let ambSky, ambIconColor, ambLabel;
+    if (lightsOn) { ambSky = 'linear-gradient(120deg,#2a1f3d 0%,#3d2350 45%,#4a2a3d 100%)'; ambIconColor = '#f9a8d4'; ambLabel = (lang==='mk'?'Светлосен циклус: ВКЛУЧЕН':'Light cycle: ON') + ' · ' + Math.floor(gameHour) + 'h'; }
+    else { ambSky = 'linear-gradient(120deg,#0c1310 0%,#0a1512 60%,#0d1a14 100%)'; ambIconColor = '#4b5563'; ambLabel = (lang==='mk'?'Темен период':'Dark period') + ' · ' + Math.floor(gameHour) + 'h'; }
+
+    const rooms = d.ROOM_TYPES.map(rd => {
+      const rs = s.rooms[rd.id];
+      const unlocked = rs && rs.unlocked;
+      const active = s.activeRoomId===rd.id;
+      return { id: rd.id, name: lang==='mk'?rd.nameMk:rd.nameEn, locked: !unlocked, unlockedFlag: !!unlocked, lockCostLabel: d.formatCompact(rd.unlockCost), capLabel: rd.isLab ? '—' : String(rd.capacity),
+        bg: active ? 'oklch(38% 0.06 152)' : (unlocked ? 'oklch(94% 0.015 90)' : 'oklch(96% 0.01 90)'), color: active ? '#ffffff' : (unlocked ? 'oklch(27% 0.02 150)' : 'oklch(55% 0.02 150)'), border: unlocked ? 'none' : '1px dashed oklch(80% 0.02 90)',
+        onClick: () => this.switchRoom(rd.id) };
+    });
+    const isLabRoom = !!(d.ROOM_TYPES.find(r=>r.id===s.activeRoomId)||{}).isLab;
+    const isPlantableRoom = !isLabRoom;
+
+    const lamp = this.lampTier(s.activeRoomId);
+    const nextLamp = d.LAMP_TIERS[lamp.tier+1];
+    const lampLabel = lang==='mk'?lamp.nameMk:lamp.nameEn;
+    const lampMaxed = !nextLamp;
+    const lampCanAfford = !lampMaxed && s.money >= nextLamp.cost;
+    const lampBtnText = lampMaxed ? t.lamp_maxed : `${t.lamp_upgrade_btn} · ${d.formatCompact(nextLamp.cost)}`;
+
+    const challenges = s.challenges.map(c => {
+      const progress = Math.min(c.goal, s.dayCounters[c.key]||0);
+      return { id:c.id, label: lang==='mk'?c.labelMk:c.labelEn, progress, goal:c.goal, pct: Math.min(100,(progress/c.goal)*100), barColor: c.done ? 'oklch(60% 0.11 152)' : 'oklch(66% 0.15 55)' };
+    });
+
+    const viewPlants = this.plantsInRoom(s.activeRoomId).map(p => {
+      const strain = this.strainById(p.strainId);
+      const stage = p.progress>=1 ? 4 : Math.min(3, Math.floor(p.progress*4));
+      const canHarvest = p.progress >= 1;
+      const needsAttention = p.water<25 || p.food<25 || p.health<50;
+      let badgeText, badgeBg, badgeColor;
+      if (canHarvest) { badgeText = t.badge_mature; badgeBg = 'linear-gradient(135deg,#fbbf24,#d97706)'; badgeColor = '#2a1a00'; }
+      else if (stage===3) { badgeText = t.badge_flower; badgeBg = 'oklch(92% 0.06 152)'; badgeColor = 'oklch(35% 0.08 152)'; }
+      else if (stage===2) { badgeText = t.badge_veg; badgeBg = 'oklch(92% 0.06 152)'; badgeColor = 'oklch(35% 0.08 152)'; }
+      else if (stage===1) { badgeText = t.badge_sprout; badgeBg = 'oklch(93% 0.03 230)'; badgeColor = 'oklch(38% 0.08 230)'; }
+      else { badgeText = t.badge_seed; badgeBg = 'oklch(94% 0.015 90)'; badgeColor = 'oklch(50% 0.02 150)'; }
+      return {
+        id: p.id, name: nm(strain), badgeText, badgeBg, badgeColor,
+        waterPct: Math.round(p.water), waterColor: d.colorForPct(p.water),
+        foodPct: Math.round(p.food), foodColor: d.colorForPct(p.food),
+        healthPct: Math.round(p.health), healthColor: d.colorForPct(p.health),
+        scale: 0.45 + stage*0.14, lowerOpacity: stage>=1?1:0, midOpacity: stage>=2?1:0, budOpacity: stage>=3?1:0, budScale: stage>=4?1:0.55,
+        budColor: stage>=4 ? strain.glow : '#86efac', glow: strain.glow, glowOpacity: canHarvest?0.9:0,
+        needsAttention, canHarvest, harvestDisabled: !canHarvest,
+        harvestLabel: canHarvest ? t.plant_harvest : t.plant_growing_label,
+        harvestBg: canHarvest ? 'linear-gradient(135deg,oklch(70% 0.14 55),oklch(62% 0.15 40))' : 'oklch(92% 0.01 90)',
+        harvestColor: canHarvest ? '#ffffff' : 'oklch(60% 0.02 150)', harvestOpacity: canHarvest?1:0.7,
+        floaters: (p.floaters||[]).map(f=>({ id:f.id, text:f.text, color:f.color })),
+        onWater: () => this.waterPlant(p.id), onFeed: () => this.feedPlant(p.id), onHarvest: () => { if (p.progress>=1) this.harvestPlant(p.id); },
+      };
+    });
+
+    const roomDef = d.ROOM_TYPES.find(r=>r.id===s.activeRoomId);
+    const emptySlots = [];
+    if (roomDef && !roomDef.isLab) { for (let i=viewPlants.length;i<roomDef.capacity;i++) emptySlots.push({ key:i, onClick: () => this.openPlantPicker(s.activeRoomId) }); }
+
+    const strainRows = this.allStrains().map(strain => {
+      const unlocked = this.isUnlocked(strain);
+      return { id:strain.id, name: nm(strain), tier:strain.tier, glow: strain.glow, locked:!unlocked, unlockedFlag: unlocked, unlockLevel: strain.unlockLevel, priceLabel: d.formatNum(strain.price), rowOpacity: unlocked?1:0.55 };
+    });
+    const labUnlocked = !!(s.rooms.breeding_lab && s.rooms.breeding_lab.unlocked);
+    const labLocked = !labUnlocked;
+    const breedOptions = this.discoveredStrains().map(strain => {
+      const selected = s.breedSelection.includes(strain.id);
+      return { id:strain.id, name:nm(strain), bg: selected?'oklch(38% 0.06 152)':'oklch(94% 0.015 90)', color: selected?'#fff':'oklch(30% 0.02 150)', border: selected?'2px solid oklch(60% 0.11 152)':'2px solid transparent', onClick: () => this.toggleBreedSelect(strain.id) };
+    });
+    const breedDisabled = s.breedSelection.length!==2 || s.money<this.breedCost();
+    const breedResult = s.breedResult ? { name: nm(s.breedResult), glow: s.breedResult.glow, tier: s.breedResult.tier, price: d.formatNum(s.breedResult.price) } : null;
+
+    const inventoryRows = Object.keys(s.inventory).filter(id=>s.inventory[id]>0).map(id => {
+      const strain = this.strainById(id);
+      const qty = s.inventory[id];
+      const unitPrice = this.currentSellPrice(strain);
+      return { id, name: nm(strain), glow: strain.glow, qty, unitPrice: d.formatNum(unitPrice), totalValue: d.formatNum(unitPrice*qty), onSellOne: () => this.sellUnits(id,1), onSellAll: () => this.sellUnits(id,qty) };
+    });
+    const inventoryEmpty = inventoryRows.length===0;
+    const orderRows = s.orders.map(o => {
+      const strain = this.strainById(o.strainId);
+      const have = s.inventory[o.strainId]||0;
+      const can = have>=o.qty;
+      return { id:o.id, strainName: nm(strain), qty:o.qty, haveQty: have, pct: Math.min(100,(have/o.qty)*100), rewardMoney: d.formatNum(o.rewardMoney), rewardXp:o.rewardXp, expiresLabel: (lang==='mk'?'Истекува ден ':'Expires day ')+o.expiresAtDay, fulfillDisabled: !can, fulfillOpacity: can?1:0.55, fulfillLabel: can?t.order_fulfill_btn:t.order_need_btn, onFulfill: () => this.fulfillOrder(o.id) };
+    });
+    const ordersEmpty = orderRows.length===0;
+    const hasSellBoost = !!(s.sellBoost && s.sellBoost.remaining>0);
+    const sellBoostLabel = hasSellBoost ? '+'+Math.round((s.sellBoost.mult-1)*100)+'% × '+s.sellBoost.remaining : '';
+
+    const staffDesc = {
+      waterer: lang==='mk'?'Автоматски полева растенија на секои 15с.':'Automatically waters plants every 15s.',
+      feeder: lang==='mk'?'Автоматски храни растенија на секои 18с.':'Automatically feeds plants every 18s.',
+      harvester: lang==='mk'?'Автоматски обира и presади зрели растенија.':'Automatically harvests and replants mature plants.',
+      trader: lang==='mk'?'Автоматски исполнува нарачки или продава залиха.':'Automatically fulfills orders or sells inventory.',
+    };
+    const staffRows = d.STAFF_TYPES.map(def => {
+      const hired = !!s.staff[def.key];
+      return { key:def.key, name: lang==='mk'?def.nameMk:def.nameEn, desc: staffDesc[def.key], wage: d.formatNum(def.wage), hired, notHired: !hired, costLabel: d.formatCompact(def.cost), hireDisabled: s.money<def.cost, hireOpacity: s.money<def.cost?0.55:1, onHire: () => this.hireStaff(def.key) };
+    });
+
+    const bestStrainEntry = Object.entries(s.stats.harvestsByStrain||{}).sort((a,b)=>b[1]-a[1])[0];
+    const bestStrainName = bestStrainEntry ? nm(this.strainById(bestStrainEntry[0])) : '—';
+    const achievementRows = d.ACHIEVEMENTS.map(a => {
+      const unlocked = s.achievementsUnlocked.includes(a.id);
+      const current = Math.min(a.value, this.statValue(a.statKey));
+      return { id:a.id, name: lang==='mk'?a.nameMk:a.nameEn, desc: lang==='mk'?a.descMk:a.descEn, unlocked, showProgress: !unlocked, pct: Math.min(100,(current/a.value)*100), current, goal:a.value, rewardXp:a.rewardXp, rowOpacity: unlocked?1:0.85 };
+    });
+
+    const canPrestige = this.canPrestige();
+    const idx = s.tutorialStep;
+    const stepsArr = [1,2,3,4,5,6,7].map(n => ({ title: t['tut_'+n+'_title'], body: t['tut_'+n+'_body'] }));
+    const isLast = idx===stepsArr.length-1;
+    const tutStep = { title: stepsArr[idx].title, body: stepsArr[idx].body, nextLabel: isLast?t.tut_done:t.tut_next, dots: stepsArr.map((_,i)=>({ dotColor: i<=idx?'oklch(60% 0.11 152)':'oklch(90% 0.02 90)' })) };
+
+    return {
+      dataLoaded:true, notLoaded:false, t, lang,
+      langMkStyle: { bg: lang==='mk'?'oklch(60% 0.11 152)':'transparent', color: lang==='mk'?'#fff':'oklch(50% 0.02 150)' },
+      langEnStyle: { bg: lang==='en'?'oklch(60% 0.11 152)':'transparent', color: lang==='en'?'#fff':'oklch(50% 0.02 150)' },
+      onSetLangMk: () => this.setState({lang:'mk'}), onSetLangEn: () => this.setState({lang:'en'}),
+      soundOn: s.soundOn, soundOff: !s.soundOn, onToggleSound: () => this.setState({soundOn:!s.soundOn}),
+      onReplayTutorial: () => this.replayTutorial(),
+      moneyDisplay: d.formatNum(s.displayMoney), levelDisplay: s.level, xpPct, dayDisplay: s.day,
+      showPrestigeChip: s.prestige>0, prestigeDisplay: s.prestige,
+      activeTab: s.activeTab,
+      onTabGrow: () => this.switchTab('grow'), onTabGenetics: () => this.switchTab('genetics'), onTabMarket: () => this.switchTab('market'), onTabStaff: () => this.switchTab('staff'), onTabAch: () => this.switchTab('achievements'), onTabPrestige: () => this.switchTab('prestige'),
+      navGrow: navDef('grow'), navGenetics: navDef('genetics'), navMarket: navDef('market'), navStaff: navDef('staff'), navAch: navDef('achievements'), navPrestige: navDef('prestige'),
+      isGrowTab: s.activeTab==='grow', isGeneticsTab: s.activeTab==='genetics', isMarketTab: s.activeTab==='market', isStaffTab: s.activeTab==='staff', isAchTab: s.activeTab==='achievements', isPrestigeTab: s.activeTab==='prestige',
+      ambSky, ambIconColor, ambLabel,
+      rooms, isLabRoom, isPlantableRoom,
+      lampLabel, lampBtnText, lampBtnBg: lampMaxed?'oklch(94% 0.015 90)':(lampCanAfford?'oklch(38% 0.06 152)':'oklch(94% 0.015 90)'), lampBtnColor: lampMaxed?'oklch(60% 0.02 150)':(lampCanAfford?'#fff':'oklch(60% 0.02 150)'), lampBtnOpacity: lampMaxed?0.6:1, onUpgradeLamp: () => this.upgradeLamp(),
+      challenges, viewPlants, emptySlots,
+      strainRows, labUnlocked, labLocked,
+      breedOptions, breedSelectionCount: s.breedSelection.length, breedDisabled, breedBtnBg: breedDisabled?'oklch(90% 0.01 90)':'linear-gradient(135deg,oklch(60% 0.11 152),oklch(45% 0.09 152))', breedBtnColor: breedDisabled?'oklch(60% 0.02 150)':'#fff', breedBtnOpacity: breedDisabled?0.7:1, breedCostLabel: d.formatNum(this.breedCost()), onBreedClick: () => this.confirmBreed(),
+      breedResult, hasBreedResult: !!breedResult, onCloseBreedResult: () => this.closeBreedResult(),
+      inventoryRows, inventoryEmpty, onSellAllInventory: () => this.sellAllInventory(), hasSellBoost, sellBoostLabel,
+      orderRows, ordersEmpty,
+      staffRows,
+      statHarvests: d.formatNum(s.stats.totalHarvests), statEarned: d.formatNum(s.stats.lifetimeMoneyEarned), statPlaytime: d.fmtPlaytime(s.stats.playSeconds), statBestStrain: bestStrainName, statAchCount: s.achievementsUnlocked.length+'/'+d.ACHIEVEMENTS.length,
+      achievementRows,
+      prestigePoints: s.prestige, prestigeMultLabel: '+'+(s.prestige*5)+'%', canPrestige, cannotPrestige: !canPrestige, prestigeReqLevel: 10, onPrestigeClick: () => this.setState({showRebirthConfirm:true}),
+      showRebirthConfirm: s.showRebirthConfirm, onConfirmRebirth: () => this.doRebirth(), onCancelRebirth: () => this.setState({showRebirthConfirm:false}),
+      toasts: s.toasts,
+      activeEvent: s.activeEvent ? { title: lang==='mk'?s.activeEvent.titleMk:s.activeEvent.titleEn, desc: lang==='mk'?s.activeEvent.descMk:s.activeEvent.descEn, choices: s.activeEvent.choices.map(c=>({ label: lang==='mk'?c.labelMk:c.labelEn, onClick: () => this.resolveEventChoice(c) })) } : null,
+      hasActiveEvent: !!s.activeEvent,
+      showPlantPicker: !!s.showPlantPicker,
+      pickerStrains: this.discoveredStrains().map(strain => ({ id:strain.id, name:nm(strain), tierLabel:'T'+strain.tier, glow:strain.glow, onClick: () => this.plantSeed(strain.id) })),
+      onClosePicker: () => this.closePlantPicker(),
+      showTutorial: s.showTutorial, tutStep, onTutNext: () => this.tutNext(), onTutSkip: () => this.tutSkip(),
+    };
+  }
+}
+</script>
+</body>
+</html>
