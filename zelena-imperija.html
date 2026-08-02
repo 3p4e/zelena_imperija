@@ -108,7 +108,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .strana{background:var(--panel);border:1px solid var(--rab);border-radius:var(--r);
   box-shadow:var(--sen);overflow:hidden;position:sticky;top:14px}
 .jazicinja{display:flex;background:#0d1712;border-bottom:1px solid var(--rab)}
-.jazicinja button{flex:1;padding:11px 4px;font-size:11.5px;font-weight:700;
+.jazicinja button{flex:1;padding:11px 2px;font-size:10.5px;font-weight:700;
   background:transparent;color:var(--tekst-slab);border-radius:0;border-bottom:2px solid transparent}
 .jazicinja button.aktivno{color:var(--zelena);border-bottom-color:var(--zelena);background:var(--panel)}
 .sodrzina{padding:12px;max-height:calc(100vh - 190px);overflow-y:auto}
@@ -181,7 +181,8 @@ button:disabled{opacity:.35;cursor:not-allowed}
   <aside class="strana">
     <nav class="jazicinja">
       <button data-jaz="prodavnica" class="aktivno">Продавница</button>
-      <button data-jaz="sushara">Сушара</button>
+      <button data-jaz="sushara">Сушење</button>
+      <button data-jaz="zreenje">Зреење</button>
       <button data-jaz="magacin">Магацин</button>
       <button data-jaz="prodazba">Пазар</button>
       <button data-jaz="nadgradbi">Надградби</button>
@@ -362,7 +363,7 @@ let brojacTikovi = 0;
 let aktivnoJazice = "prodavnica";
 let panelValjaSe = true;         // dirty flag за страничниот панел
 let posledenTajmer = 0;
-let posetenoSushara = false, posetenoMagacin = false;
+let posetenoSushara = false, posetenoMagacin = false, posetenoZreenje = false;
 let sledenId = 1;
 
 function novaIgra(){
@@ -656,7 +657,8 @@ function tikni(){
       }
     }
   }
-  if (susharaSePromeni && aktivnoJazice === "sushara") panelValjaSe = true;
+  if (susharaSePromeni && (aktivnoJazice === "sushara" || aktivnoJazice === "zreenje"))
+    panelValjaSe = true;
 
   // ── Пазар — еднаш дневно ──────────────────────────────────
   if (novDen){
@@ -869,6 +871,7 @@ function spakuvajVoTegli(serijaId){
   s.burpDostapen = true;         // првиот бурп е достапен веднаш
   s.trebaVrtenje = false; s.vlazenDen = false; s.muvla = false;
   izvesti(TEKST.spakuvano(Math.round(s.vlaga)));
+  if (!posetenoZreenje){ aktivnoJazice = "zreenje"; posetenoZreenje = true; }
   panelValjaSe = true;
   iscrtajSe();
 }
@@ -1006,7 +1009,7 @@ const HUD = {
 
 const lejaJazli = [];   // трајни DOM јазли, се менуваат на место
 // На кој дел од височината на стеблото седи секој пар лисја (одоздола нагоре).
-const FRAKCII_LISJA = [0.30, 0.58, 0.84];
+const FRAKCII_LISJA = [0.20, 0.44, 0.66, 0.87];
 
 /** Растението е чист SVG — растот е само трансформација, без слики. */
 function svgRastenie(){
@@ -1045,17 +1048,20 @@ function svgRastenie(){
     </g>
     <g class="rastenie-boja" fill="#4ade80">
       <path class="steblo" d="M49,118 L51,118 L51,118 L49,118 Z"/>
-      ${par(96, 0.55)}${par(74, 0.72)}${par(52, 0.62)}
+      ${par(98, 0.80)}${par(80, 1.00)}${par(62, 0.88)}${par(46, 0.62)}
       <g class="pupki" opacity="0">
         <g class="kalisi" fill="#a3e635">
-          <ellipse cx="50" cy="46" rx="5"   ry="9"/>
-          <ellipse cx="50" cy="36" rx="4.3" ry="8"/>
-          <ellipse cx="50" cy="27" rx="3.6" ry="7"/>
-          <ellipse cx="50" cy="19" rx="2.8" ry="6"/>
-          <ellipse cx="42" cy="50" rx="3.6" ry="6.5" opacity=".85"/>
-          <ellipse cx="42" cy="41" rx="3"   ry="5.6" opacity=".85"/>
-          <ellipse cx="58" cy="50" rx="3.6" ry="6.5" opacity=".85"/>
-          <ellipse cx="58" cy="41" rx="3"   ry="5.6" opacity=".85"/>
+          <ellipse cx="50" cy="48" rx="6.4" ry="11"/>
+          <ellipse cx="50" cy="37" rx="5.6" ry="10"/>
+          <ellipse cx="50" cy="27" rx="4.7" ry="9"/>
+          <ellipse cx="50" cy="18" rx="3.7" ry="7.5"/>
+          <ellipse cx="50" cy="11" rx="2.7" ry="6"/>
+          <ellipse cx="40" cy="52" rx="4.6" ry="8"   opacity=".9"/>
+          <ellipse cx="40" cy="42" rx="3.8" ry="7"   opacity=".85"/>
+          <ellipse cx="40" cy="33" rx="3"   ry="5.8" opacity=".8"/>
+          <ellipse cx="60" cy="52" rx="4.6" ry="8"   opacity=".9"/>
+          <ellipse cx="60" cy="42" rx="3.8" ry="7"   opacity=".85"/>
+          <ellipse cx="60" cy="33" rx="3"   ry="5.8" opacity=".8"/>
         </g>
         <g class="niski" stroke="#f59e0b" stroke-width=".6" fill="none" stroke-linecap="round" opacity=".8">
           <path d="M48,22 Q45,17 47,12"/>
@@ -1226,7 +1232,7 @@ function iscrtajLeja(i){
   const venenje = (1 - zdr) * 24;
   j.lisja.forEach((g, idx) => {
     const y = 118 - visina * FRAKCII_LISJA[idx];
-    const lokalno = stegni((vid - idx * 0.22) / 0.35, 0, 1);
+    const lokalno = stegni((vid - idx * 0.17) / 0.32, 0, 1);
     g.style.transform =
       `translate(50px,${y.toFixed(1)}px) rotate(${venenje.toFixed(1)}deg) scale(${lokalno.toFixed(3)})`;
   });
@@ -1290,6 +1296,7 @@ function iscrtajPanel(){
 
   if      (aktivnoJazice === "prodavnica") el.innerHTML = panelProdavnica();
   else if (aktivnoJazice === "sushara")    el.innerHTML = panelSushara();
+  else if (aktivnoJazice === "zreenje")    el.innerHTML = panelZreenje();
   else if (aktivnoJazice === "magacin")    el.innerHTML = panelMagacin();
   else if (aktivnoJazice === "prodazba")   el.innerHTML = panelProdazba();
   else                                     el.innerHTML = panelNadgradbi();
@@ -1321,19 +1328,18 @@ function panelProdavnica(){
 }
 
 function panelSushara(){
-  if (!sostojba.sushara.length)
-    return `<div class="prazno">Сушарата е празна.<br>Обери зрело растение за да почнеш.</div>`;
+  const serii = sostojba.sushara.filter(s => s.faza === "sushenje");
+  if (!serii.length)
+    return `<div class="prazno">Нема ништо на сушење.<br>Обери зрело растение за да почнеш.</div>`;
 
   const imaSushara = sostojba.nadgradbi.sushara;
   const idealMin = imaSushara ? 8 : 10;
   const idealMax = imaSushara ? 20 : 16;
 
-  return sostojba.sushara.map(s => {
+  return serii.map(s => {
     const sorta = najdiSorta(s.sorta);
     const masa = Math.round(s.gramaVlazno * (1 - s.izgubenoMasa));
-
-    // ── Фаза 1: висечко сушење ──
-    if (s.faza === "sushenje"){
+    {
       const vlaga = Math.round(s.vlaga);
       const bojaVlaga = vlaga > KONFIG.MUVLA_PRAG_VLAGA ? "var(--crvena)"
                       : vlaga > idealMax ? "var(--zlato)"
@@ -1372,12 +1378,21 @@ function panelSushara(){
       </div>
       ${alarmi}
       <button ${mozeTegli ? "" : "disabled"} onclick="spakuvajVoTegli(${s.id})">
-        ${mozeTegli ? "Спакувај во тегли" : `Тегли под ${KONFIG.VLAGA_PAKUVANJE_MAX}% влажност`}
+        ${mozeTegli ? "Спакувај во тегли → Зреење" : `Тегли под ${KONFIG.VLAGA_PAKUVANJE_MAX}% влажност`}
       </button>
     </div>`;
     }
+  }).join("");
+}
 
-    // ── Фаза 2: зреење во тегли ──
+function panelZreenje(){
+  const serii = sostojba.sushara.filter(s => s.faza === "zreenje");
+  if (!serii.length)
+    return `<div class="prazno">Нема тегли на зреење.<br>Спакувај исушена берба од јазичето „Сушење".</div>`;
+
+  return serii.map(s => {
+    const sorta = najdiSorta(s.sorta);
+    const masa = Math.round(s.gramaVlazno * (1 - s.izgubenoMasa));
     const dZr = Math.floor(s.denoviZreenje);
     const gotovo = s.denoviZreenje >= KONFIG.ZREENJE_MIN_DENOVI;
     return `
