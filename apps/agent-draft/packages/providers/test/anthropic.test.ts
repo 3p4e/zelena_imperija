@@ -8,25 +8,55 @@ describe('AnthropicProvider', () => {
   it('streams text, tool calls and usage from the Messages API', async () => {
     const { fetch, calls } = fetchSequence([
       sseResponse([
-        { event: 'message_start', data: { type: 'message_start', message: { usage: { input_tokens: 25, cache_read_input_tokens: 5 } } } },
-        { event: 'content_block_start', data: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } } },
-        { event: 'content_block_delta', data: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'Hel' } } },
-        { event: 'content_block_delta', data: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'lo' } } },
+        {
+          event: 'message_start',
+          data: {
+            type: 'message_start',
+            message: { usage: { input_tokens: 25, cache_read_input_tokens: 5 } },
+          },
+        },
+        {
+          event: 'content_block_start',
+          data: { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
+        },
+        {
+          event: 'content_block_delta',
+          data: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'Hel' } },
+        },
+        {
+          event: 'content_block_delta',
+          data: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'lo' } },
+        },
         { event: 'content_block_stop', data: { type: 'content_block_stop', index: 0 } },
         {
           event: 'content_block_start',
-          data: { type: 'content_block_start', index: 1, content_block: { type: 'tool_use', id: 'toolu_1', name: 'fs_write' } },
+          data: {
+            type: 'content_block_start',
+            index: 1,
+            content_block: { type: 'tool_use', id: 'toolu_1', name: 'fs_write' },
+          },
         },
         {
           event: 'content_block_delta',
-          data: { type: 'content_block_delta', index: 1, delta: { type: 'input_json_delta', partial_json: '{"path":"a.' } },
+          data: {
+            type: 'content_block_delta',
+            index: 1,
+            delta: { type: 'input_json_delta', partial_json: '{"path":"a.' },
+          },
         },
         {
           event: 'content_block_delta',
-          data: { type: 'content_block_delta', index: 1, delta: { type: 'input_json_delta', partial_json: 'txt"}' } },
+          data: {
+            type: 'content_block_delta',
+            index: 1,
+            delta: { type: 'input_json_delta', partial_json: 'txt"}' },
+          },
         },
         { event: 'content_block_stop', data: { type: 'content_block_stop', index: 1 } },
-        { event: 'message_delta', data: { type: 'message_delta', delta: { stop_reason: 'tool_use' }, usage: { output_tokens: 12 } } },
+        {
+          event: 'message_delta',
+          data: { type: 'message_delta', delta: { stop_reason: 'tool_use' }, usage: { output_tokens: 12 } },
+        },
         { event: 'message_stop', data: { type: 'message_stop' } },
       ]),
     ]);
@@ -61,7 +91,9 @@ describe('AnthropicProvider', () => {
       errorResponse(401, { error: { type: 'authentication_error', message: `invalid x-api-key ${KEY}` } }),
     ]);
     const p = new AnthropicProvider({ apiKey: KEY, fetch });
-    const err = await p.chat({ model: 'm', messages: [{ role: 'user', content: [{ type: 'text', text: 'x' }] }] }).catch((e: unknown) => e);
+    const err = await p
+      .chat({ model: 'm', messages: [{ role: 'user', content: [{ type: 'text', text: 'x' }] }] })
+      .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ProviderError);
     const pe = err as ProviderError;
     expect(pe.code).toBe('auth');
@@ -70,7 +102,9 @@ describe('AnthropicProvider', () => {
   });
 
   it('maps 429 with retry-after to rate_limited', async () => {
-    const { fetch } = fetchSequence([errorResponse(429, { error: { message: 'slow down' } }, { 'retry-after': '7' })]);
+    const { fetch } = fetchSequence([
+      errorResponse(429, { error: { message: 'slow down' } }, { 'retry-after': '7' }),
+    ]);
     const p = new AnthropicProvider({ apiKey: KEY, fetch });
     const err = (await p
       .chat({ model: 'm', messages: [{ role: 'user', content: [{ type: 'text', text: 'x' }] }] })
@@ -111,8 +145,20 @@ describe('AnthropicProvider', () => {
     const { fetch, calls } = fetchSequence([
       sseResponse([
         { data: { type: 'message_start', message: { usage: { input_tokens: 1 } } } },
-        { data: { type: 'content_block_start', index: 0, content_block: { type: 'tool_use', id: 'x', name: '__structured_output' } } },
-        { data: { type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: '{"ok":true}' } } },
+        {
+          data: {
+            type: 'content_block_start',
+            index: 0,
+            content_block: { type: 'tool_use', id: 'x', name: '__structured_output' },
+          },
+        },
+        {
+          data: {
+            type: 'content_block_delta',
+            index: 0,
+            delta: { type: 'input_json_delta', partial_json: '{"ok":true}' },
+          },
+        },
         { data: { type: 'content_block_stop', index: 0 } },
         { data: { type: 'message_delta', delta: { stop_reason: 'tool_use' }, usage: { output_tokens: 3 } } },
       ]),
@@ -125,7 +171,10 @@ describe('AnthropicProvider', () => {
     });
     expect(res.content).toEqual([{ type: 'text', text: '{"ok":true}' }]);
     expect(res.finishReason).toBe('stop');
-    expect((calls[0]?.body as { tool_choice: unknown }).tool_choice).toEqual({ type: 'tool', name: '__structured_output' });
+    expect((calls[0]?.body as { tool_choice: unknown }).tool_choice).toEqual({
+      type: 'tool',
+      name: '__structured_output',
+    });
   });
 
   it('honours an abort signal', async () => {
@@ -135,7 +184,11 @@ describe('AnthropicProvider', () => {
         init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
       });
     const p = new AnthropicProvider({ apiKey: KEY, fetch: fetchStub });
-    const promise = p.chat({ model: 'm', messages: [{ role: 'user', content: [{ type: 'text', text: 'x' }] }], signal: controller.signal });
+    const promise = p.chat({
+      model: 'm',
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'x' }] }],
+      signal: controller.signal,
+    });
     controller.abort();
     const err = (await promise.catch((e: unknown) => e)) as ProviderError;
     expect(err.code).toBe('aborted');

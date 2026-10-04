@@ -46,7 +46,14 @@ export function InvitePage() {
           <Input required value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
         </Field>
         <Field label="Choose a password" hint="At least 10 characters.">
-          <Input type="password" autoComplete="new-password" minLength={10} required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            minLength={10}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </Field>
         <ErrorText error={error} />
         <Button type="submit" variant="primary" loading={busy}>

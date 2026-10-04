@@ -1,6 +1,11 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { and, asc, desc, eq, inArray } from 'drizzle-orm';
-import { createConversationSchema, regenerateSchema, sendMessageSchema, updateConversationSchema } from '@agent/shared';
+import {
+  createConversationSchema,
+  regenerateSchema,
+  sendMessageSchema,
+  updateConversationSchema,
+} from '@agent/shared';
 import type { AppDeps } from '../../deps.js';
 import { agentDefinitions, conversations, messageParts, messages } from '../../db/schema/index.js';
 import { currentUser } from '../../auth/plugin.js';
@@ -27,7 +32,11 @@ export function registerConversationRoutes(app: FastifyInstance, deps: AppDeps):
   app.get('/projects/:id/conversations', async (req) => {
     const user = currentUser(req);
     const { project } = await projectFor(db, user, (req.params as { id: string }).id, 'read');
-    const rows = await db.select().from(conversations).where(eq(conversations.projectId, project.id)).orderBy(desc(conversations.updatedAt));
+    const rows = await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.projectId, project.id))
+      .orderBy(desc(conversations.updatedAt));
     return rows.map(conversationDto);
   });
 
@@ -37,8 +46,12 @@ export function registerConversationRoutes(app: FastifyInstance, deps: AppDeps):
     const body = parseBody(createConversationSchema, req.body);
     assertModeAllowed(user, body.credentialMode);
     const agent = body.agentDefinitionId
-      ? await db.query.agentDefinitions.findFirst({ where: and(eq(agentDefinitions.id, body.agentDefinitionId), eq(agentDefinitions.enabled, true)) })
-      : await db.query.agentDefinitions.findFirst({ where: and(eq(agentDefinitions.isPrimary, true), eq(agentDefinitions.enabled, true)) });
+      ? await db.query.agentDefinitions.findFirst({
+          where: and(eq(agentDefinitions.id, body.agentDefinitionId), eq(agentDefinitions.enabled, true)),
+        })
+      : await db.query.agentDefinitions.findFirst({
+          where: and(eq(agentDefinitions.isPrimary, true), eq(agentDefinitions.enabled, true)),
+        });
     if (!agent) throw new AppError('validation_failed', 'No enabled agent is configured.');
     const [row] = await db
       .insert(conversations)
@@ -106,7 +119,12 @@ export function registerConversationRoutes(app: FastifyInstance, deps: AppDeps):
     return {
       conversation: conversationDto(conversation),
       running: deps.agent.isRunning(conversation.id),
-      messages: rows.map((m) => messageDto(m, parts.filter((p) => p.messageId === m.id))),
+      messages: rows.map((m) =>
+        messageDto(
+          m,
+          parts.filter((p) => p.messageId === m.id),
+        ),
+      ),
     };
   });
 

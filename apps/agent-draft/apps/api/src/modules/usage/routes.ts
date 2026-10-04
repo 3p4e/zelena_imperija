@@ -128,7 +128,12 @@ export function registerUsageRoutes(app: FastifyInstance, deps: AppDeps): void {
         blocked: sql<number>`count(*) filter (where ${usageRecords.status} in ('blocked_quota','blocked_cap'))::int`,
       })
       .from(users)
-      .leftJoin(usageRecords, filters.length > 0 ? and(eq(usageRecords.userId, users.id), ...filters) : eq(usageRecords.userId, users.id))
+      .leftJoin(
+        usageRecords,
+        filters.length > 0
+          ? and(eq(usageRecords.userId, users.id), ...filters)
+          : eq(usageRecords.userId, users.id),
+      )
       .groupBy(users.id, users.email)
       .orderBy(users.email);
     return rows.map((r) => ({ ...r, estimatedCostUsd: Number(r.cost) }));

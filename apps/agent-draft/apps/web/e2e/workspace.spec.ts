@@ -16,7 +16,9 @@ test.describe.serial('workspace UI (real API + sandbox, scripted model)', () => 
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
   });
 
-  test('admin adds a key, builds a page with the agent, sees files, preview and terminal', async ({ page }) => {
+  test('admin adds a key, builds a page with the agent, sees files, preview and terminal', async ({
+    page,
+  }) => {
     await login(page, ADMIN.email, ADMIN.password);
 
     // BYOK through the Settings page: saved, masked, tested.
@@ -78,7 +80,10 @@ test.describe.serial('workspace UI (real API + sandbox, scripted model)', () => 
     await expect(page.getByText('anthropic/claude-sonnet-4-5')).toBeVisible();
   });
 
-  test('admin creates a member; the member sees no admin area and no subscription options', async ({ page, browser }) => {
+  test('admin creates a member; the member sees no admin area and no subscription options', async ({
+    page,
+    browser,
+  }) => {
     await login(page, ADMIN.email, ADMIN.password);
     await page.getByRole('link', { name: 'Admin' }).click();
     await page.getByLabel('Email').fill('member@test.local');

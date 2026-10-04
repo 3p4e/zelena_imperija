@@ -25,12 +25,23 @@ export function shellTools(sandbox: SandboxManager, db: Db): Tool[] {
       permission: 'exec',
       schema: z.object({
         command: z.string().min(1).max(10_000),
-        timeout_s: z.number().int().min(1).max(3600).optional().describe('Kill the command after this many seconds.'),
+        timeout_s: z
+          .number()
+          .int()
+          .min(1)
+          .max(3600)
+          .optional()
+          .describe('Kill the command after this many seconds.'),
         background: z.boolean().optional(),
       }),
       async run(ctx, args) {
         if (args.background) {
-          const log = await sandbox.startBackground(ctx.projectId, args.command, `bg-${Date.now()}`, ctx.actorUserId);
+          const log = await sandbox.startBackground(
+            ctx.projectId,
+            args.command,
+            `bg-${Date.now()}`,
+            ctx.actorUserId,
+          );
           return ok(`Started in background. Output is written to ${log}; read it with: tail -n 50 ${log}`);
         }
         const r = await sandbox.exec({
@@ -53,7 +64,10 @@ export function shellTools(sandbox: SandboxManager, db: Db): Tool[] {
       description:
         'Run the project test command (e.g. "npm test", "pytest -q") and record a structured result shown in the Tests panel.',
       permission: 'exec',
-      schema: z.object({ command: z.string().min(1).max(2000), timeout_s: z.number().int().min(1).max(3600).optional() }),
+      schema: z.object({
+        command: z.string().min(1).max(2000),
+        timeout_s: z.number().int().min(1).max(3600).optional(),
+      }),
       async run(ctx, args) {
         const { exec, summary } = await runTestCommand(sandbox, db, {
           projectId: ctx.projectId,

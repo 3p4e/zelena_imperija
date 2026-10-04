@@ -11,8 +11,18 @@ export function AgentsTab() {
   const agents = useQuery({ queryKey: key, queryFn: () => api.get<AgentDefinition[]>('/admin/agents') });
   const [editing, setEditing] = useState<AgentDefinition | 'new' | null>(null);
   return (
-    <Card title="Agents" actions={<Button size="sm" variant="primary" onClick={() => setEditing('new')}>New agent</Button>}>
-      <p className="mb-3 text-xs text-zinc-400">New conversations use the primary agent. Phase 1 runs one agent per conversation; delegation between agents comes in Phase 2.</p>
+    <Card
+      title="Agents"
+      actions={
+        <Button size="sm" variant="primary" onClick={() => setEditing('new')}>
+          New agent
+        </Button>
+      }
+    >
+      <p className="mb-3 text-xs text-zinc-400">
+        New conversations use the primary agent. Phase 1 runs one agent per conversation; delegation between
+        agents comes in Phase 2.
+      </p>
       <ul className="divide-y divide-zinc-800 text-sm">
         {agents.data?.map((a) => (
           <li key={a.id} className="flex items-center gap-3 py-2">
@@ -77,29 +87,52 @@ function AgentDialog({ agent, onClose }: { agent: AgentDefinition | null; onClos
           <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
         </Field>
         <Field label="Name">
-          <Input value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} />
+          <Input
+            value={form.displayName}
+            onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+          />
         </Field>
         <Field label="Max steps per turn">
-          <Input type="number" value={form.maxIterations} onChange={(e) => setForm({ ...form, maxIterations: e.target.value })} />
+          <Input
+            type="number"
+            value={form.maxIterations}
+            onChange={(e) => setForm({ ...form, maxIterations: e.target.value })}
+          />
         </Field>
       </div>
       <div className="mt-3 flex flex-col gap-3">
         <Field label="Role">
-          <Input value={form.roleDescription} onChange={(e) => setForm({ ...form, roleDescription: e.target.value })} />
+          <Input
+            value={form.roleDescription}
+            onChange={(e) => setForm({ ...form, roleDescription: e.target.value })}
+          />
         </Field>
         <Field label="System prompt">
-          <Textarea rows={10} className="font-mono text-xs" value={form.systemPrompt} onChange={(e) => setForm({ ...form, systemPrompt: e.target.value })} />
+          <Textarea
+            rows={10}
+            className="font-mono text-xs"
+            value={form.systemPrompt}
+            onChange={(e) => setForm({ ...form, systemPrompt: e.target.value })}
+          />
         </Field>
         <div>
           <div className="mb-1 text-sm text-zinc-300">Tools</div>
           <div className="grid grid-cols-3 gap-1 rounded border border-zinc-800 p-2 text-xs">
             <label className="flex items-center gap-1.5">
-              <input type="checkbox" checked={selected.has('mcp__*')} onChange={(e) => toggle('mcp__*', e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={selected.has('mcp__*')}
+                onChange={(e) => toggle('mcp__*', e.target.checked)}
+              />
               <span className="font-mono">mcp__*</span> (all MCP tools)
             </label>
             {tools.data?.map((t) => (
               <label key={t.name} className="flex items-center gap-1.5">
-                <input type="checkbox" checked={selected.has(t.name)} onChange={(e) => toggle(t.name, e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={selected.has(t.name)}
+                  onChange={(e) => toggle(t.name, e.target.checked)}
+                />
                 <span className="font-mono">{t.name}</span>
               </label>
             ))}
@@ -107,10 +140,20 @@ function AgentDialog({ agent, onClose }: { agent: AgentDefinition | null; onClos
         </div>
         <div className="flex gap-4 text-sm">
           <label className="flex items-center gap-1.5">
-            <input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} /> Enabled
+            <input
+              type="checkbox"
+              checked={form.enabled}
+              onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
+            />{' '}
+            Enabled
           </label>
           <label className="flex items-center gap-1.5">
-            <input type="checkbox" checked={form.isPrimary} onChange={(e) => setForm({ ...form, isPrimary: e.target.checked })} /> Primary (used for new conversations)
+            <input
+              type="checkbox"
+              checked={form.isPrimary}
+              onChange={(e) => setForm({ ...form, isPrimary: e.target.checked })}
+            />{' '}
+            Primary (used for new conversations)
           </label>
         </div>
       </div>

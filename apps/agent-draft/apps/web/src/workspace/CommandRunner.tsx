@@ -4,7 +4,17 @@ import { errorMessage, streamSse } from '../lib/api';
 import { Button, Input } from '../components/ui';
 
 /** Runs one command through an SSE endpoint and shows live output. */
-export function CommandRunner({ endpoint, placeholder, label, onDone }: { endpoint: string; placeholder: string; label: string; onDone?: () => void }) {
+export function CommandRunner({
+  endpoint,
+  placeholder,
+  label,
+  onDone,
+}: {
+  endpoint: string;
+  placeholder: string;
+  label: string;
+  onDone?: () => void;
+}) {
   const [command, setCommand] = useState('');
   const [output, setOutput] = useState('');
   const [running, setRunning] = useState(false);
@@ -35,12 +45,21 @@ export function CommandRunner({ endpoint, placeholder, label, onDone }: { endpoi
           void run();
         }}
       >
-        <Input className="font-mono text-xs" placeholder={placeholder} value={command} onChange={(e) => setCommand(e.target.value)} />
+        <Input
+          className="font-mono text-xs"
+          placeholder={placeholder}
+          value={command}
+          onChange={(e) => setCommand(e.target.value)}
+        />
         <Button type="submit" loading={running}>
           {label}
         </Button>
       </form>
-      {output && <pre className="max-h-64 overflow-auto rounded bg-zinc-900 p-2 font-mono text-[11.5px] whitespace-pre-wrap">{output}</pre>}
+      {output && (
+        <pre className="max-h-64 overflow-auto rounded bg-zinc-900 p-2 font-mono text-[11.5px] whitespace-pre-wrap">
+          {output}
+        </pre>
+      )}
     </div>
   );
 }

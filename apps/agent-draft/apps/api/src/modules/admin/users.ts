@@ -10,7 +10,16 @@ import {
   type Invite,
 } from '@agent/shared';
 import type { AppDeps } from '../../deps.js';
-import { conversations, invites, memberLimits, memberToolRestrictions, passwordResets, projects, sandboxes, users } from '../../db/schema/index.js';
+import {
+  conversations,
+  invites,
+  memberLimits,
+  memberToolRestrictions,
+  passwordResets,
+  projects,
+  sandboxes,
+  users,
+} from '../../db/schema/index.js';
 import { currentUser } from '../../auth/plugin.js';
 import { hashPassword } from '../../auth/password.js';
 import { hashToken, newToken } from '../../lib/crypto.js';
@@ -23,12 +32,18 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
 
   const issueResetLink = async (userId: string, hours: number): Promise<string> => {
     const token = newToken(32);
-    await db.insert(passwordResets).values({ userId, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + hours * 3600_000) });
+    await db
+      .insert(passwordResets)
+      .values({ userId, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + hours * 3600_000) });
     return `${deps.config.PUBLIC_URL}/reset-password?token=${token}`;
   };
 
   app.get('/admin/users', async (): Promise<AdminUserRow[]> => {
-    const rows = await db.select({ u: users, l: memberLimits }).from(users).leftJoin(memberLimits, eq(memberLimits.userId, users.id)).orderBy(asc(users.email));
+    const rows = await db
+      .select({ u: users, l: memberLimits })
+      .from(users)
+      .leftJoin(memberLimits, eq(memberLimits.userId, users.id))
+      .orderBy(asc(users.email));
     return rows.map(({ u, l }) => ({
       id: u.id,
       email: u.email,
@@ -38,7 +53,15 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
       createdAt: u.createdAt.toISOString(),
       suspendedAt: iso(u.suspendedAt),
       lastSeenAt: iso(u.lastSeenAt),
-      limits: l ? { sandboxCpu: l.sandboxCpu, sandboxMemMb: l.sandboxMemMb, sandboxDiskMb: l.sandboxDiskMb, maxContainers: l.maxContainers, networkMode: l.networkMode } : null,
+      limits: l
+        ? {
+            sandboxCpu: l.sandboxCpu,
+            sandboxMemMb: l.sandboxMemMb,
+            sandboxDiskMb: l.sandboxDiskMb,
+            maxContainers: l.maxContainers,
+            networkMode: l.networkMode,
+          }
+        : null,
     }));
   });
 
@@ -83,7 +106,11 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
         .innerJoin(sandboxes, eq(sandboxes.projectId, projects.id))
         .where(and(eq(projects.ownerUserId, id), eq(sandboxes.status, 'running')));
       for (const p of owned) await deps.sandbox.stop(p.projectId);
-      const convs = await db.select({ id: conversations.id }).from(conversations).innerJoin(projects, eq(projects.id, conversations.projectId)).where(eq(projects.ownerUserId, id));
+      const convs = await db
+        .select({ id: conversations.id })
+        .from(conversations)
+        .innerJoin(projects, eq(projects.id, conversations.projectId))
+        .where(eq(projects.ownerUserId, id));
       for (const c of convs) deps.agent.stop(c.id);
     }
     await deps.audit(admin.id, `admin.user_${body.status}`, 'user', id, req.ip);
@@ -121,7 +148,10 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
 
   app.get('/admin/users/:id/tool-restrictions', async (req) => {
     const id = requireUuid((req.params as { id: string }).id);
-    return db.select({ toolName: memberToolRestrictions.toolName, allowed: memberToolRestrictions.allowed }).from(memberToolRestrictions).where(eq(memberToolRestrictions.userId, id));
+    return db
+      .select({ toolName: memberToolRestrictions.toolName, allowed: memberToolRestrictions.allowed })
+      .from(memberToolRestrictions)
+      .where(eq(memberToolRestrictions.userId, id));
   });
 
   app.put('/admin/users/:id/tool-restrictions', async (req) => {
@@ -132,13 +162,18 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
     if (user.role === 'admin') throw new AppError('validation_failed', 'The admin always has every tool.');
     await db.transaction(async (tx) => {
       await tx.delete(memberToolRestrictions).where(eq(memberToolRestrictions.userId, id));
-      if (body.restrictions.length > 0) await tx.insert(memberToolRestrictions).values(body.restrictions.map((r) => ({ userId: id, ...r })));
+      if (body.restrictions.length > 0)
+        await tx.insert(memberToolRestrictions).values(body.restrictions.map((r) => ({ userId: id, ...r })));
     });
     return body.restrictions;
   });
 
   app.get('/admin/invites', async (): Promise<Invite[]> => {
-    const rows = await db.select().from(invites).where(isNull(invites.acceptedAt)).orderBy(desc(invites.createdAt));
+    const rows = await db
+      .select()
+      .from(invites)
+      .where(isNull(invites.acceptedAt))
+      .orderBy(desc(invites.createdAt));
     return rows.map((i) => ({
       id: i.id,
       email: i.email,
@@ -157,13 +192,23 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
     const token = newToken(32);
     const [row] = await db
       .insert(invites)
-      .values({ email: body.email, role: body.role, tokenHash: hashToken(token), createdByUserId: admin.id, expiresAt: new Date(Date.now() + body.expiresInHours * 3600_000) })
+      .values({
+        email: body.email,
+        role: body.role,
+        tokenHash: hashToken(token),
+        createdByUserId: admin.id,
+        expiresAt: new Date(Date.now() + body.expiresInHours * 3600_000),
+      })
       .returning();
     if (!row) throw new AppError('internal', 'Could not create invite.');
     const acceptUrl = `${deps.config.PUBLIC_URL}/invite?token=${token}`;
     let emailed = false;
     if (deps.mailer.configured) {
-      await deps.mailer.send(body.email, 'You are invited', `You were invited to the agent workspace. Accept within ${body.expiresInHours} hours:\n\n${acceptUrl}`);
+      await deps.mailer.send(
+        body.email,
+        'You are invited',
+        `You were invited to the agent workspace. Accept within ${body.expiresInHours} hours:\n\n${acceptUrl}`,
+      );
       emailed = true;
     }
     await deps.audit(admin.id, 'admin.invite', 'invite', row.id, req.ip);

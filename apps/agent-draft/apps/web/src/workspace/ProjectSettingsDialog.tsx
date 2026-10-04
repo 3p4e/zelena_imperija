@@ -63,7 +63,10 @@ export function ProjectSettingsDialog({ project, onClose }: { project: Project; 
             Delete project
           </Button>
           <div className="flex gap-2">
-            <Button onClick={() => void save({ status: project.status === 'archived' ? 'active' : 'archived' })} disabled={busy}>
+            <Button
+              onClick={() => void save({ status: project.status === 'archived' ? 'active' : 'archived' })}
+              disabled={busy}
+            >
               {project.status === 'archived' ? 'Unarchive' : 'Archive'}
             </Button>
             <Button

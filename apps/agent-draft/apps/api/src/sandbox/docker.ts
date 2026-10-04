@@ -45,7 +45,7 @@ export async function dockerExec(container: Docker.Container, opts: ExecOptions)
     Env: opts.env ?? [],
     Tty: false,
   });
-  const stream = (await exec.start({ hijack: true, stdin: opts.stdin !== undefined }));
+  const stream = await exec.start({ hijack: true, stdin: opts.stdin !== undefined });
   const limit = opts.captureLimit ?? 1024 * 1024;
   const out = new PassThrough();
   const err = new PassThrough();
@@ -117,8 +117,17 @@ export async function dockerExec(container: Docker.Container, opts: ExecOptions)
 }
 
 /** dockerode's modem is untyped; this is its documented demultiplexer for non-TTY streams. */
-export function demux(modem: unknown, stream: NodeJS.ReadableStream, out: NodeJS.WritableStream, err: NodeJS.WritableStream): void {
-  (modem as { demuxStream: (s: NodeJS.ReadableStream, o: NodeJS.WritableStream, e: NodeJS.WritableStream) => void }).demuxStream(stream, out, err);
+export function demux(
+  modem: unknown,
+  stream: NodeJS.ReadableStream,
+  out: NodeJS.WritableStream,
+  err: NodeJS.WritableStream,
+): void {
+  (
+    modem as {
+      demuxStream: (s: NodeJS.ReadableStream, o: NodeJS.WritableStream, e: NodeJS.WritableStream) => void;
+    }
+  ).demuxStream(stream, out, err);
 }
 
 export function isNotFound(err: unknown): boolean {

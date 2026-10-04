@@ -43,7 +43,14 @@ export type SandboxStatus = (typeof SANDBOX_STATUSES)[number];
 export const EXECUTION_KINDS = ['shell', 'test', 'preview', 'git', 'fs'] as const;
 export type ExecutionKind = (typeof EXECUTION_KINDS)[number];
 
-export const USAGE_STATUSES = ['ok', 'error', 'rate_limited', 'timeout', 'blocked_quota', 'blocked_cap'] as const;
+export const USAGE_STATUSES = [
+  'ok',
+  'error',
+  'rate_limited',
+  'timeout',
+  'blocked_quota',
+  'blocked_cap',
+] as const;
 export type UsageStatus = (typeof USAGE_STATUSES)[number];
 
 export const TOOL_PERMISSIONS = ['read', 'write', 'exec', 'network'] as const;

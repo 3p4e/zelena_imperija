@@ -11,7 +11,15 @@ import { Button, Empty, ErrorText, Input, Select } from '../components/ui';
  * sandboxed iframe without same-origin rights, so the previewed app cannot act
  * as the logged-in user.
  */
-export function PreviewPane({ project, canEdit, ports }: { project: Project; canEdit: boolean; ports: { port: number; label: string }[] }) {
+export function PreviewPane({
+  project,
+  canEdit,
+  ports,
+}: {
+  project: Project;
+  canEdit: boolean;
+  ports: { port: number; label: string }[];
+}) {
   const qc = useQueryClient();
   const [port, setPort] = useState<number | null>(ports[0]?.port ?? null);
   const [url, setUrl] = useState<string | null>(null);
@@ -59,7 +67,12 @@ export function PreviewPane({ project, canEdit, ports }: { project: Project; can
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b border-zinc-800 px-3 py-1.5">
-        <Select value={port ?? ''} onChange={(e) => setPort(Number(e.target.value))} className="text-xs" aria-label="Preview port">
+        <Select
+          value={port ?? ''}
+          onChange={(e) => setPort(Number(e.target.value))}
+          className="text-xs"
+          aria-label="Preview port"
+        >
           {ports.length === 0 && <option value="">No ports</option>}
           {ports.map((p) => (
             <option key={p.port} value={p.port}>
@@ -67,11 +80,23 @@ export function PreviewPane({ project, canEdit, ports }: { project: Project; can
             </option>
           ))}
         </Select>
-        <Button size="sm" variant="ghost" aria-label="Reload preview" onClick={() => setNonce((n) => n + 1)} disabled={!url}>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label="Reload preview"
+          onClick={() => setNonce((n) => n + 1)}
+          disabled={!url}
+        >
           <RefreshCw className="size-3.5" />
         </Button>
         {url && (
-          <a href={url} target="_blank" rel="noreferrer noopener" className="text-zinc-400 hover:text-zinc-100" aria-label="Open preview in a new tab">
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="text-zinc-400 hover:text-zinc-100"
+            aria-label="Open preview in a new tab"
+          >
             <ExternalLink className="size-3.5" />
           </a>
         )}
@@ -88,7 +113,12 @@ export function PreviewPane({ project, canEdit, ports }: { project: Project; can
               void addPort();
             }}
           >
-            <Input className="h-7 w-20 text-xs" placeholder="port" value={newPort} onChange={(e) => setNewPort(e.target.value)} />
+            <Input
+              className="h-7 w-20 text-xs"
+              placeholder="port"
+              value={newPort}
+              onChange={(e) => setNewPort(e.target.value)}
+            />
             <Button size="sm" type="submit">
               Expose
             </Button>
@@ -105,7 +135,10 @@ export function PreviewPane({ project, canEdit, ports }: { project: Project; can
           className="min-h-0 w-full flex-1 bg-white"
         />
       ) : (
-        <Empty>Ask the agent to start a server and call preview, or expose a port your app listens on (bind to 0.0.0.0).</Empty>
+        <Empty>
+          Ask the agent to start a server and call preview, or expose a port your app listens on (bind to
+          0.0.0.0).
+        </Empty>
       )}
     </div>
   );

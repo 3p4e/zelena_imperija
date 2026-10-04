@@ -20,10 +20,15 @@ function encode(s: Selection): string {
 }
 
 function decode(v: string): Selection {
-  if (v.startsWith('cli:')) return { modelId: null, credentialMode: 'subscription_cli', cliKind: v.slice(4) as CliKind };
+  if (v.startsWith('cli:'))
+    return { modelId: null, credentialMode: 'subscription_cli', cliKind: v.slice(4) as CliKind };
   if (v.startsWith('api:')) {
     const [, modelId, mode] = v.split(':');
-    return { modelId: modelId ?? null, credentialMode: mode === 'auto' || !mode ? null : (mode as CredentialMode), cliKind: null };
+    return {
+      modelId: modelId ?? null,
+      credentialMode: mode === 'auto' || !mode ? null : (mode as CredentialMode),
+      cliKind: null,
+    };
   }
   return EMPTY_SELECTION;
 }
@@ -32,7 +37,17 @@ function decode(v: string): Selection {
  * Lists only what the current user can actually run: models with a usable key
  * (own or shared), plus subscription CLIs for the admin.
  */
-export function ModelPicker({ value, onChange, inheritLabel, disabled }: { value: Selection; onChange: (s: Selection) => void; inheritLabel: string; disabled?: boolean }) {
+export function ModelPicker({
+  value,
+  onChange,
+  inheritLabel,
+  disabled,
+}: {
+  value: Selection;
+  onChange: (s: Selection) => void;
+  inheritLabel: string;
+  disabled?: boolean;
+}) {
   const models = useModels();
   const cli = useCliOptions();
   const byProvider = new Map<string, NonNullable<typeof models.data>>();
@@ -42,10 +57,19 @@ export function ModelPicker({ value, onChange, inheritLabel, disabled }: { value
     byProvider.set(opt.model.providerSlug, list);
   }
   const current = encode(value);
-  const known = current === 'inherit' || current.startsWith('cli:') || (models.data ?? []).some((o) => current.startsWith(`api:${o.model.id}:`));
+  const known =
+    current === 'inherit' ||
+    current.startsWith('cli:') ||
+    (models.data ?? []).some((o) => current.startsWith(`api:${o.model.id}:`));
 
   return (
-    <Select value={current} onChange={(e) => onChange(decode(e.target.value))} disabled={disabled} className="max-w-[260px] text-xs" aria-label="Model">
+    <Select
+      value={current}
+      onChange={(e) => onChange(decode(e.target.value))}
+      disabled={disabled}
+      className="max-w-[260px] text-xs"
+      aria-label="Model"
+    >
       <option value="inherit">{inheritLabel}</option>
       {!known && <option value={current}>(unavailable model)</option>}
       {[...byProvider.entries()].map(([provider, opts]) => (

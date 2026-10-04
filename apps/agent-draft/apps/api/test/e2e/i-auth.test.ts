@@ -46,7 +46,9 @@ describe('I. authentication', () => {
       expect(res.status, `${r.method} ${r.url}`).toBe(401);
     }
     // A forged cookie is no better than none.
-    const forged = await fetch(`${h.baseUrl}/api/projects`, { headers: { cookie: 'agent_session=forged-token-value' } });
+    const forged = await fetch(`${h.baseUrl}/api/projects`, {
+      headers: { cookie: 'agent_session=forged-token-value' },
+    });
     expect(forged.status).toBe(401);
     expect(anon.authenticated).toBe(false);
   });
@@ -69,21 +71,44 @@ describe('I. authentication', () => {
 
   it('invite links create accounts once; there is no open registration', async () => {
     const admin = await adminClient(h);
-    const inv = await admin.post<{ acceptUrl: string; emailed: boolean }>('/api/admin/invites', { email: 'newbie@test.local', role: 'member' });
+    const inv = await admin.post<{ acceptUrl: string; emailed: boolean }>('/api/admin/invites', {
+      email: 'newbie@test.local',
+      role: 'member',
+    });
     expect(inv.status).toBe(201);
     expect(inv.body.emailed).toBe(true);
     expect(h.mail.at(-1)?.to).toBe('newbie@test.local');
     const token = new URL(inv.body.acceptUrl).searchParams.get('token') ?? '';
 
     const bad = new Client(h.baseUrl);
-    expect((await bad.post('/api/auth/invites/accept', { token: 'x'.repeat(40), displayName: 'n', password: 'long-password-1' })).status).toBe(404);
+    expect(
+      (
+        await bad.post('/api/auth/invites/accept', {
+          token: 'x'.repeat(40),
+          displayName: 'n',
+          password: 'long-password-1',
+        })
+      ).status,
+    ).toBe(404);
 
     const c = new Client(h.baseUrl);
-    const accepted = await c.post<{ user: { role: string } }>('/api/auth/invites/accept', { token, displayName: 'Newbie', password: 'newbie-password-1' });
+    const accepted = await c.post<{ user: { role: string } }>('/api/auth/invites/accept', {
+      token,
+      displayName: 'Newbie',
+      password: 'newbie-password-1',
+    });
     expect(accepted.status).toBe(200);
     expect(accepted.body.user.role).toBe('member');
     expect((await c.get('/api/projects')).status).toBe(200);
-    expect((await new Client(h.baseUrl).post('/api/auth/invites/accept', { token, displayName: 'Again', password: 'newbie-password-1' })).status).toBe(404);
+    expect(
+      (
+        await new Client(h.baseUrl).post('/api/auth/invites/accept', {
+          token,
+          displayName: 'Again',
+          password: 'newbie-password-1',
+        })
+      ).status,
+    ).toBe(404);
 
     // No route creates users without the admin.
     expect(h.app.routeTable.some((r) => /register|signup/i.test(r.url))).toBe(false);
@@ -93,17 +118,27 @@ describe('I. authentication', () => {
     const admin = await adminClient(h);
     const { client: member } = await createMember(h, admin, 'reset@test.local');
     const anon = new Client(h.baseUrl);
-    const req = await anon.post<{ ok: boolean }>('/api/auth/password-reset/request', { email: 'reset@test.local' });
+    const req = await anon.post<{ ok: boolean }>('/api/auth/password-reset/request', {
+      email: 'reset@test.local',
+    });
     expect(req.body.ok).toBe(true);
     // Unknown emails get the same answer.
-    expect((await anon.post('/api/auth/password-reset/request', { email: 'nobody@test.local' })).status).toBe(200);
+    expect((await anon.post('/api/auth/password-reset/request', { email: 'nobody@test.local' })).status).toBe(
+      200,
+    );
     const link = /https?:\/\/\S+/.exec(h.mail.at(-1)?.text ?? '')?.[0] ?? '';
     const token = new URL(link).searchParams.get('token') ?? '';
-    expect((await anon.post('/api/auth/password-reset/complete', { token, password: 'brand-new-password' })).status).toBe(200);
+    expect(
+      (await anon.post('/api/auth/password-reset/complete', { token, password: 'brand-new-password' }))
+        .status,
+    ).toBe(200);
     expect((await member.get('/api/projects')).status).toBe(401);
     expect((await new Client(h.baseUrl).login('reset@test.local', 'member-password-1')).status).toBe(401);
     expect((await new Client(h.baseUrl).login('reset@test.local', 'brand-new-password')).status).toBe(200);
-    expect((await anon.post('/api/auth/password-reset/complete', { token, password: 'another-password-1' })).status).toBe(404);
+    expect(
+      (await anon.post('/api/auth/password-reset/complete', { token, password: 'another-password-1' }))
+        .status,
+    ).toBe(404);
   });
 
   it('suspending a user ends their sessions and blocks login', async () => {
@@ -116,7 +151,9 @@ describe('I. authentication', () => {
     expect((await new Client(h.baseUrl).login('sus@test.local', 'member-password-1')).status).toBe(200);
     // The admin cannot lock themselves out.
     const me = await admin.get<{ user: { id: string } }>('/api/auth/me');
-    expect((await admin.patch(`/api/admin/users/${me.body.user.id}/status`, { status: 'suspended' })).status).toBe(400);
+    expect(
+      (await admin.patch(`/api/admin/users/${me.body.user.id}/status`, { status: 'suspended' })).status,
+    ).toBe(400);
   });
 
   it('logout ends the session', async () => {
@@ -139,14 +176,21 @@ describe('I. HTTPS enforcement outside localhost', () => {
     const plain = await rawGet(h.baseUrl, '/api/projects', { host: 'agent.example.com' });
     expect(plain.status).toBe(308);
     expect(plain.location).toBe('https://agent.example.com/api/projects');
-    const viaProxy = await rawGet(h.baseUrl, '/api/projects', { host: 'agent.example.com', 'x-forwarded-proto': 'https' });
+    const viaProxy = await rawGet(h.baseUrl, '/api/projects', {
+      host: 'agent.example.com',
+      'x-forwarded-proto': 'https',
+    });
     expect(viaProxy.status).toBe(401);
     const local = await fetch(`${h.baseUrl}/api/projects`);
     expect(local.status).toBe(401);
   });
 });
 
-function rawGet(baseUrl: string, path: string, headers: Record<string, string>): Promise<{ status: number; location: string | undefined }> {
+function rawGet(
+  baseUrl: string,
+  path: string,
+  headers: Record<string, string>,
+): Promise<{ status: number; location: string | undefined }> {
   const u = new URL(baseUrl);
   return new Promise((resolve, reject) => {
     const req = http.request({ host: u.hostname, port: u.port, path, method: 'GET', headers }, (res) => {

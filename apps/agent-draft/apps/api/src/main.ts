@@ -22,7 +22,9 @@ async function main(): Promise<void> {
   const app = await buildApp(deps);
 
   const reaper = setInterval(() => {
-    void deps.sandbox.reapIdle().catch((err: unknown) => log.warn({ err: String(err) }, 'idle reaper failed'));
+    void deps.sandbox
+      .reapIdle()
+      .catch((err: unknown) => log.warn({ err: String(err) }, 'idle reaper failed'));
     void deps.sessions.purgeExpired().catch(() => undefined);
   }, 60_000);
 

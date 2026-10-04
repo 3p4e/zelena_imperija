@@ -1,5 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { adminClient, modelRef, newProject, providerId, startHarness, type Client, type Harness } from '../helpers/harness.js';
+import {
+  adminClient,
+  modelRef,
+  newProject,
+  providerId,
+  startHarness,
+  type Client,
+  type Harness,
+} from '../helpers/harness.js';
 
 interface MsgList {
   messages: { role: string; status: string; parts: { kind: string; text: string | null }[] }[];
@@ -25,12 +33,21 @@ describe('agent runtime controls: stop, regenerate, retry, provider failures', (
     const { conversationId } = await newProject(admin, 'Stop');
     h.factory.chunkDelayMs = 40;
     h.factory.script([{ kind: 'text', text: 'word '.repeat(200) }]);
-    const pending = admin.sse(`/api/conversations/${conversationId}/messages`, { content: 'long answer', modelId: claude });
+    const pending = admin.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'long answer',
+      modelId: claude,
+    });
     await new Promise((r) => setTimeout(r, 400));
-    expect((await admin.get<MsgList>(`/api/conversations/${conversationId}/messages`)).body.running).toBe(true);
+    expect((await admin.get<MsgList>(`/api/conversations/${conversationId}/messages`)).body.running).toBe(
+      true,
+    );
     // A second message while running is refused.
-    expect((await admin.post(`/api/conversations/${conversationId}/messages`, { content: 'again' })).status).toBe(409);
-    expect((await admin.post<{ stopped: boolean }>(`/api/conversations/${conversationId}/stop`)).body.stopped).toBe(true);
+    expect(
+      (await admin.post(`/api/conversations/${conversationId}/messages`, { content: 'again' })).status,
+    ).toBe(409);
+    expect(
+      (await admin.post<{ stopped: boolean }>(`/api/conversations/${conversationId}/stop`)).body.stopped,
+    ).toBe(true);
     const run = await pending;
     h.factory.chunkDelayMs = 2;
     expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'stopped' });
@@ -46,7 +63,10 @@ describe('agent runtime controls: stop, regenerate, retry, provider failures', (
   it('regenerate replaces the last answer and the model does not see the old one', async () => {
     const { conversationId } = await newProject(admin, 'Regenerate');
     h.factory.script([{ kind: 'text', text: 'FIRST ANSWER' }]);
-    await admin.sse(`/api/conversations/${conversationId}/messages`, { content: 'question', modelId: claude });
+    await admin.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'question',
+      modelId: claude,
+    });
     h.factory.script([{ kind: 'text', text: 'SECOND ANSWER' }]);
     const run = await admin.sse(`/api/conversations/${conversationId}/regenerate`, { modelId: claude });
     expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'complete' });
@@ -63,7 +83,10 @@ describe('agent runtime controls: stop, regenerate, retry, provider failures', (
       { kind: 'text', text: 'recovered' },
     ]);
     const before = h.factory.requests.length;
-    const run = await admin.sse(`/api/conversations/${conversationId}/messages`, { content: 'q', modelId: claude });
+    const run = await admin.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'q',
+      modelId: claude,
+    });
     expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'complete' });
     expect(h.factory.requests.length - before).toBe(2);
   });
@@ -71,7 +94,10 @@ describe('agent runtime controls: stop, regenerate, retry, provider failures', (
   it('surfaces non-retryable failures, then retry succeeds once fixed', async () => {
     const { conversationId } = await newProject(admin, 'Retry');
     h.factory.script([{ kind: 'error', code: 'bad_request', message: 'context too long', status: 400 }]);
-    const failed = await admin.sse(`/api/conversations/${conversationId}/messages`, { content: 'q', modelId: claude });
+    const failed = await admin.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'q',
+      modelId: claude,
+    });
     const end = failed.events.find((e) => e.type === 'message_end');
     expect(end).toMatchObject({ status: 'error', errorCode: 'provider_bad_request' });
     expect(JSON.stringify(failed.events)).not.toMatch(/at \w+ \(|node_modules|stack/i);
@@ -89,6 +115,9 @@ describe('agent runtime controls: stop, regenerate, retry, provider failures', (
     await admin.put('/api/admin/settings', { defaultModelId: null });
     const { conversationId } = await newProject(admin, 'No model');
     const run = await admin.sse(`/api/conversations/${conversationId}/messages`, { content: 'q' });
-    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'error', errorCode: 'model_unavailable' });
+    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({
+      status: 'error',
+      errorCode: 'model_unavailable',
+    });
   });
 });

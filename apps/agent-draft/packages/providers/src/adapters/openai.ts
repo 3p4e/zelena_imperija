@@ -22,7 +22,12 @@ const NON_CHAT_PATTERNS = [
 
 export class OpenAIProvider extends OpenAICompatibleProvider {
   constructor(config: ProviderConfig) {
-    super({ ...config, kind: 'openai', baseUrl: config.baseUrl ?? DEFAULT_BASE_URL, includeUsageOption: true });
+    super({
+      ...config,
+      kind: 'openai',
+      baseUrl: config.baseUrl ?? DEFAULT_BASE_URL,
+      includeUsageOption: true,
+    });
   }
 
   override async listModels(): Promise<ModelInfo[]> {

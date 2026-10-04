@@ -7,7 +7,9 @@ const server = new McpServer({ name: 'echo', version: '1.0.0' });
 server.registerTool(
   'shout',
   { description: 'Upper-cases text', inputSchema: { text: z.string() } },
-  async ({ text }) => ({ content: [{ type: 'text', text: `${text.toUpperCase()} (token=${process.env.ECHO_TOKEN ?? 'none'})` }] }),
+  async ({ text }) => ({
+    content: [{ type: 'text', text: `${text.toUpperCase()} (token=${process.env.ECHO_TOKEN ?? 'none'})` }],
+  }),
 );
 server.registerTool('fail', { description: 'Always fails', inputSchema: {} }, async () => ({
   content: [{ type: 'text', text: 'nope' }],

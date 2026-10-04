@@ -42,7 +42,10 @@ export function UsageView({ summary }: { summary: UsageSummary }) {
         {summary.byDay.map((d) => (
           <div key={d.day} className="flex items-center gap-2 text-xs">
             <span className="w-20 shrink-0 text-zinc-500">{d.day}</span>
-            <div className="h-2 rounded bg-amber-500/70" style={{ width: `${Math.max(2, (d.estimatedCostUsd / maxDay) * 100)}%` }} />
+            <div
+              className="h-2 rounded bg-amber-500/70"
+              style={{ width: `${Math.max(2, (d.estimatedCostUsd / maxDay) * 100)}%` }}
+            />
             <span className="shrink-0 text-zinc-400">
               {usd(d.estimatedCostUsd)} · {d.requests} req
             </span>

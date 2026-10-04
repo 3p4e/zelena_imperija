@@ -5,7 +5,13 @@ import type { ChatRequest, ModelInfo, StreamEvent, Usage } from '../types.js';
 
 export type MockTurn =
   | { kind: 'text'; text: string; usage?: Partial<Usage> }
-  | { kind: 'tool_call'; name: string; arguments: Record<string, unknown>; text?: string; usage?: Partial<Usage> }
+  | {
+      kind: 'tool_call';
+      name: string;
+      arguments: Record<string, unknown>;
+      text?: string;
+      usage?: Partial<Usage>;
+    }
   | { kind: 'error'; code: ConstructorParameters<typeof ProviderError>[0]; message: string; status?: number };
 
 export interface MockScript {

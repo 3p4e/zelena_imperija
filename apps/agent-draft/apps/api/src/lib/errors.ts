@@ -52,18 +52,32 @@ export class AppError extends Error {
 }
 
 export const notFound = (what = 'Resource'): AppError => new AppError('not_found', `${what} not found.`);
-export const forbidden = (msg = 'You do not have access to this resource.'): AppError => new AppError('forbidden', msg);
+export const forbidden = (msg = 'You do not have access to this resource.'): AppError =>
+  new AppError('forbidden', msg);
 export const unauthenticated = (): AppError => new AppError('unauthenticated', 'Authentication required.');
 
 /** Maps a normalised provider failure to a user-facing API error. */
 export function fromProviderError(err: ProviderError): AppError {
   switch (err.code) {
     case 'auth':
-      return new AppError('provider_auth_failed', `The provider rejected the API key. Check the key in Settings. (${err.message})`);
+      return new AppError(
+        'provider_auth_failed',
+        `The provider rejected the API key. Check the key in Settings. (${err.message})`,
+      );
     case 'rate_limited':
-      return new AppError('provider_rate_limited', `The provider is rate-limiting requests. ${err.message}`, undefined, true);
+      return new AppError(
+        'provider_rate_limited',
+        `The provider is rate-limiting requests. ${err.message}`,
+        undefined,
+        true,
+      );
     case 'unavailable':
-      return new AppError('provider_unavailable', `The provider is unavailable. ${err.message}`, undefined, true);
+      return new AppError(
+        'provider_unavailable',
+        `The provider is unavailable. ${err.message}`,
+        undefined,
+        true,
+      );
     case 'timeout':
       return new AppError('provider_timeout', 'The provider did not answer in time.', undefined, true);
     case 'model_not_found':

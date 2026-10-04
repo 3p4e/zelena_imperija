@@ -1,5 +1,12 @@
 import type { Conversation, Message, MessagePart, Model, Project } from '@agent/shared';
-import type { conversations, messageParts, messages, models, projects, providers } from '../db/schema/index.js';
+import type {
+  conversations,
+  messageParts,
+  messages,
+  models,
+  projects,
+  providers,
+} from '../db/schema/index.js';
 import type { Permission } from './projects/access.js';
 
 const iso = (d: Date | null): string | null => (d ? d.toISOString() : null);
@@ -51,7 +58,10 @@ export function partDto(p: typeof messageParts.$inferSelect): MessagePart {
   };
 }
 
-export function messageDto(m: typeof messages.$inferSelect, parts: (typeof messageParts.$inferSelect)[]): Message {
+export function messageDto(
+  m: typeof messages.$inferSelect,
+  parts: (typeof messageParts.$inferSelect)[],
+): Message {
   return {
     id: m.id,
     conversationId: m.conversationId,
@@ -66,7 +76,10 @@ export function messageDto(m: typeof messages.$inferSelect, parts: (typeof messa
   };
 }
 
-export function modelDto(m: typeof models.$inferSelect, p: Pick<typeof providers.$inferSelect, 'slug' | 'kind'>): Model {
+export function modelDto(
+  m: typeof models.$inferSelect,
+  p: Pick<typeof providers.$inferSelect, 'slug' | 'kind'>,
+): Model {
   return {
     id: m.id,
     providerId: m.providerId,

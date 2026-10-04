@@ -112,7 +112,9 @@ export function registerSandboxRoutes(app: FastifyInstance, deps: AppDeps): void
     const list = await db
       .select()
       .from(executions)
-      .where(and(eq(executions.sandboxId, row.id), inArray(executions.kind, ['shell', 'test', 'preview', 'git'])))
+      .where(
+        and(eq(executions.sandboxId, row.id), inArray(executions.kind, ['shell', 'test', 'preview', 'git'])),
+      )
       .orderBy(desc(executions.startedAt))
       .limit(100);
     return list.map((e) => ({
@@ -130,12 +132,21 @@ export function registerSandboxRoutes(app: FastifyInstance, deps: AppDeps): void
   app.get('/executions/:id/logs', async (req) => {
     const user = currentUser(req);
     const id = requireUuid((req.params as { id: string }).id);
-    const e = await db.select({ projectId: sandboxes.projectId }).from(executions).innerJoin(sandboxes, eq(sandboxes.id, executions.sandboxId)).where(eq(executions.id, id)).limit(1);
+    const e = await db
+      .select({ projectId: sandboxes.projectId })
+      .from(executions)
+      .innerJoin(sandboxes, eq(sandboxes.id, executions.sandboxId))
+      .where(eq(executions.id, id))
+      .limit(1);
     if (!e[0]) throw notFound('Execution');
     await projectFor(db, user, e[0].projectId, 'read').catch(() => {
       throw notFound('Execution');
     });
-    const logs = await db.select().from(executionLogs).where(eq(executionLogs.executionId, id)).orderBy(executionLogs.seq);
+    const logs = await db
+      .select()
+      .from(executionLogs)
+      .where(eq(executionLogs.executionId, id))
+      .orderBy(executionLogs.seq);
     return logs.map((l) => ({ stream: l.stream, chunk: l.chunk }));
   });
 
@@ -182,7 +193,12 @@ export function registerSandboxRoutes(app: FastifyInstance, deps: AppDeps): void
         onOutput: (chunk) => sse.send({ type: 'stdout', chunk }),
       });
       sse.send({ type: 'stdout', chunk: `\n${summary.text}\n` });
-      sse.send({ type: 'exit', exitCode: exec.exitCode, timedOut: exec.timedOut, executionId: exec.executionId });
+      sse.send({
+        type: 'exit',
+        exitCode: exec.exitCode,
+        timedOut: exec.timedOut,
+        executionId: exec.executionId,
+      });
     } catch (err) {
       sse.send({ type: 'stderr', chunk: err instanceof AppError ? err.message : 'Test run failed.' });
       sse.send({ type: 'exit', exitCode: null, timedOut: false });
@@ -199,7 +215,10 @@ export function registerSandboxRoutes(app: FastifyInstance, deps: AppDeps): void
     await db
       .insert(previewPorts)
       .values({ sandboxId: row.id, port: body.port, label: body.label })
-      .onConflictDoUpdate({ target: [previewPorts.sandboxId, previewPorts.port], set: { label: body.label } });
+      .onConflictDoUpdate({
+        target: [previewPorts.sandboxId, previewPorts.port],
+        set: { label: body.label },
+      });
     return { sandbox: await info(project.id) };
   });
 
@@ -207,7 +226,10 @@ export function registerSandboxRoutes(app: FastifyInstance, deps: AppDeps): void
     const { project } = await projectFor(db, currentUser(req), pid(req), 'edit');
     const port = Number((req.params as { port: string }).port);
     const row = await sandbox.info(project.id);
-    if (row) await db.delete(previewPorts).where(and(eq(previewPorts.sandboxId, row.id), eq(previewPorts.port, port)));
+    if (row)
+      await db
+        .delete(previewPorts)
+        .where(and(eq(previewPorts.sandboxId, row.id), eq(previewPorts.port, port)));
     return { ok: true };
   });
 
@@ -217,7 +239,8 @@ export function registerSandboxRoutes(app: FastifyInstance, deps: AppDeps): void
     const q = parseBody(portQuery, req.query);
     const row = await sandbox.info(project.id);
     const ports = row ? await sandbox.previewPortsFor(row.id) : [];
-    if (!ports.some((p) => p.port === q.port)) throw new AppError('not_found', `Port ${q.port} is not registered for preview.`);
+    if (!ports.some((p) => p.port === q.port))
+      throw new AppError('not_found', `Port ${q.port} is not registered for preview.`);
     const exp = Math.floor(Date.now() / 1000) + deps.config.PREVIEW_TOKEN_TTL_HOURS * 3600;
     const token = signPreviewToken(deps.vault, { projectId: project.id, port: q.port, userId: user.id, exp });
     return { url: `/preview/${token}/`, expiresAt: new Date(exp * 1000).toISOString() };
@@ -245,9 +268,15 @@ export function registerSandboxRoutes(app: FastifyInstance, deps: AppDeps): void
     term.stream.on('end', () => socket.close(1000, 'exit'));
     socket.on('message', (raw: Buffer) => {
       try {
-        const msg = JSON.parse(raw.toString('utf8')) as { type: string; data?: string; cols?: number; rows?: number };
+        const msg = JSON.parse(raw.toString('utf8')) as {
+          type: string;
+          data?: string;
+          cols?: number;
+          rows?: number;
+        };
         if (msg.type === 'input' && typeof msg.data === 'string') term.stream.write(msg.data);
-        else if (msg.type === 'resize' && msg.cols && msg.rows) void term.resize(Math.min(msg.cols, 500), Math.min(msg.rows, 200)).catch(() => undefined);
+        else if (msg.type === 'resize' && msg.cols && msg.rows)
+          void term.resize(Math.min(msg.cols, 500), Math.min(msg.rows, 200)).catch(() => undefined);
       } catch {
         /* ignore malformed frames */
       }

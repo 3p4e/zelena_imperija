@@ -10,9 +10,18 @@ const key = ['admin', 'grants'];
 
 export function SharedKeysTab() {
   const qc = useQueryClient();
-  const grants = useQuery({ queryKey: key, queryFn: () => api.get<SharedKeyGrant[]>('/admin/shared-grants') });
-  const users = useQuery({ queryKey: ['admin', 'users'], queryFn: () => api.get<AdminUserRow[]>('/admin/users') });
-  const models = useQuery({ queryKey: ['admin', 'models'], queryFn: () => api.get<Model[]>('/admin/models') });
+  const grants = useQuery({
+    queryKey: key,
+    queryFn: () => api.get<SharedKeyGrant[]>('/admin/shared-grants'),
+  });
+  const users = useQuery({
+    queryKey: ['admin', 'users'],
+    queryFn: () => api.get<AdminUserRow[]>('/admin/users'),
+  });
+  const models = useQuery({
+    queryKey: ['admin', 'models'],
+    queryFn: () => api.get<Model[]>('/admin/models'),
+  });
   const keys = useKeys();
   const [editing, setEditing] = useState<SharedKeyGrant | 'new' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,9 +37,17 @@ export function SharedKeysTab() {
   };
 
   return (
-    <Card title="Shared keys" actions={<Button size="sm" variant="primary" onClick={() => setEditing('new')}>Grant access</Button>}>
+    <Card
+      title="Shared keys"
+      actions={
+        <Button size="sm" variant="primary" onClick={() => setEditing('new')}>
+          Grant access
+        </Button>
+      }
+    >
       <p className="mb-3 text-xs text-zinc-400">
-        Members use your keys through the server only; they never see the key. Quotas are checked before every request using estimated cost. Your own usage is never limited by grants.
+        Members use your keys through the server only; they never see the key. Quotas are checked before every
+        request using estimated cost. Your own usage is never limited by grants.
       </p>
       <ErrorText error={error} />
       <table className="w-full text-sm">
@@ -64,7 +81,11 @@ export function SharedKeysTab() {
                   <Button size="sm" onClick={() => setEditing(g)}>
                     Edit
                   </Button>
-                  <Button size="sm" variant="danger" onClick={() => void act(() => api.del(`/admin/shared-grants/${g.id}`))}>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => void act(() => api.del(`/admin/shared-grants/${g.id}`))}
+                  >
                     Remove
                   </Button>
                 </div>
@@ -121,7 +142,12 @@ function GrantDialog({
 
   const save = async (): Promise<void> => {
     try {
-      const body = { dailyLimitUsd: Number(daily), monthlyLimitUsd: Number(monthly), enabled, allowedModelIds: [...allowed] };
+      const body = {
+        dailyLimitUsd: Number(daily),
+        monthlyLimitUsd: Number(monthly),
+        enabled,
+        allowedModelIds: [...allowed],
+      };
       if (grant) await api.patch(`/admin/shared-grants/${grant.id}`, body);
       else await api.post('/admin/shared-grants', { ...body, memberUserId, userKeyId });
       onSaved();
@@ -158,14 +184,22 @@ function GrantDialog({
           <Input type="number" step="0.01" min="0" value={daily} onChange={(e) => setDaily(e.target.value)} />
         </Field>
         <Field label="Monthly limit (USD)">
-          <Input type="number" step="0.01" min="0" value={monthly} onChange={(e) => setMonthly(e.target.value)} />
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={monthly}
+            onChange={(e) => setMonthly(e.target.value)}
+          />
         </Field>
       </div>
       <label className="mt-3 flex items-center gap-2 text-sm">
         <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} /> Enabled
       </label>
       <div className="mt-3 text-sm">
-        <div className="mb-1 text-zinc-300">Allowed models (none selected = every model of this provider)</div>
+        <div className="mb-1 text-zinc-300">
+          Allowed models (none selected = every model of this provider)
+        </div>
         <div className="grid max-h-56 grid-cols-2 gap-1 overflow-auto rounded border border-zinc-800 p-2 text-xs">
           {providerModels.map((m) => (
             <label key={m.id} className="flex items-center gap-2">

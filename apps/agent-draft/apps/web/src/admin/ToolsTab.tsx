@@ -20,7 +20,9 @@ export function ToolsTab() {
   return (
     <Card title="Tool registry">
       <p className="mb-3 text-xs text-zinc-400">
-        Disabling a tool removes it for every agent and user. Per-member restrictions are set on the Users tab. MCP servers are configured through the admin API in Phase 1 (see README); their tools appear here.
+        Disabling a tool removes it for every agent and user. Per-member restrictions are set on the Users
+        tab. MCP servers are configured through the admin API in Phase 1 (see README); their tools appear
+        here.
       </p>
       <ErrorText error={error} />
       <table className="w-full text-sm">
@@ -41,7 +43,9 @@ export function ToolsTab() {
                 <Badge tone={t.source === 'mcp' ? 'info' : 'neutral'}>{t.source}</Badge>
               </td>
               <td>
-                <Badge tone={t.permission === 'exec' || t.permission === 'network' ? 'warn' : 'neutral'}>{t.permission}</Badge>
+                <Badge tone={t.permission === 'exec' || t.permission === 'network' ? 'warn' : 'neutral'}>
+                  {t.permission}
+                </Badge>
               </td>
               <td className="max-w-md truncate text-xs text-zinc-400">{t.description}</td>
               <td className="text-right">

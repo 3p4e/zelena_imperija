@@ -1,6 +1,13 @@
 import clsx from 'clsx';
 import { Loader2, X } from 'lucide-react';
-import { useEffect, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import {
+  useEffect,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -61,7 +68,10 @@ export function Select({ className, children, ...rest }: SelectHTMLAttributes<HT
   return (
     <select
       {...rest}
-      className={clsx('h-9 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none', className)}
+      className={clsx(
+        'h-9 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none',
+        className,
+      )}
     >
       {children}
     </select>
@@ -78,7 +88,13 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
   );
 }
 
-export function Badge({ tone = 'neutral', children }: { tone?: 'neutral' | 'good' | 'warn' | 'bad' | 'info'; children: ReactNode }) {
+export function Badge({
+  tone = 'neutral',
+  children,
+}: {
+  tone?: 'neutral' | 'good' | 'warn' | 'bad' | 'info';
+  children: ReactNode;
+}) {
   return (
     <span
       className={clsx(
@@ -97,10 +113,24 @@ export function Badge({ tone = 'neutral', children }: { tone?: 'neutral' | 'good
 
 export function ErrorText({ error }: { error: string | null | undefined }) {
   if (!error) return null;
-  return <p className="rounded-md border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p>;
+  return (
+    <p className="rounded-md border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p>
+  );
 }
 
-export function Modal({ title, open, onClose, children, wide }: { title: string; open: boolean; onClose: () => void; children: ReactNode; wide?: boolean }) {
+export function Modal({
+  title,
+  open,
+  onClose,
+  children,
+  wide,
+}: {
+  title: string;
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  wide?: boolean;
+}) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent): void => {
@@ -111,11 +141,17 @@ export function Modal({ title, open, onClose, children, wide }: { title: string;
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onMouseDown={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onMouseDown={onClose}
+    >
       <div
         role="dialog"
         aria-label={title}
-        className={clsx('max-h-[90vh] w-full overflow-auto rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl', wide ? 'max-w-3xl' : 'max-w-md')}
+        className={clsx(
+          'max-h-[90vh] w-full overflow-auto rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl',
+          wide ? 'max-w-3xl' : 'max-w-md',
+        )}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
@@ -130,7 +166,15 @@ export function Modal({ title, open, onClose, children, wide }: { title: string;
   );
 }
 
-export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: string }[]; value: T; onChange: (v: T) => void }) {
+export function Tabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: { id: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
   return (
     <div className="flex gap-1 border-b border-zinc-800 px-2">
       {tabs.map((t) => (
@@ -139,7 +183,9 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
           onClick={() => onChange(t.id)}
           className={clsx(
             '-mb-px border-b-2 px-2.5 py-2 text-xs font-medium',
-            value === t.id ? 'border-amber-500 text-zinc-100' : 'border-transparent text-zinc-400 hover:text-zinc-200',
+            value === t.id
+              ? 'border-amber-500 text-zinc-100'
+              : 'border-transparent text-zinc-400 hover:text-zinc-200',
           )}
         >
           {t.label}
@@ -162,7 +208,15 @@ export function Empty({ children }: { children: ReactNode }) {
   return <div className="p-6 text-center text-sm text-zinc-500">{children}</div>;
 }
 
-export function Card({ title, actions, children }: { title: string; actions?: ReactNode; children: ReactNode }) {
+export function Card({
+  title,
+  actions,
+  children,
+}: {
+  title: string;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="rounded-lg border border-zinc-800 bg-zinc-900/60">
       <header className="flex items-center justify-between border-b border-zinc-800 px-4 py-2.5">

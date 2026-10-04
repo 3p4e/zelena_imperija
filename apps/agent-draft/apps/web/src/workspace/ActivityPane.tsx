@@ -11,7 +11,10 @@ import { CommandRunner } from './CommandRunner';
 /** Every command run in the sandbox (by the agent, the terminal or this panel), with its full log. */
 export function ActivityPane({ project, canEdit }: { project: Project; canEdit: boolean }) {
   const qc = useQueryClient();
-  const execs = useQuery({ queryKey: qk.executions(project.id), queryFn: () => api.get<Execution[]>(`/projects/${project.id}/executions`) });
+  const execs = useQuery({
+    queryKey: qk.executions(project.id),
+    queryFn: () => api.get<Execution[]>(`/projects/${project.id}/executions`),
+  });
   const [open, setOpen] = useState<string | null>(null);
   const logs = useQuery({
     queryKey: ['logs', open],
@@ -34,17 +37,33 @@ export function ActivityPane({ project, canEdit }: { project: Project; canEdit: 
       <ul className="flex flex-col divide-y divide-zinc-800 rounded-md border border-zinc-800 text-xs">
         {execs.data?.map((e) => (
           <li key={e.id}>
-            <button className={clsx('flex w-full items-center gap-2 px-2 py-1.5 text-left hover:bg-zinc-900', open === e.id && 'bg-zinc-900')} onClick={() => setOpen(open === e.id ? null : e.id)}>
+            <button
+              className={clsx(
+                'flex w-full items-center gap-2 px-2 py-1.5 text-left hover:bg-zinc-900',
+                open === e.id && 'bg-zinc-900',
+              )}
+              onClick={() => setOpen(open === e.id ? null : e.id)}
+            >
               <Badge>{e.kind}</Badge>
               <span className="truncate font-mono text-zinc-300">{e.command}</span>
               <span className="ml-auto shrink-0">
-                {e.timedOut ? <Badge tone="warn">timed out</Badge> : e.exitCode === null ? <Badge>—</Badge> : e.exitCode === 0 ? <Badge tone="good">0</Badge> : <Badge tone="bad">{e.exitCode}</Badge>}
+                {e.timedOut ? (
+                  <Badge tone="warn">timed out</Badge>
+                ) : e.exitCode === null ? (
+                  <Badge>—</Badge>
+                ) : e.exitCode === 0 ? (
+                  <Badge tone="good">0</Badge>
+                ) : (
+                  <Badge tone="bad">{e.exitCode}</Badge>
+                )}
               </span>
               <span className="w-20 shrink-0 text-right text-zinc-500">{relativeTime(e.startedAt)}</span>
             </button>
             {open === e.id && (
               <pre className="max-h-72 overflow-auto bg-zinc-950 p-2 font-mono text-[11.5px] whitespace-pre-wrap">
-                {logs.isLoading ? 'Loading…' : (logs.data ?? []).map((l) => l.chunk).join('') || '(no output)'}
+                {logs.isLoading
+                  ? 'Loading…'
+                  : (logs.data ?? []).map((l) => l.chunk).join('') || '(no output)'}
               </pre>
             )}
           </li>

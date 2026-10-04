@@ -18,7 +18,16 @@ describe('collectStream', () => {
         { type: 'tool_call_delta', id: '1', argumentsDelta: '{"x":1}' },
         { type: 'tool_call_end', id: '1', name: 't', arguments: { x: 1 } },
         { type: 'text_delta', text: 'c' },
-        { type: 'usage', usage: { inputTokens: 1, outputTokens: 2, cachedInputTokens: 0, reasoningTokens: null, costUsd: null } },
+        {
+          type: 'usage',
+          usage: {
+            inputTokens: 1,
+            outputTokens: 2,
+            cachedInputTokens: 0,
+            reasoningTokens: null,
+            costUsd: null,
+          },
+        },
         { type: 'finish', reason: 'tool_calls' },
       ]),
     );
@@ -53,7 +62,9 @@ describe('parseSse', () => {
 
 describe('sanitize', () => {
   it('redacts key-like strings', () => {
-    expect(sanitize('bad key sk-abcdefghijklmnop and AIzaSyABCDEFGHIJKLMNOPQRSTUV')).toBe('bad key [redacted] and [redacted]');
+    expect(sanitize('bad key sk-abcdefghijklmnop and AIzaSyABCDEFGHIJKLMNOPQRSTUV')).toBe(
+      'bad key [redacted] and [redacted]',
+    );
   });
 });
 
@@ -63,7 +74,9 @@ describe('createProvider', () => {
     expect(createProvider('openai', { apiKey: 'k' }).kind).toBe('openai');
     expect(createProvider('gemini', { apiKey: 'k' }).kind).toBe('gemini');
     expect(createProvider('openrouter', { apiKey: 'k' }).kind).toBe('openrouter');
-    expect(createProvider('openai_compatible', { apiKey: '', baseUrl: 'http://x/v1' }).kind).toBe('openai_compatible');
+    expect(createProvider('openai_compatible', { apiKey: '', baseUrl: 'http://x/v1' }).kind).toBe(
+      'openai_compatible',
+    );
   });
 });
 

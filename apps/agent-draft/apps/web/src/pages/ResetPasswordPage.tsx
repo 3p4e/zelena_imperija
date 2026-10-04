@@ -54,7 +54,14 @@ export function ResetPasswordPage() {
       ) : token ? (
         <form onSubmit={complete} className="flex flex-col gap-3">
           <Field label="New password" hint="At least 10 characters.">
-            <Input type="password" autoComplete="new-password" minLength={10} required value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Input
+              type="password"
+              autoComplete="new-password"
+              minLength={10}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </Field>
           <ErrorText error={error} />
           <Button type="submit" variant="primary" loading={busy}>

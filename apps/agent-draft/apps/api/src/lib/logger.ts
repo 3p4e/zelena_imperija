@@ -27,6 +27,8 @@ export function createLogger(config: Pick<AppConfig, 'LOG_LEVEL' | 'NODE_ENV'>):
     level: config.LOG_LEVEL,
     redact: { paths: REDACT_PATHS, censor: '[redacted]' },
     base: { service: 'agent-api' },
-    ...(config.NODE_ENV === 'development' ? { transport: { target: 'pino-pretty', options: { colorize: true } } } : {}),
+    ...(config.NODE_ENV === 'development'
+      ? { transport: { target: 'pino-pretty', options: { colorize: true } } }
+      : {}),
   });
 }

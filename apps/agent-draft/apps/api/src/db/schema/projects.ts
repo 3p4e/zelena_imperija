@@ -1,4 +1,15 @@
-import { boolean, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, uuid, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  uuid,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import {
   CONVERSATION_STATUSES,
   MESSAGE_ROLES,

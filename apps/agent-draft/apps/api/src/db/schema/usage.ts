@@ -23,7 +23,9 @@ export const usageRecords = pgTable(
     modelId: text('model_id').notNull(),
     credentialSource: credentialModeEnum('credential_source').notNull(),
     userKeyId: uuid('user_key_id').references(() => userKeys.id, { onDelete: 'set null' }),
-    sharedKeyGrantId: uuid('shared_key_grant_id').references(() => sharedKeyGrants.id, { onDelete: 'set null' }),
+    sharedKeyGrantId: uuid('shared_key_grant_id').references(() => sharedKeyGrants.id, {
+      onDelete: 'set null',
+    }),
     inputTokens: integer('input_tokens').notNull().default(0),
     outputTokens: integer('output_tokens').notNull().default(0),
     cachedInputTokens: integer('cached_input_tokens').notNull().default(0),

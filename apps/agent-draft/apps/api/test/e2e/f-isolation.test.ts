@@ -1,6 +1,15 @@
 import WebSocket from 'ws';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { adminClient, createMember, modelRef, newProject, providerId, startHarness, type Client, type Harness } from '../helpers/harness.js';
+import {
+  adminClient,
+  createMember,
+  modelRef,
+  newProject,
+  providerId,
+  startHarness,
+  type Client,
+  type Harness,
+} from '../helpers/harness.js';
 
 /** F. User A cannot read, modify or execute in user B's projects, keys, conversations or containers. */
 describe('F. cross-user isolation through the API', () => {
@@ -23,13 +32,19 @@ describe('F. cross-user isolation through the API', () => {
     bobId = b.id;
 
     ({ projectId: project, conversationId: conversation } = await newProject(alice, 'Alice private'));
-    const key = await alice.post<{ id: string }>('/api/keys', { providerId: await providerId(alice, 'openai'), apiKey: 'sk-alice-secret-9999' });
+    const key = await alice.post<{ id: string }>('/api/keys', {
+      providerId: await providerId(alice, 'openai'),
+      apiKey: 'sk-alice-secret-9999',
+    });
     aliceKey = key.body.id;
     await alice.put(`/api/projects/${project}/files/content`, { path: 'secret.txt', content: 'alice only' });
     await alice.sse(`/api/projects/${project}/exec`, { command: 'echo hi' });
     await alice.post(`/api/projects/${project}/preview-ports`, { port: 8000, label: 'web' });
     h.factory.script([{ kind: 'text', text: 'alice answer' }]);
-    await alice.sse(`/api/conversations/${conversation}/messages`, { content: 'private question', modelId: await modelRef(admin, 'openai', 'gpt-5') });
+    await alice.sse(`/api/conversations/${conversation}/messages`, {
+      content: 'private question',
+      modelId: await modelRef(admin, 'openai', 'gpt-5'),
+    });
     const execs = await alice.get<{ id: string }[]>(`/api/projects/${project}/executions`);
     executionId = execs.body[0]?.id ?? '';
     expect(executionId).not.toBe('');
@@ -79,7 +94,9 @@ describe('F. cross-user isolation through the API', () => {
       expect(r.status, `${method} ${path} → ${JSON.stringify(r.body)}`).toBe(404);
     }
     // Nothing changed for Alice.
-    const file = await alice.get<{ content: string }>(`/api/projects/${project}/files/content?path=secret.txt`);
+    const file = await alice.get<{ content: string }>(
+      `/api/projects/${project}/files/content?path=secret.txt`,
+    );
     expect(file.body.content).toBe('alice only');
     const msgs = await alice.get<{ messages: unknown[] }>(`/api/conversations/${conversation}/messages`);
     expect(msgs.body.messages.length).toBe(2);
@@ -102,7 +119,9 @@ describe('F. cross-user isolation through the API', () => {
 
   it('cannot open a terminal in another user’s container', async () => {
     const cookie = await bobCookie();
-    const ws = new WebSocket(`${h.baseUrl.replace('http', 'ws')}/api/projects/${project}/terminal`, { headers: { cookie } });
+    const ws = new WebSocket(`${h.baseUrl.replace('http', 'ws')}/api/projects/${project}/terminal`, {
+      headers: { cookie },
+    });
     const outcome = await new Promise<string>((resolve) => {
       ws.on('close', (code) => resolve(`close:${code}`));
       ws.on('unexpected-response', (_req, res) => resolve(`http:${res.statusCode ?? 0}`));
@@ -118,15 +137,23 @@ describe('F. cross-user isolation through the API', () => {
   });
 
   it('sharing grants exactly the chosen permission and can be revoked', async () => {
-    expect((await alice.put(`/api/projects/${project}/shares`, { email: 'bob@test.local', permission: 'read' })).status).toBe(200);
+    expect(
+      (await alice.put(`/api/projects/${project}/shares`, { email: 'bob@test.local', permission: 'read' }))
+        .status,
+    ).toBe(200);
     expect((await bob.get(`/api/projects/${project}`)).status).toBe(200);
     expect((await bob.get(`/api/conversations/${conversation}/messages`)).status).toBe(200);
-    expect((await bob.put(`/api/projects/${project}/files/content`, { path: 'secret.txt', content: 'x' })).status).toBe(403);
+    expect(
+      (await bob.put(`/api/projects/${project}/files/content`, { path: 'secret.txt', content: 'x' })).status,
+    ).toBe(403);
     expect((await bob.post(`/api/projects/${project}/exec`, { command: 'id' })).status).toBe(403);
     expect((await bob.del(`/api/projects/${project}`)).status).toBe(403);
 
     await alice.put(`/api/projects/${project}/shares`, { email: 'bob@test.local', permission: 'edit' });
-    expect((await bob.put(`/api/projects/${project}/files/content`, { path: 'from-bob.txt', content: 'hello' })).status).toBe(200);
+    expect(
+      (await bob.put(`/api/projects/${project}/files/content`, { path: 'from-bob.txt', content: 'hello' }))
+        .status,
+    ).toBe(200);
     expect((await bob.patch(`/api/projects/${project}`, { name: 'renamed' })).status).toBe(403);
 
     expect((await alice.del(`/api/projects/${project}/shares/${bobId}`)).status).toBe(200);

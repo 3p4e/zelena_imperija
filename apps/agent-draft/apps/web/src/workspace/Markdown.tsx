@@ -7,10 +7,13 @@ let highlighter: Promise<Highlighter> | null = null;
 
 /** Loads Shiki lazily on first code block; unknown languages fall back to plain text. */
 function getHighlighter(): Promise<Highlighter> {
-  highlighter ??= import('shiki/bundle/web').then(({ codeToHtml, bundledLanguages }) => async (code: string, lang: string) => {
-    const language = lang in bundledLanguages ? lang : 'text';
-    return codeToHtml(code, { lang: language, theme: 'github-dark-dimmed' });
-  });
+  highlighter ??= import('shiki/bundle/web').then(
+    ({ codeToHtml, bundledLanguages }) =>
+      async (code: string, lang: string) => {
+        const language = lang in bundledLanguages ? lang : 'text';
+        return codeToHtml(code, { lang: language, theme: 'github-dark-dimmed' });
+      },
+  );
   return highlighter;
 }
 

@@ -15,7 +15,15 @@ h.factory.script([
     arguments: { path: 'site/index.html', content: '<h1>Hello from the UI test</h1>' },
   },
   { kind: 'tool_call', name: 'shell_exec', arguments: { command: 'ls -la site && cat site/index.html' } },
-  { kind: 'tool_call', name: 'preview_register', arguments: { port: 8090, label: 'site', command: 'cd site && python3 -m http.server 8090 --bind 0.0.0.0' } },
+  {
+    kind: 'tool_call',
+    name: 'preview_register',
+    arguments: {
+      port: 8090,
+      label: 'site',
+      command: 'cd site && python3 -m http.server 8090 --bind 0.0.0.0',
+    },
+  },
   { kind: 'text', text: 'Done. The page is in the **Preview** tab.\n\n```python\nprint("highlighted")\n```' },
 ]);
 process.stdout.write(`ui test api listening on ${h.baseUrl}\n`);

@@ -32,7 +32,11 @@ export interface Harness {
   close: () => Promise<void>;
 }
 
-export async function startHarness(name: string, overrides: Record<string, string> = {}, listenPort = 0): Promise<Harness> {
+export async function startHarness(
+  name: string,
+  overrides: Record<string, string> = {},
+  listenPort = 0,
+): Promise<Harness> {
   const url = await freshDatabase(name);
   const config = loadConfig({
     ...process.env,
@@ -83,13 +87,28 @@ export async function startHarness(name: string, overrides: Record<string, strin
 }
 
 /** Removes every container, volume and network created under the test prefix. */
-export async function cleanupDocker(prefix: string, docker = createDocker(process.env.DOCKER_HOST ?? 'unix:///var/run/docker.sock')): Promise<void> {
+export async function cleanupDocker(
+  prefix: string,
+  docker = createDocker(process.env.DOCKER_HOST ?? 'unix:///var/run/docker.sock'),
+): Promise<void> {
   const containers = await docker.listContainers({ all: true, filters: { name: [prefix] } });
-  for (const c of containers) await docker.getContainer(c.Id).remove({ force: true }).catch(() => undefined);
+  for (const c of containers)
+    await docker
+      .getContainer(c.Id)
+      .remove({ force: true })
+      .catch(() => undefined);
   const { Volumes } = await docker.listVolumes({ filters: { name: [prefix] } });
-  for (const v of Volumes) await docker.getVolume(v.Name).remove({ force: true }).catch(() => undefined);
+  for (const v of Volumes)
+    await docker
+      .getVolume(v.Name)
+      .remove({ force: true })
+      .catch(() => undefined);
   const networks = await docker.listNetworks({ filters: { name: [prefix] } });
-  for (const n of networks) await docker.getNetwork(n.Id).remove().catch(() => undefined);
+  for (const n of networks)
+    await docker
+      .getNetwork(n.Id)
+      .remove()
+      .catch(() => undefined);
 }
 
 export interface ApiResponse<T = unknown> {
@@ -133,9 +152,11 @@ export class Client {
   }
 
   get = <T = unknown>(p: string): Promise<ApiResponse<T>> => this.request<T>('GET', p);
-  post = <T = unknown>(p: string, b?: unknown): Promise<ApiResponse<T>> => this.request<T>('POST', p, b ?? {});
+  post = <T = unknown>(p: string, b?: unknown): Promise<ApiResponse<T>> =>
+    this.request<T>('POST', p, b ?? {});
   put = <T = unknown>(p: string, b?: unknown): Promise<ApiResponse<T>> => this.request<T>('PUT', p, b ?? {});
-  patch = <T = unknown>(p: string, b?: unknown): Promise<ApiResponse<T>> => this.request<T>('PATCH', p, b ?? {});
+  patch = <T = unknown>(p: string, b?: unknown): Promise<ApiResponse<T>> =>
+    this.request<T>('PATCH', p, b ?? {});
   del = <T = unknown>(p: string): Promise<ApiResponse<T>> => this.request<T>('DELETE', p);
 
   async login(email: string, password: string): Promise<ApiResponse> {
@@ -143,7 +164,10 @@ export class Client {
   }
 
   /** POSTs and collects SSE `data:` frames until the server ends the stream. */
-  async sse(path: string, body: unknown): Promise<{ status: number; events: ChatStreamEvent[]; error: unknown }> {
+  async sse(
+    path: string,
+    body: unknown,
+  ): Promise<{ status: number; events: ChatStreamEvent[]; error: unknown }> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...(this.cookie ? { cookie: this.cookie } : {}) },
@@ -163,9 +187,18 @@ export class Client {
 }
 
 /** Creates a member through the admin API and returns a logged-in client for them. */
-export async function createMember(h: Harness, admin: Client, email: string): Promise<{ client: Client; id: string }> {
+export async function createMember(
+  h: Harness,
+  admin: Client,
+  email: string,
+): Promise<{ client: Client; id: string }> {
   const password = 'member-password-1';
-  const res = await admin.post<{ id: string }>('/api/admin/users', { email, displayName: email.split('@')[0], role: 'member', password });
+  const res = await admin.post<{ id: string }>('/api/admin/users', {
+    email,
+    displayName: email.split('@')[0],
+    role: 'member',
+    password,
+  });
   if (res.status !== 201) throw new Error(`create member failed: ${res.status} ${JSON.stringify(res.body)}`);
   const client = new Client(h.baseUrl);
   const login = await client.login(email, password);
@@ -194,7 +227,10 @@ export async function providerId(c: Client, slug: string): Promise<string> {
   return p.id;
 }
 
-export async function newProject(c: Client, name: string): Promise<{ projectId: string; conversationId: string }> {
+export async function newProject(
+  c: Client,
+  name: string,
+): Promise<{ projectId: string; conversationId: string }> {
   const p = await c.post<{ id: string }>('/api/projects', { name });
   if (p.status !== 201) throw new Error(`project create failed ${p.status} ${JSON.stringify(p.body)}`);
   const convs = await c.get<{ id: string }[]>(`/api/projects/${p.body.id}/conversations`);

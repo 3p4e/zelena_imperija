@@ -6,7 +6,13 @@ import { workspacePath } from '../../src/sandbox/paths.js';
 import { fitToContext, repairToolPairs } from '../../src/agent/history.js';
 import { AppError } from '../../src/lib/errors.js';
 
-const usage = (i: number, o: number, cached = 0, costUsd: number | null = null) => ({ inputTokens: i, outputTokens: o, cachedInputTokens: cached, reasoningTokens: null, costUsd });
+const usage = (i: number, o: number, cached = 0, costUsd: number | null = null) => ({
+  inputTokens: i,
+  outputTokens: o,
+  cachedInputTokens: cached,
+  reasoningTokens: null,
+  costUsd,
+});
 
 describe('estimateCostUsd', () => {
   const pricing = { inputPricePerMtok: '3', outputPricePerMtok: '15', cachedInputPricePerMtok: '0.3' };
@@ -18,7 +24,13 @@ describe('estimateCostUsd', () => {
     expect(estimateCostUsd(usage(1_000_000, 0, 0, 0.42), pricing)).toBe(0.42);
   });
   it('returns null (unknown) when the registry has no price', () => {
-    expect(estimateCostUsd(usage(10, 10), { inputPricePerMtok: null, outputPricePerMtok: '1', cachedInputPricePerMtok: null })).toBeNull();
+    expect(
+      estimateCostUsd(usage(10, 10), {
+        inputPricePerMtok: null,
+        outputPricePerMtok: '1',
+        cachedInputPricePerMtok: null,
+      }),
+    ).toBeNull();
     expect(estimateCostUsd(usage(10, 10), null)).toBeNull();
   });
 });
@@ -27,8 +39,18 @@ describe('parseTestSummary', () => {
   it.each([
     ['vitest', ' Tests  3 passed | 1 failed (4)', 1, { framework: 'vitest', passed: 3, failed: 1, total: 4 }],
     ['vitest-all-pass', ' Tests  4 passed (4)', 0, { framework: 'vitest', passed: 4, failed: 0, total: 4 }],
-    ['jest', 'Tests:       1 failed, 3 passed, 4 total', 1, { framework: 'jest', passed: 3, failed: 1, total: 4 }],
-    ['pytest', '===== 5 passed, 2 failed in 0.31s =====', 1, { framework: 'pytest', passed: 5, failed: 2, total: 7 }],
+    [
+      'jest',
+      'Tests:       1 failed, 3 passed, 4 total',
+      1,
+      { framework: 'jest', passed: 3, failed: 1, total: 4 },
+    ],
+    [
+      'pytest',
+      '===== 5 passed, 2 failed in 0.31s =====',
+      1,
+      { framework: 'pytest', passed: 5, failed: 2, total: 7 },
+    ],
     ['node:test', '# pass 2\n# fail 0', 0, { framework: 'node:test', passed: 2, failed: 0, total: 2 }],
     ['mocha', '  6 passing (12ms)\n  1 failing', 1, { framework: 'mocha', passed: 6, failed: 1, total: 7 }],
   ])('%s', (_name, out, code, expected) => {

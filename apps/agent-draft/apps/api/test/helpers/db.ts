@@ -1,7 +1,8 @@
 import postgres from 'postgres';
 import { runMigrations } from '../../src/db/migrate.js';
 
-const ADMIN_URL = process.env.TEST_DATABASE_ADMIN_URL ?? 'postgres://postgres:postgres@localhost:5432/postgres';
+const ADMIN_URL =
+  process.env.TEST_DATABASE_ADMIN_URL ?? 'postgres://postgres:postgres@localhost:5432/postgres';
 
 /** Drops and recreates a dedicated database for one test file, then applies migrations. */
 export async function freshDatabase(name: string): Promise<string> {

@@ -18,11 +18,16 @@ export function WorkspacePage() {
   // Keep the URL pointing at something that exists.
   useEffect(() => {
     if (!projects.data) return;
-    if (!project && projects.data[0]) void navigate({ search: { project: projects.data[0].id }, replace: true });
+    if (!project && projects.data[0])
+      void navigate({ search: { project: projects.data[0].id }, replace: true });
   }, [projects.data, project, navigate]);
   useEffect(() => {
     if (!project || !conversations.data) return;
-    if (!conversation && conversations.data[0]) void navigate({ search: { project: project.id, conversation: conversations.data[0].id }, replace: true });
+    if (!conversation && conversations.data[0])
+      void navigate({
+        search: { project: project.id, conversation: conversations.data[0].id },
+        replace: true,
+      });
   }, [project, conversations.data, conversation, navigate]);
 
   if (projects.isLoading) return <Spinner />;
@@ -35,7 +40,11 @@ export function WorkspacePage() {
         project={project}
         conversations={conversations.data ?? []}
         conversationId={conversation?.id ?? null}
-        onSelect={(projectId, conversationId) => void navigate({ search: { project: projectId, ...(conversationId ? { conversation: conversationId } : {}) } })}
+        onSelect={(projectId, conversationId) =>
+          void navigate({
+            search: { project: projectId, ...(conversationId ? { conversation: conversationId } : {}) },
+          })
+        }
       />
       <section className="flex min-h-0 flex-col border-x border-zinc-800">
         {project && conversation ? (
@@ -44,7 +53,13 @@ export function WorkspacePage() {
           <Empty>{project ? 'Create a conversation to start.' : 'Create a project to start.'}</Empty>
         )}
       </section>
-      <section className="flex min-h-0 flex-col">{project ? <RightPanel key={project.id} project={project} canEdit={canEdit} /> : <Empty>No project selected.</Empty>}</section>
+      <section className="flex min-h-0 flex-col">
+        {project ? (
+          <RightPanel key={project.id} project={project} canEdit={canEdit} />
+        ) : (
+          <Empty>No project selected.</Empty>
+        )}
+      </section>
     </div>
   );
 }

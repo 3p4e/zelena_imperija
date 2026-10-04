@@ -1,4 +1,16 @@
-import { boolean, index, inet, integer, pgEnum, pgTable, real, text, timestamp, uuid, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  inet,
+  integer,
+  pgEnum,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  uuid,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { NETWORK_MODES, USER_ROLES, USER_STATUSES } from '@agent/shared';
 import { createdAt, id, updatedAt } from './common.js';
 

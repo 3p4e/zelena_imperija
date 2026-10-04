@@ -15,13 +15,19 @@ export function parseTestSummary(rawOutput: string, exitCode: number | null): Te
   let m: RegExpExecArray | null;
 
   // Vitest: "Tests  3 passed | 1 failed (4)" / "Tests  4 passed (4)"
-  if ((m = /Tests\s+(?:(\d+)\s+failed\s*\|\s*)?(\d+)\s+passed(?:\s*\|\s*(\d+)\s+failed)?.*?\((\d+)\)/.exec(out))) {
+  if (
+    (m = /Tests\s+(?:(\d+)\s+failed\s*\|\s*)?(\d+)\s+passed(?:\s*\|\s*(\d+)\s+failed)?.*?\((\d+)\)/.exec(out))
+  ) {
     const failed = Number(m[1] ?? m[3] ?? 0);
     const total = Number(m[4]);
     return done('vitest', total, Number(m[2]), failed);
   }
   // Jest: "Tests:       1 failed, 3 passed, 4 total"
-  if ((m = /Tests:\s+(?:(\d+)\s+failed,\s+)?(?:\d+\s+skipped,\s+)?(?:(\d+)\s+passed,\s+)?(\d+)\s+total/.exec(out))) {
+  if (
+    (m = /Tests:\s+(?:(\d+)\s+failed,\s+)?(?:\d+\s+skipped,\s+)?(?:(\d+)\s+passed,\s+)?(\d+)\s+total/.exec(
+      out,
+    ))
+  ) {
     return done('jest', Number(m[3]), Number(m[2] ?? 0), Number(m[1] ?? 0));
   }
   // node --test: "# pass 3" "# fail 1"
@@ -50,10 +56,19 @@ export function parseTestSummary(rawOutput: string, exitCode: number | null): Te
     total: null,
     passed: null,
     failed: null,
-    text: exitCode === 0 ? 'Tests passed (exit code 0; runner output not recognised).' : `Tests failed (exit code ${exitCode ?? 'unknown'}).`,
+    text:
+      exitCode === 0
+        ? 'Tests passed (exit code 0; runner output not recognised).'
+        : `Tests failed (exit code ${exitCode ?? 'unknown'}).`,
   };
 
   function done(framework: string, total: number, passed: number, failed: number): TestSummary {
-    return { framework, total, passed, failed, text: `${framework}: ${passed} passed, ${failed} failed, ${total} total.` };
+    return {
+      framework,
+      total,
+      passed,
+      failed,
+      text: `${framework}: ${passed} passed, ${failed} failed, ${total} total.`,
+    };
   }
 }

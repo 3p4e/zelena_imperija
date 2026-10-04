@@ -19,9 +19,15 @@ interface UserUsage {
 export function UsageTab() {
   const [days, setDays] = useState(30);
   const from = new Date(Date.now() - days * 86_400_000).toISOString();
-  const byUser = useQuery({ queryKey: ['admin', 'usage-users', days], queryFn: () => api.get<UserUsage[]>(`/admin/usage/users?from=${encodeURIComponent(from)}`) });
+  const byUser = useQuery({
+    queryKey: ['admin', 'usage-users', days],
+    queryFn: () => api.get<UserUsage[]>(`/admin/usage/users?from=${encodeURIComponent(from)}`),
+  });
   const [userId, setUserId] = useState('');
-  const overall = useUsage('/admin/usage/summary', `from=${encodeURIComponent(from)}${userId ? `&userId=${userId}` : ''}`);
+  const overall = useUsage(
+    '/admin/usage/summary',
+    `from=${encodeURIComponent(from)}${userId ? `&userId=${userId}` : ''}`,
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -48,7 +54,11 @@ export function UsageTab() {
           </thead>
           <tbody className="divide-y divide-zinc-800">
             {byUser.data?.map((u) => (
-              <tr key={u.userId} className="cursor-pointer hover:bg-zinc-900" onClick={() => setUserId(u.userId === userId ? '' : u.userId)}>
+              <tr
+                key={u.userId}
+                className="cursor-pointer hover:bg-zinc-900"
+                onClick={() => setUserId(u.userId === userId ? '' : u.userId)}
+              >
                 <td className="py-1.5">{u.email}</td>
                 <td>{u.requests}</td>
                 <td>
@@ -61,7 +71,9 @@ export function UsageTab() {
           </tbody>
         </table>
       </Card>
-      <Card title={userId ? `Detail — ${byUser.data?.find((u) => u.userId === userId)?.email ?? ''}` : 'Overall'}>
+      <Card
+        title={userId ? `Detail — ${byUser.data?.find((u) => u.userId === userId)?.email ?? ''}` : 'Overall'}
+      >
         {overall.isLoading && <Spinner />}
         {overall.data && <UsageView summary={overall.data} />}
       </Card>

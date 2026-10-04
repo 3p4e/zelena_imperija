@@ -23,7 +23,12 @@ export class MessageWriter {
     bus: RunBus,
     conversationId: string,
     role: MessageRole,
-    meta: { modelId?: string | null; credentialMode?: CredentialMode | null; cliKind?: CliKind | null; status?: 'streaming' | 'complete' } = {},
+    meta: {
+      modelId?: string | null;
+      credentialMode?: CredentialMode | null;
+      cliKind?: CliKind | null;
+      status?: 'streaming' | 'complete';
+    } = {},
   ): Promise<MessageWriter> {
     const [row] = await db
       .insert(messages)
@@ -39,11 +44,20 @@ export class MessageWriter {
       .returning({ id: messages.id });
     if (!row) throw new Error('failed to create message');
     const w = new MessageWriter(db, bus, conversationId, row.id);
-    bus.emit(conversationId, { type: 'message_start', messageId: row.id, conversationId, role, modelId: meta.modelId ?? null });
+    bus.emit(conversationId, {
+      type: 'message_start',
+      messageId: row.id,
+      conversationId,
+      role,
+      modelId: meta.modelId ?? null,
+    });
     return w;
   }
 
-  async startPart(kind: PartKind, extra: { toolName?: string; toolCallId?: string; arguments?: unknown; text?: string } = {}): Promise<string> {
+  async startPart(
+    kind: PartKind,
+    extra: { toolName?: string; toolCallId?: string; arguments?: unknown; text?: string } = {},
+  ): Promise<string> {
     const seq = this.partSeq++;
     const [row] = await this.db
       .insert(messageParts)
@@ -68,7 +82,8 @@ export class MessageWriter {
       ...(extra.toolName ? { toolName: extra.toolName } : {}),
       ...(extra.toolCallId ? { toolCallId: extra.toolCallId } : {}),
     });
-    if (extra.text) this.bus.emit(this.conversationId, { type: 'part_delta', partId: row.id, delta: extra.text });
+    if (extra.text)
+      this.bus.emit(this.conversationId, { type: 'part_delta', partId: row.id, delta: extra.text });
     return row.id;
   }
 
@@ -99,9 +114,22 @@ export class MessageWriter {
     this.bus.emit(this.conversationId, { type: 'part_end', partId });
   }
 
-  async finishToolResult(partId: string, toolCallId: string, toolName: string, resultText: string, isError: boolean): Promise<void> {
+  async finishToolResult(
+    partId: string,
+    toolCallId: string,
+    toolName: string,
+    resultText: string,
+    isError: boolean,
+  ): Promise<void> {
     await this.db.update(messageParts).set({ resultText, isError }).where(eq(messageParts.id, partId));
-    this.bus.emit(this.conversationId, { type: 'tool_result', partId, toolCallId, toolName, resultText, isError });
+    this.bus.emit(this.conversationId, {
+      type: 'tool_result',
+      partId,
+      toolCallId,
+      toolName,
+      resultText,
+      isError,
+    });
     this.bus.emit(this.conversationId, { type: 'part_end', partId, isError });
   }
 
@@ -114,7 +142,8 @@ export class MessageWriter {
   /** Flushes any open text buffers (used when a run is stopped mid-stream). */
   async flushOpen(): Promise<void> {
     for (const [id, b] of this.buffers) {
-      if (b.kind === 'text' || b.kind === 'reasoning') await this.db.update(messageParts).set({ text: b.text }).where(eq(messageParts.id, id));
+      if (b.kind === 'text' || b.kind === 'reasoning')
+        await this.db.update(messageParts).set({ text: b.text }).where(eq(messageParts.id, id));
     }
   }
 

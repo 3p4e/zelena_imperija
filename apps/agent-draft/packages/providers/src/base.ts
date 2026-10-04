@@ -36,7 +36,11 @@ export abstract class BaseProvider implements AIProvider {
   async validateCredential(): Promise<CredentialCheck> {
     try {
       const models = await this.listModels();
-      return { ok: true, message: `Credential accepted; ${models.length} models visible.`, modelsSeen: models.length };
+      return {
+        ok: true,
+        message: `Credential accepted; ${models.length} models visible.`,
+        modelsSeen: models.length,
+      };
     } catch (err) {
       if (err instanceof ProviderError) return { ok: false, message: err.message, modelsSeen: null };
       return { ok: false, message: 'Validation failed.', modelsSeen: null };
@@ -97,7 +101,8 @@ export async function collectStream(stream: AsyncIterable<StreamEvent>): Promise
   flushReasoning();
   flushText();
   for (const [id, entry] of toolArgs) {
-    if (!entry.done) content.push({ type: 'tool_call', id, name: entry.name, arguments: safeJson(entry.buffer) });
+    if (!entry.done)
+      content.push({ type: 'tool_call', id, name: entry.name, arguments: safeJson(entry.buffer) });
   }
   return { content, usage, finishReason };
 }

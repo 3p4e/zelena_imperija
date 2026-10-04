@@ -2,8 +2,21 @@ import { eq } from 'drizzle-orm';
 import argon2 from 'argon2';
 import type { AppConfig } from '../config/env.js';
 import type { Db } from './client.js';
-import { PRIMARY_AGENT_TOOLS, PRIMARY_AGENT_SLUG, PRIMARY_AGENT_SYSTEM_PROMPT, SEED_PROVIDERS } from './seed-data.js';
-import { agentDefinitionTools, agentDefinitions, cliProviders, globalSettings, models, providers, users } from './schema/index.js';
+import {
+  PRIMARY_AGENT_TOOLS,
+  PRIMARY_AGENT_SLUG,
+  PRIMARY_AGENT_SYSTEM_PROMPT,
+  SEED_PROVIDERS,
+} from './seed-data.js';
+import {
+  agentDefinitionTools,
+  agentDefinitions,
+  cliProviders,
+  globalSettings,
+  models,
+  providers,
+  users,
+} from './schema/index.js';
 import { CLI_KINDS } from '@agent/shared';
 
 export interface SeedResult {
@@ -13,7 +26,10 @@ export interface SeedResult {
 }
 
 /** Idempotent: inserts what is missing, never overwrites admin edits. */
-export async function runSeed(db: Db, config: Pick<AppConfig, 'ADMIN_EMAIL' | 'ADMIN_PASSWORD'>): Promise<SeedResult> {
+export async function runSeed(
+  db: Db,
+  config: Pick<AppConfig, 'ADMIN_EMAIL' | 'ADMIN_PASSWORD'>,
+): Promise<SeedResult> {
   let providersInserted = 0;
   let modelsInserted = 0;
 
@@ -54,7 +70,10 @@ export async function runSeed(db: Db, config: Pick<AppConfig, 'ADMIN_EMAIL' | 'A
     }
   }
 
-  await db.insert(globalSettings).values({ id: 1, adminCapPerTaskUsd: '5', adminCapPerDayUsd: '50' }).onConflictDoNothing();
+  await db
+    .insert(globalSettings)
+    .values({ id: 1, adminCapPerTaskUsd: '5', adminCapPerDayUsd: '50' })
+    .onConflictDoNothing();
 
   const settings = await db.query.globalSettings.findFirst({ where: eq(globalSettings.id, 1) });
   if (settings && !settings.defaultModelId) {
@@ -62,10 +81,13 @@ export async function runSeed(db: Db, config: Pick<AppConfig, 'ADMIN_EMAIL' | 'A
     const fallback = anthropic
       ? await db.query.models.findFirst({ where: eq(models.providerId, anthropic.id) })
       : await db.query.models.findFirst();
-    if (fallback) await db.update(globalSettings).set({ defaultModelId: fallback.id }).where(eq(globalSettings.id, 1));
+    if (fallback)
+      await db.update(globalSettings).set({ defaultModelId: fallback.id }).where(eq(globalSettings.id, 1));
   }
 
-  const agent = await db.query.agentDefinitions.findFirst({ where: eq(agentDefinitions.slug, PRIMARY_AGENT_SLUG) });
+  const agent = await db.query.agentDefinitions.findFirst({
+    where: eq(agentDefinitions.slug, PRIMARY_AGENT_SLUG),
+  });
   if (!agent) {
     const [row] = await db
       .insert(agentDefinitions)

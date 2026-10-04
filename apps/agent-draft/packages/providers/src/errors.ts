@@ -22,14 +22,20 @@ export class ProviderError extends Error {
   constructor(
     code: ProviderErrorCode,
     message: string,
-    opts: { status?: number | undefined; retryable?: boolean; retryAfterMs?: number | undefined; cause?: unknown } = {},
+    opts: {
+      status?: number | undefined;
+      retryable?: boolean;
+      retryAfterMs?: number | undefined;
+      cause?: unknown;
+    } = {},
   ) {
     super(sanitize(message), { cause: opts.cause });
     this.name = 'ProviderError';
     this.code = code;
     this.status = opts.status;
     this.retryAfterMs = opts.retryAfterMs;
-    this.retryable = opts.retryable ?? (code === 'rate_limited' || code === 'unavailable' || code === 'timeout');
+    this.retryable =
+      opts.retryable ?? (code === 'rate_limited' || code === 'unavailable' || code === 'timeout');
   }
 }
 
@@ -41,7 +47,11 @@ export function sanitize(text: string): string {
   return out.length > 500 ? `${out.slice(0, 500)}…` : out;
 }
 
-export function errorFromStatus(status: number, bodyText: string, retryAfterHeader?: string | null): ProviderError {
+export function errorFromStatus(
+  status: number,
+  bodyText: string,
+  retryAfterHeader?: string | null,
+): ProviderError {
   const snippet = extractMessage(bodyText);
   const retryAfterMs = parseRetryAfter(retryAfterHeader);
   if (status === 401 || status === 403) {
@@ -66,7 +76,9 @@ export function errorFromStatus(status: number, bodyText: string, retryAfterHead
     return new ProviderError('timeout', `Provider timed out (${status}). ${snippet}`.trim(), { status });
   }
   if (status >= 500) {
-    return new ProviderError('unavailable', `Provider unavailable (${status}). ${snippet}`.trim(), { status });
+    return new ProviderError('unavailable', `Provider unavailable (${status}). ${snippet}`.trim(), {
+      status,
+    });
   }
   if (status === 400 || status === 422) {
     return new ProviderError('bad_request', `Provider rejected the request (${status}). ${snippet}`.trim(), {
@@ -74,7 +86,9 @@ export function errorFromStatus(status: number, bodyText: string, retryAfterHead
       retryable: false,
     });
   }
-  return new ProviderError('unknown', `Unexpected provider response (${status}). ${snippet}`.trim(), { status });
+  return new ProviderError('unknown', `Unexpected provider response (${status}). ${snippet}`.trim(), {
+    status,
+  });
 }
 
 function extractMessage(bodyText: string): string {

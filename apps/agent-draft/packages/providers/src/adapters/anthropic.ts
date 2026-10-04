@@ -37,7 +37,8 @@ interface AnthropicToolResultBlock {
   content: string;
   is_error?: boolean;
 }
-type AnthropicBlock = AnthropicTextBlock | AnthropicImageBlock | AnthropicToolUseBlock | AnthropicToolResultBlock;
+type AnthropicBlock =
+  AnthropicTextBlock | AnthropicImageBlock | AnthropicToolUseBlock | AnthropicToolResultBlock;
 interface AnthropicMessage {
   role: 'user' | 'assistant';
   content: AnthropicBlock[];
@@ -54,7 +55,10 @@ type AnthropicStreamEvent =
   | {
       type: 'content_block_start';
       index: number;
-      content_block: { type: 'text'; text: string } | { type: 'tool_use'; id: string; name: string } | { type: 'thinking' };
+      content_block:
+        | { type: 'text'; text: string }
+        | { type: 'tool_use'; id: string; name: string }
+        | { type: 'thinking' };
     }
   | {
       type: 'content_block_delta';
@@ -102,7 +106,10 @@ export class AnthropicProvider extends BaseProvider {
       const url = new URL(`${this.baseUrl}/v1/models`);
       url.searchParams.set('limit', '100');
       if (after) url.searchParams.set('after_id', after);
-      const res = await this.http.json<AnthropicModelsResponse>(url.toString(), { method: 'GET', headers: this.headers() });
+      const res = await this.http.json<AnthropicModelsResponse>(url.toString(), {
+        method: 'GET',
+        headers: this.headers(),
+      });
       for (const m of res.data) {
         out.push({
           modelId: m.id,
@@ -133,7 +140,10 @@ export class AnthropicProvider extends BaseProvider {
       ...(request.timeoutMs ? { timeoutMs: request.timeoutMs } : {}),
     });
 
-    const blocks = new Map<number, { kind: 'text' | 'tool_use' | 'thinking'; id?: string; name?: string; json: string }>();
+    const blocks = new Map<
+      number,
+      { kind: 'text' | 'tool_use' | 'thinking'; id?: string; name?: string; json: string }
+    >();
     let inputTokens = 0;
     let cached = 0;
     let outputTokens = 0;
@@ -153,7 +163,8 @@ export class AnthropicProvider extends BaseProvider {
           const cb = ev.content_block;
           if (cb.type === 'tool_use') {
             blocks.set(ev.index, { kind: 'tool_use', id: cb.id, name: cb.name, json: '' });
-            if (!(structured && cb.name === STRUCTURED_TOOL_NAME)) yield { type: 'tool_call_start', id: cb.id, name: cb.name };
+            if (!(structured && cb.name === STRUCTURED_TOOL_NAME))
+              yield { type: 'tool_call_start', id: cb.id, name: cb.name };
           } else if (cb.type === 'thinking') {
             blocks.set(ev.index, { kind: 'thinking', json: '' });
           } else {
@@ -169,14 +180,21 @@ export class AnthropicProvider extends BaseProvider {
           else if (d.type === 'thinking_delta') yield { type: 'reasoning_delta', text: d.thinking };
           else if (d.type === 'input_json_delta' && block?.kind === 'tool_use') {
             block.json += d.partial_json;
-            if (structured && block.name === STRUCTURED_TOOL_NAME) yield { type: 'text_delta', text: d.partial_json };
-            else if (block.id) yield { type: 'tool_call_delta', id: block.id, argumentsDelta: d.partial_json };
+            if (structured && block.name === STRUCTURED_TOOL_NAME)
+              yield { type: 'text_delta', text: d.partial_json };
+            else if (block.id)
+              yield { type: 'tool_call_delta', id: block.id, argumentsDelta: d.partial_json };
           }
           break;
         }
         case 'content_block_stop': {
           const block = blocks.get(ev.index);
-          if (block?.kind === 'tool_use' && block.id && block.name && !(structured && block.name === STRUCTURED_TOOL_NAME)) {
+          if (
+            block?.kind === 'tool_use' &&
+            block.id &&
+            block.name &&
+            !(structured && block.name === STRUCTURED_TOOL_NAME)
+          ) {
             yield { type: 'tool_call_end', id: block.id, name: block.name, arguments: safeJson(block.json) };
           }
           break;
@@ -278,7 +296,10 @@ function toAnthropicMessage(m: ChatMessage): AnthropicMessage {
         if (part.text) content.push({ type: 'text', text: part.text });
         break;
       case 'image':
-        content.push({ type: 'image', source: { type: 'base64', media_type: part.mimeType, data: part.data } });
+        content.push({
+          type: 'image',
+          source: { type: 'base64', media_type: part.mimeType, data: part.data },
+        });
         break;
       case 'tool_call':
         content.push({ type: 'tool_use', id: part.id, name: part.name, input: part.arguments ?? {} });

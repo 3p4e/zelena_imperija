@@ -33,7 +33,12 @@ type OAIMessage =
   | { role: 'tool'; tool_call_id: string; content: string };
 
 export interface OAIModelsResponse {
-  data: { id: string; owned_by?: string; context_length?: number; pricing?: { prompt?: string; completion?: string } }[];
+  data: {
+    id: string;
+    owned_by?: string;
+    context_length?: number;
+    pricing?: { prompt?: string; completion?: string };
+  }[];
 }
 
 interface OAIChunk {
@@ -81,7 +86,10 @@ export class OpenAICompatibleProvider extends BaseProvider {
 
   constructor(options: OpenAICompatibleOptions) {
     super();
-    if (!options.baseUrl) throw new ProviderError('bad_request', 'An OpenAI-compatible provider needs a base URL.', { retryable: false });
+    if (!options.baseUrl)
+      throw new ProviderError('bad_request', 'An OpenAI-compatible provider needs a base URL.', {
+        retryable: false,
+      });
     this.kind = options.kind ?? 'openai_compatible';
     this.http = new HttpClient({ fetch: options.fetch, timeoutMs: options.timeoutMs });
     this.baseUrl = options.baseUrl.replace(/\/+$/, '');
@@ -98,7 +106,10 @@ export class OpenAICompatibleProvider extends BaseProvider {
   }
 
   async listModels(): Promise<ModelInfo[]> {
-    const res = await this.http.json<OAIModelsResponse>(`${this.baseUrl}/models`, { method: 'GET', headers: this.headers() });
+    const res = await this.http.json<OAIModelsResponse>(`${this.baseUrl}/models`, {
+      method: 'GET',
+      headers: this.headers(),
+    });
     return res.data.map((m) => this.mapModel(m));
   }
 
@@ -135,7 +146,11 @@ export class OpenAICompatibleProvider extends BaseProvider {
     if (request.structuredOutput) {
       body.response_format = {
         type: 'json_schema',
-        json_schema: { name: request.structuredOutput.name, schema: request.structuredOutput.schema, strict: false },
+        json_schema: {
+          name: request.structuredOutput.name,
+          schema: request.structuredOutput.schema,
+          strict: false,
+        },
       };
     }
     if (request.reasoningEffort) body.reasoning_effort = request.reasoningEffort;
@@ -185,7 +200,8 @@ export class OpenAICompatibleProvider extends BaseProvider {
           }
           if (tc.function?.arguments) {
             entry.args += tc.function.arguments;
-            if (entry.started) yield { type: 'tool_call_delta', id: entry.id, argumentsDelta: tc.function.arguments };
+            if (entry.started)
+              yield { type: 'tool_call_delta', id: entry.id, argumentsDelta: tc.function.arguments };
           }
         }
         if (choice.finish_reason) finish = mapFinish(choice.finish_reason);
@@ -207,7 +223,13 @@ export class OpenAICompatibleProvider extends BaseProvider {
     if (calls.size > 0 && finish === 'stop') finish = 'tool_calls';
     yield {
       type: 'usage',
-      usage: usage ?? { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, reasoningTokens: null, costUsd: null },
+      usage: usage ?? {
+        inputTokens: 0,
+        outputTokens: 0,
+        cachedInputTokens: 0,
+        reasoningTokens: null,
+        costUsd: null,
+      },
     };
     yield { type: 'finish', reason: finish };
   }
@@ -228,7 +250,10 @@ function mapFinish(reason: string): FinishReason {
 }
 
 function toOAITool(t: ToolDefinition): Record<string, unknown> {
-  return { type: 'function', function: { name: t.name, description: t.description, parameters: t.inputSchema } };
+  return {
+    type: 'function',
+    function: { name: t.name, description: t.description, parameters: t.inputSchema },
+  };
 }
 
 export function toOAIMessages(m: ChatMessage): OAIMessage[] {
@@ -251,7 +276,11 @@ export function toOAIMessages(m: ChatMessage): OAIMessage[] {
       .join('');
     const toolCalls: OAIToolCall[] = m.content
       .filter((p) => p.type === 'tool_call')
-      .map((p) => ({ id: p.id, type: 'function', function: { name: p.name, arguments: JSON.stringify(p.arguments ?? {}) } }));
+      .map((p) => ({
+        id: p.id,
+        type: 'function',
+        function: { name: p.name, arguments: JSON.stringify(p.arguments ?? {}) },
+      }));
     const msg: OAIMessage = { role: 'assistant', content: text || null };
     if (toolCalls.length > 0) msg.tool_calls = toolCalls;
     return [msg];
@@ -263,7 +292,8 @@ export function toOAIMessages(m: ChatMessage): OAIMessage[] {
   const parts: (OAITextContent | OAIImageContent)[] = [];
   for (const p of m.content) {
     if (p.type === 'text') parts.push({ type: 'text', text: p.text });
-    else if (p.type === 'image') parts.push({ type: 'image_url', image_url: { url: `data:${p.mimeType};base64,${p.data}` } });
+    else if (p.type === 'image')
+      parts.push({ type: 'image_url', image_url: { url: `data:${p.mimeType};base64,${p.data}` } });
   }
   if (parts.length === 1 && parts[0]?.type === 'text') out.push({ role: 'user', content: parts[0].text });
   else if (parts.length > 0) out.push({ role: 'user', content: parts });

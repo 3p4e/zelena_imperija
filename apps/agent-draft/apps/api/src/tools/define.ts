@@ -1,7 +1,13 @@
 import { z, type ZodType } from 'zod';
 import type { ToolPermission } from '@agent/shared';
 import type { JsonSchema } from '@agent/providers';
-import { ToolInputError, type Tool, type ToolAuthRequirement, type ToolContext, type ToolResult } from './types.js';
+import {
+  ToolInputError,
+  type Tool,
+  type ToolAuthRequirement,
+  type ToolContext,
+  type ToolResult,
+} from './types.js';
 
 export interface BuiltinToolSpec<S extends ZodType> {
   name: string;
@@ -29,7 +35,9 @@ export function defineTool<S extends ZodType>(spec: BuiltinToolSpec<S>): Tool {
     parse(args) {
       const r = spec.schema.safeParse(args ?? {});
       if (!r.success) {
-        throw new ToolInputError(r.error.issues.map((i) => `${i.path.join('.') || 'input'}: ${i.message}`).join('; '));
+        throw new ToolInputError(
+          r.error.issues.map((i) => `${i.path.join('.') || 'input'}: ${i.message}`).join('; '),
+        );
       }
       return r.data;
     },

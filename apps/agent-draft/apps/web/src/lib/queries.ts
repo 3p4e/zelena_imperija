@@ -45,7 +45,8 @@ export function useMe() {
   });
 }
 
-export const useProjects = () => useQuery({ queryKey: qk.projects, queryFn: () => api.get<Project[]>('/projects') });
+export const useProjects = () =>
+  useQuery({ queryKey: qk.projects, queryFn: () => api.get<Project[]>('/projects') });
 
 export const useConversations = (projectId: string | undefined) =>
   useQuery({
@@ -54,13 +55,24 @@ export const useConversations = (projectId: string | undefined) =>
     enabled: !!projectId,
   });
 
-export const useModels = () => useQuery({ queryKey: qk.models, queryFn: () => api.get<AvailableModelOption[]>('/models') });
-export const useProviders = () => useQuery({ queryKey: qk.providers, queryFn: () => api.get<Provider[]>('/providers') });
-export const useCliOptions = () => useQuery({ queryKey: qk.cliOptions, queryFn: () => api.get<{ kind: string; loginState: string }[]>('/cli/options') });
+export const useModels = () =>
+  useQuery({ queryKey: qk.models, queryFn: () => api.get<AvailableModelOption[]>('/models') });
+export const useProviders = () =>
+  useQuery({ queryKey: qk.providers, queryFn: () => api.get<Provider[]>('/providers') });
+export const useCliOptions = () =>
+  useQuery({
+    queryKey: qk.cliOptions,
+    queryFn: () => api.get<{ kind: string; loginState: string }[]>('/cli/options'),
+  });
 export const useKeys = () => useQuery({ queryKey: qk.keys, queryFn: () => api.get<UserKey[]>('/keys') });
-export const useTools = () => useQuery({ queryKey: qk.tools, queryFn: () => api.get<ToolCatalogEntry[]>('/tools') });
+export const useTools = () =>
+  useQuery({ queryKey: qk.tools, queryFn: () => api.get<ToolCatalogEntry[]>('/tools') });
 export const useDefaults = () =>
-  useQuery({ queryKey: qk.defaults, queryFn: () => api.get<{ defaultModelId: string | null; defaultCredentialMode: string | null }>('/me/defaults') });
+  useQuery({
+    queryKey: qk.defaults,
+    queryFn: () =>
+      api.get<{ defaultModelId: string | null; defaultCredentialMode: string | null }>('/me/defaults'),
+  });
 
 export const useSandbox = (projectId: string) =>
   useQuery({
@@ -70,4 +82,7 @@ export const useSandbox = (projectId: string) =>
   });
 
 export const useUsage = (scope: string, query: string) =>
-  useQuery({ queryKey: qk.usage(`${scope}?${query}`), queryFn: () => api.get<UsageSummary>(`${scope}${query ? `?${query}` : ''}`) });
+  useQuery({
+    queryKey: qk.usage(`${scope}?${query}`),
+    queryFn: () => api.get<UsageSummary>(`${scope}${query ? `?${query}` : ''}`),
+  });

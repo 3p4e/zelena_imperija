@@ -2,7 +2,15 @@ import type { ProviderKind } from '@agent/shared';
 import { BaseProvider, newToolCallId } from '../base.js';
 import { HttpClient } from '../http.js';
 import { ProviderError } from '../errors.js';
-import type { ChatMessage, ChatRequest, FinishReason, ModelInfo, ProviderConfig, StreamEvent, Usage } from '../types.js';
+import type {
+  ChatMessage,
+  ChatRequest,
+  FinishReason,
+  ModelInfo,
+  ProviderConfig,
+  StreamEvent,
+  Usage,
+} from '../types.js';
 
 const DEFAULT_BASE_URL = 'https://generativelanguage.googleapis.com';
 
@@ -62,7 +70,10 @@ export class GeminiProvider extends BaseProvider {
       const url = new URL(`${this.baseUrl}/v1beta/models`);
       url.searchParams.set('pageSize', '200');
       if (pageToken) url.searchParams.set('pageToken', pageToken);
-      const res = await this.http.json<GeminiModelsResponse>(url.toString(), { method: 'GET', headers: this.headers() });
+      const res = await this.http.json<GeminiModelsResponse>(url.toString(), {
+        method: 'GET',
+        headers: this.headers(),
+      });
       for (const m of res.models) {
         if (!(m.supportedGenerationMethods ?? []).includes('generateContent')) continue;
         const id = m.name.replace(/^models\//, '');
@@ -102,7 +113,8 @@ export class GeminiProvider extends BaseProvider {
 
     for await (const msg of sse) {
       const chunk = JSON.parse(msg.data) as GeminiChunk;
-      if (chunk.error) throw new ProviderError('unknown', `Gemini stream error: ${chunk.error.message ?? 'unknown'}`);
+      if (chunk.error)
+        throw new ProviderError('unknown', `Gemini stream error: ${chunk.error.message ?? 'unknown'}`);
       for (const cand of chunk.candidates ?? []) {
         for (const part of cand.content?.parts ?? []) {
           if (part.functionCall) {
@@ -111,7 +123,12 @@ export class GeminiProvider extends BaseProvider {
             const argsText = JSON.stringify(part.functionCall.args ?? {});
             yield { type: 'tool_call_start', id, name: part.functionCall.name };
             yield { type: 'tool_call_delta', id, argumentsDelta: argsText };
-            yield { type: 'tool_call_end', id, name: part.functionCall.name, arguments: part.functionCall.args ?? {} };
+            yield {
+              type: 'tool_call_end',
+              id,
+              name: part.functionCall.name,
+              arguments: part.functionCall.args ?? {},
+            };
           } else if (typeof part.text === 'string' && part.text.length > 0) {
             if (part.thought) yield { type: 'reasoning_delta', text: part.text };
             else yield { type: 'text_delta', text: part.text };
@@ -122,7 +139,8 @@ export class GeminiProvider extends BaseProvider {
       if (chunk.usageMetadata) {
         usage = {
           inputTokens: chunk.usageMetadata.promptTokenCount ?? 0,
-          outputTokens: (chunk.usageMetadata.candidatesTokenCount ?? 0) + (chunk.usageMetadata.thoughtsTokenCount ?? 0),
+          outputTokens:
+            (chunk.usageMetadata.candidatesTokenCount ?? 0) + (chunk.usageMetadata.thoughtsTokenCount ?? 0),
           cachedInputTokens: chunk.usageMetadata.cachedContentTokenCount ?? 0,
           reasoningTokens: chunk.usageMetadata.thoughtsTokenCount ?? null,
           costUsd: null,
@@ -132,7 +150,13 @@ export class GeminiProvider extends BaseProvider {
     if (sawToolCall && finish === 'stop') finish = 'tool_calls';
     yield {
       type: 'usage',
-      usage: usage ?? { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, reasoningTokens: null, costUsd: null },
+      usage: usage ?? {
+        inputTokens: 0,
+        outputTokens: 0,
+        cachedInputTokens: 0,
+        reasoningTokens: null,
+        costUsd: null,
+      },
     };
     yield { type: 'finish', reason: finish };
   }
@@ -238,7 +262,15 @@ function toGeminiContent(m: ChatMessage, callNames: Map<string, string>): Gemini
 
 /** Gemini's schema dialect rejects several JSON Schema keywords; drop them recursively. */
 export function stripUnsupportedSchemaKeys(schema: Record<string, unknown>): Record<string, unknown> {
-  const banned = new Set(['$schema', 'additionalProperties', 'default', 'examples', '$id', 'const', 'patternProperties']);
+  const banned = new Set([
+    '$schema',
+    'additionalProperties',
+    'default',
+    'examples',
+    '$id',
+    'const',
+    'patternProperties',
+  ]);
   const walk = (node: unknown): unknown => {
     if (Array.isArray(node)) return node.map(walk);
     if (node && typeof node === 'object') {

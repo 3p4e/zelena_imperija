@@ -17,7 +17,9 @@ export function openSse(req: FastifyRequest, reply: FastifyReply): SseChannel {
     'cache-control': 'no-cache, no-transform',
     connection: 'keep-alive',
     'x-accel-buffering': 'no',
-    ...(origin ? { 'access-control-allow-origin': origin, 'access-control-allow-credentials': 'true', vary: 'Origin' } : {}),
+    ...(origin
+      ? { 'access-control-allow-origin': origin, 'access-control-allow-credentials': 'true', vary: 'Origin' }
+      : {}),
   });
   res.write(': connected\n\n');
   let closed = false;

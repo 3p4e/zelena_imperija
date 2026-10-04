@@ -19,7 +19,10 @@ interface TestRunRow {
 
 export function TestsPane({ project, canEdit }: { project: Project; canEdit: boolean }) {
   const qc = useQueryClient();
-  const runs = useQuery({ queryKey: qk.testRuns(project.id), queryFn: () => api.get<TestRunRow[]>(`/projects/${project.id}/test-runs`) });
+  const runs = useQuery({
+    queryKey: qk.testRuns(project.id),
+    queryFn: () => api.get<TestRunRow[]>(`/projects/${project.id}/test-runs`),
+  });
   return (
     <div className="flex h-full flex-col gap-3 overflow-auto p-3">
       {canEdit && (
@@ -31,7 +34,9 @@ export function TestsPane({ project, canEdit }: { project: Project; canEdit: boo
         />
       )}
       {runs.isLoading && <Spinner />}
-      {runs.data?.length === 0 && <Empty>No test runs yet. The agent records them with its test tool, or run them here.</Empty>}
+      {runs.data?.length === 0 && (
+        <Empty>No test runs yet. The agent records them with its test tool, or run them here.</Empty>
+      )}
       <ul className="flex flex-col gap-2">
         {runs.data?.map((r) => {
           const ok = r.failed === 0 || (r.failed === null && r.summary.includes('passed'));
@@ -43,7 +48,9 @@ export function TestsPane({ project, canEdit }: { project: Project; canEdit: boo
                 <span className="ml-auto text-zinc-500">{relativeTime(r.createdAt)}</span>
               </div>
               <div className="mt-1 text-zinc-400">
-                {r.total !== null ? `${r.passed ?? 0} passed · ${r.failed ?? 0} failed · ${r.total} total (${r.framework})` : r.summary}
+                {r.total !== null
+                  ? `${r.passed ?? 0} passed · ${r.failed ?? 0} failed · ${r.total} total (${r.framework})`
+                  : r.summary}
               </div>
             </li>
           );

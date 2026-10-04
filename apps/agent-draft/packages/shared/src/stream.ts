@@ -6,8 +6,22 @@ import type { MessageRole, PartKind } from './enums.js';
  * normalises vendor CLI output into.
  */
 export type ChatStreamEvent =
-  | { type: 'message_start'; messageId: string; conversationId: string; role: MessageRole; modelId: string | null }
-  | { type: 'part_start'; messageId: string; partId: string; seq: number; kind: PartKind; toolName?: string; toolCallId?: string }
+  | {
+      type: 'message_start';
+      messageId: string;
+      conversationId: string;
+      role: MessageRole;
+      modelId: string | null;
+    }
+  | {
+      type: 'part_start';
+      messageId: string;
+      partId: string;
+      seq: number;
+      kind: PartKind;
+      toolName?: string;
+      toolCallId?: string;
+    }
   | { type: 'part_delta'; partId: string; delta: string }
   | { type: 'part_end'; partId: string; isError?: boolean }
   | {
@@ -25,7 +39,13 @@ export type ChatStreamEvent =
       cachedInputTokens: number;
       estimatedCostUsd: number | null;
     }
-  | { type: 'message_end'; messageId: string; status: 'complete' | 'stopped' | 'error'; errorCode?: string; errorMessage?: string }
+  | {
+      type: 'message_end';
+      messageId: string;
+      status: 'complete' | 'stopped' | 'error';
+      errorCode?: string;
+      errorMessage?: string;
+    }
   | { type: 'conversation_status'; status: 'idle' | 'running' | 'stopped' | 'error' };
 
 export type ExecStreamEvent =

@@ -80,7 +80,8 @@ function KeysCard() {
   return (
     <Card title="API keys">
       <p className="mb-3 text-xs text-zinc-400">
-        Keys are encrypted at rest and never shown again after saving. Requests made with your own keys are billed to you by the provider and are not subject to shared-key quotas.
+        Keys are encrypted at rest and never shown again after saving. Requests made with your own keys are
+        billed to you by the provider and are not subject to shared-key quotas.
       </p>
       <form
         className="mb-4 grid grid-cols-[1fr_1fr_2fr_auto] items-end gap-2"
@@ -103,7 +104,14 @@ function KeysCard() {
           <Input required value={label} onChange={(e) => setLabel(e.target.value)} />
         </Field>
         <Field label="API key">
-          <Input type="password" autoComplete="off" required value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Pasted key is sent once, over TLS" />
+          <Input
+            type="password"
+            autoComplete="off"
+            required
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Pasted key is sent once, over TLS"
+          />
         </Field>
         <Button type="submit" variant="primary" loading={busy === 'save'}>
           Save & test
@@ -124,7 +132,9 @@ function KeysCard() {
                 {testResults[k.id] && ` · ${testResults[k.id]?.message ?? ''}`}
               </div>
             </div>
-            <Badge tone={k.status === 'active' ? 'good' : k.status === 'invalid' ? 'bad' : 'neutral'}>{k.status}</Badge>
+            <Badge tone={k.status === 'active' ? 'good' : k.status === 'invalid' ? 'bad' : 'neutral'}>
+              {k.status}
+            </Badge>
             {k.status !== 'revoked' && (
               <>
                 <Button size="sm" onClick={() => void test(k.id)} loading={busy === k.id}>
@@ -157,7 +167,10 @@ function DefaultsCard() {
     setError(null);
     setSaved(false);
     try {
-      await api.put('/me/defaults', { defaultModelId: s.modelId, defaultCredentialMode: s.credentialMode === 'subscription_cli' ? null : s.credentialMode });
+      await api.put('/me/defaults', {
+        defaultModelId: s.modelId,
+        defaultCredentialMode: s.credentialMode === 'subscription_cli' ? null : s.credentialMode,
+      });
       await qc.invalidateQueries({ queryKey: qk.defaults });
       setSaved(true);
     } catch (err) {
@@ -170,7 +183,9 @@ function DefaultsCard() {
         <ModelPicker value={value} onChange={(s) => void save(s)} inheritLabel="Server default" />
         {saved && <span className="text-xs text-emerald-400">Saved</span>}
       </div>
-      <p className="mt-2 text-xs text-zinc-500">Used when neither the message, the conversation nor the project picks a model.</p>
+      <p className="mt-2 text-xs text-zinc-500">
+        Used when neither the message, the conversation nor the project picks a model.
+      </p>
       <ErrorText error={error} />
     </Card>
   );
@@ -200,10 +215,23 @@ function PasswordCard() {
         }}
       >
         <Field label="Current password">
-          <Input type="password" autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="current-password"
+            required
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+          />
         </Field>
         <Field label="New password">
-          <Input type="password" autoComplete="new-password" minLength={10} required value={next} onChange={(e) => setNext(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            minLength={10}
+            required
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+          />
         </Field>
         <Button type="submit">Change</Button>
       </form>

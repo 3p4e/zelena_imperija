@@ -37,16 +37,32 @@ export function LoginPage() {
     <AuthLayout title="Sign in">
       <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-3">
         <Field label="Email">
-          <Input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input
+            type="email"
+            autoComplete="username"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Field>
         <Field label="Password">
-          <Input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </Field>
         <ErrorText error={error} />
         <Button type="submit" variant="primary" loading={busy}>
           Sign in
         </Button>
-        <Link to="/reset-password" search={{}} className="text-center text-xs text-zinc-400 hover:text-zinc-200">
+        <Link
+          to="/reset-password"
+          search={{}}
+          className="text-center text-xs text-zinc-400 hover:text-zinc-200"
+        >
           Forgot password?
         </Link>
         <p className="text-center text-xs text-zinc-500">Accounts are created by invitation only.</p>

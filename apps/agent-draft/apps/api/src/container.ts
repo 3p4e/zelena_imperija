@@ -34,7 +34,15 @@ export async function buildDeps(opts: BuildDepsOptions): Promise<AppDeps> {
   registerBuiltinTools(tools, sandbox, db);
   const providerFactory = opts.providerFactory ?? createProvider;
   const cli = opts.cli ?? new DockerCliRunner(db, docker, sandbox, config, log.child({ mod: 'cli' }));
-  const agent = new AgentRuntime({ db, vault, providerFactory, tools, cli, config, log: log.child({ mod: 'agent' }) });
+  const agent = new AgentRuntime({
+    db,
+    vault,
+    providerFactory,
+    tools,
+    cli,
+    config,
+    log: log.child({ mod: 'agent' }),
+  });
   await tools.syncCatalog();
   return {
     config,

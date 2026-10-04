@@ -1,0 +1,28 @@
+# Single entry point. SITE_ADDRESS is a hostname (automatic HTTPS via ACME) or
+# ":80" for plain HTTP on localhost / behind another TLS terminator.
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+
+	@api path /api/* /preview/* /healthz
+	handle @api {
+		reverse_proxy api:4000 {
+			flush_interval -1
+			transport http {
+				response_header_timeout 0
+			}
+		}
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

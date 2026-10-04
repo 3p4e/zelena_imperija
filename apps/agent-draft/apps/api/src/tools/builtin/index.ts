@@ -8,7 +8,13 @@ import { previewTools } from './preview.js';
 import { shellTools } from './shell.js';
 
 export function registerBuiltinTools(registry: ToolRegistry, sandbox: SandboxManager, db: Db): void {
-  for (const t of [...fsTools(sandbox), ...shellTools(sandbox, db), ...gitTools(sandbox), ...httpTools(sandbox), ...previewTools(sandbox, db)]) {
+  for (const t of [
+    ...fsTools(sandbox),
+    ...shellTools(sandbox, db),
+    ...gitTools(sandbox),
+    ...httpTools(sandbox),
+    ...previewTools(sandbox, db),
+  ]) {
     registry.register(t);
   }
 }

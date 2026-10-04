@@ -37,7 +37,11 @@ export class KeyVault {
     if (cached) return cached;
     const row = await this.db.query.userDeks.findFirst({ where: eq(userDeks.userId, userId) });
     if (row) {
-      const dek = open(this.master, { ciphertext: row.wrappedDek, nonce: row.nonce }, Buffer.from(`dek:${userId}`));
+      const dek = open(
+        this.master,
+        { ciphertext: row.wrappedDek, nonce: row.nonce },
+        Buffer.from(`dek:${userId}`),
+      );
       this.dekCache.set(userId, dek);
       return dek;
     }
@@ -45,12 +49,21 @@ export class KeyVault {
     const wrapped = seal(this.master, dek, Buffer.from(`dek:${userId}`));
     await this.db
       .insert(userDeks)
-      .values({ userId, wrappedDek: wrapped.ciphertext, nonce: wrapped.nonce, masterKeyVersion: this.masterVersion })
+      .values({
+        userId,
+        wrappedDek: wrapped.ciphertext,
+        nonce: wrapped.nonce,
+        masterKeyVersion: this.masterVersion,
+      })
       .onConflictDoNothing();
     // Re-read in case a concurrent request won the insert race.
     const winner = await this.db.query.userDeks.findFirst({ where: eq(userDeks.userId, userId) });
     if (!winner) throw new Error('failed to persist data key');
-    const final = open(this.master, { ciphertext: winner.wrappedDek, nonce: winner.nonce }, Buffer.from(`dek:${userId}`));
+    const final = open(
+      this.master,
+      { ciphertext: winner.wrappedDek, nonce: winner.nonce },
+      Buffer.from(`dek:${userId}`),
+    );
     this.dekCache.set(userId, final);
     return final;
   }

@@ -50,7 +50,9 @@ export class McpHub {
       if (!cfg.url) throw new Error('http MCP server needs a URL');
       const headers: Record<string, string> = {};
       if (cfg.env.AUTHORIZATION) headers.authorization = cfg.env.AUTHORIZATION;
-      transport = new StreamableHTTPClientTransport(new URL(cfg.url), { requestInit: { headers } }) as Transport;
+      transport = new StreamableHTTPClientTransport(new URL(cfg.url), {
+        requestInit: { headers },
+      }) as Transport;
     }
     await client.connect(transport);
     const listed = await client.listTools();
@@ -74,7 +76,9 @@ export class McpHub {
           );
           const content = Array.isArray(res.content) ? res.content : [];
           const text = content
-            .map((c: { type: string; text?: string }) => (c.type === 'text' ? (c.text ?? '') : `[${c.type} content]`))
+            .map((c: { type: string; text?: string }) =>
+              c.type === 'text' ? (c.text ?? '') : `[${c.type} content]`,
+            )
             .join('\n');
           return { content: clip(text || '(empty result)'), isError: res.isError === true };
         },

@@ -20,7 +20,12 @@ export function previewTools(sandbox: SandboxManager, db: Db): Tool[] {
       async run(ctx, a) {
         let logNote = '';
         if (a.command) {
-          const log = await sandbox.startBackground(ctx.projectId, a.command, `preview-${a.port}`, ctx.actorUserId);
+          const log = await sandbox.startBackground(
+            ctx.projectId,
+            a.command,
+            `preview-${a.port}`,
+            ctx.actorUserId,
+          );
           logNote = ` Server log: ${log}.`;
         }
         const row = await sandbox.info(ctx.projectId);
@@ -28,7 +33,10 @@ export function previewTools(sandbox: SandboxManager, db: Db): Tool[] {
         await db
           .insert(previewPorts)
           .values({ sandboxId: row.id, port: a.port, label: a.label ?? 'app' })
-          .onConflictDoUpdate({ target: [previewPorts.sandboxId, previewPorts.port], set: { label: a.label ?? 'app' } });
+          .onConflictDoUpdate({
+            target: [previewPorts.sandboxId, previewPorts.port],
+            set: { label: a.label ?? 'app' },
+          });
 
         // Wait briefly for the server to accept connections so the preview opens on a live page.
         const probe = await sandbox.exec({
@@ -45,7 +53,9 @@ export function previewTools(sandbox: SandboxManager, db: Db): Tool[] {
           timeoutS: 40,
         });
         if (probe.exitCode !== 0) {
-          return fail(`Port ${a.port} registered, but nothing answered on it within 30 s.${logNote} Check the server log and that it binds 0.0.0.0.`);
+          return fail(
+            `Port ${a.port} registered, but nothing answered on it within 30 s.${logNote} Check the server log and that it binds 0.0.0.0.`,
+          );
         }
         return ok(`Preview is live on port ${a.port}; it is shown in the Preview panel.${logNote}`);
       },

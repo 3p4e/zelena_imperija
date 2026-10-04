@@ -18,9 +18,18 @@ export const SEED_PROVIDERS: SeedProvider[] = [
     slug: 'anthropic',
     displayName: 'Anthropic',
     models: [
-      m('claude-sonnet-4-5', 'Claude Sonnet 4.5', 200_000, 64_000, 3, 15, 0.3, { vision: true, reasoning: true }),
-      m('claude-opus-4-1', 'Claude Opus 4.1', 200_000, 32_000, 15, 75, 1.5, { vision: true, reasoning: true }),
-      m('claude-haiku-4-5', 'Claude Haiku 4.5', 200_000, 64_000, 1, 5, 0.1, { vision: true, reasoning: true }),
+      m('claude-sonnet-4-5', 'Claude Sonnet 4.5', 200_000, 64_000, 3, 15, 0.3, {
+        vision: true,
+        reasoning: true,
+      }),
+      m('claude-opus-4-1', 'Claude Opus 4.1', 200_000, 32_000, 15, 75, 1.5, {
+        vision: true,
+        reasoning: true,
+      }),
+      m('claude-haiku-4-5', 'Claude Haiku 4.5', 200_000, 64_000, 1, 5, 0.1, {
+        vision: true,
+        reasoning: true,
+      }),
     ],
   },
   {
@@ -38,8 +47,14 @@ export const SEED_PROVIDERS: SeedProvider[] = [
     slug: 'gemini',
     displayName: 'Google Gemini',
     models: [
-      m('gemini-2.5-pro', 'Gemini 2.5 Pro', 1_048_576, 65_536, 1.25, 10, 0.31, { vision: true, reasoning: true }),
-      m('gemini-2.5-flash', 'Gemini 2.5 Flash', 1_048_576, 65_536, 0.3, 2.5, 0.075, { vision: true, reasoning: true }),
+      m('gemini-2.5-pro', 'Gemini 2.5 Pro', 1_048_576, 65_536, 1.25, 10, 0.31, {
+        vision: true,
+        reasoning: true,
+      }),
+      m('gemini-2.5-flash', 'Gemini 2.5 Flash', 1_048_576, 65_536, 0.3, 2.5, 0.075, {
+        vision: true,
+        reasoning: true,
+      }),
     ],
   },
   {

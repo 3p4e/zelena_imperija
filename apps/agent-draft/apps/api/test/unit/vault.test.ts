@@ -44,7 +44,9 @@ describe('KeyVault (envelope encryption)', () => {
     const sealed = await vault.sealForUser(alice, 'provider-key', 'sk-alice');
     const tampered = Buffer.from(sealed.ciphertext);
     tampered[0] = (tampered[0] ?? 0) ^ 0xff;
-    await expect(vault.openForUser(alice, 'provider-key', { ciphertext: tampered, nonce: sealed.nonce })).rejects.toThrow();
+    await expect(
+      vault.openForUser(alice, 'provider-key', { ciphertext: tampered, nonce: sealed.nonce }),
+    ).rejects.toThrow();
   });
 
   it('decrypts with a fresh vault instance (keys survive restarts) but not with another master key', async () => {

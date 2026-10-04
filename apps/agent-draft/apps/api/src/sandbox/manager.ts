@@ -5,7 +5,16 @@ import type { Logger } from 'pino';
 import type { ExecutionKind } from '@agent/shared';
 import type { AppConfig } from '../config/env.js';
 import type { Db } from '../db/client.js';
-import { executionLogs, executions, globalSettings, memberLimits, previewPorts, projects, sandboxes, users } from '../db/schema/index.js';
+import {
+  executionLogs,
+  executions,
+  globalSettings,
+  memberLimits,
+  previewPorts,
+  projects,
+  sandboxes,
+  users,
+} from '../db/schema/index.js';
 import { AppError } from '../lib/errors.js';
 import { dockerExec, isNotFound } from './docker.js';
 import { WORKSPACE, relativeToWorkspace, workspacePath } from './paths.js';
@@ -78,9 +87,16 @@ export class SandboxManager {
     private readonly log: Logger,
   ) {}
 
-  private names(projectId: string, ownerUserId: string): { container: string; volume: string; network: string } {
+  private names(
+    projectId: string,
+    ownerUserId: string,
+  ): { container: string; volume: string; network: string } {
     const p = this.config.SANDBOX_PREFIX;
-    return { container: `${p}-${projectId}`, volume: `${p}-vol-${projectId}`, network: `${p}-net-${ownerUserId}` };
+    return {
+      container: `${p}-${projectId}`,
+      volume: `${p}-vol-${projectId}`,
+      network: `${p}-net-${ownerUserId}`,
+    };
   }
 
   /** Serialises lifecycle operations per project. */
@@ -127,7 +143,10 @@ export class SandboxManager {
   }
 
   async previewPortsFor(sandboxId: string): Promise<{ port: number; label: string }[]> {
-    return this.db.select({ port: previewPorts.port, label: previewPorts.label }).from(previewPorts).where(eq(previewPorts.sandboxId, sandboxId));
+    return this.db
+      .select({ port: previewPorts.port, label: previewPorts.label })
+      .from(previewPorts)
+      .where(eq(previewPorts.sandboxId, sandboxId));
   }
 
   /** Returns a running container for the project, creating network/volume/container as needed. */
@@ -157,7 +176,14 @@ export class SandboxManager {
       if (!row) {
         const [created] = await this.db
           .insert(sandboxes)
-          .values({ projectId, volumeName: names.volume, status: 'creating', cpu: limits.cpu, memMb: limits.memMb, diskMb: limits.diskMb })
+          .values({
+            projectId,
+            volumeName: names.volume,
+            status: 'creating',
+            cpu: limits.cpu,
+            memMb: limits.memMb,
+            diskMb: limits.diskMb,
+          })
           .returning();
         if (!created) throw new AppError('sandbox_unavailable', 'Could not register the sandbox.');
         row = created;
@@ -165,43 +191,48 @@ export class SandboxManager {
 
       try {
         await this.ensureVolume(names.volume, projectId, project.ownerUserId);
-        const networkName = limits.networkMode === 'none' ? null : await this.ensureUserNetwork(names.network, project.ownerUserId);
+        const networkName =
+          limits.networkMode === 'none'
+            ? null
+            : await this.ensureUserNetwork(names.network, project.ownerUserId);
         let container = await this.findContainer(names.container);
         const needsRecreate =
           container !== null &&
-          (row.cpu !== limits.cpu || row.memMb !== limits.memMb || (await this.networkOf(container)) !== (networkName ?? 'none'));
+          (row.cpu !== limits.cpu ||
+            row.memMb !== limits.memMb ||
+            (await this.networkOf(container)) !== (networkName ?? 'none'));
         if (container && needsRecreate) {
           await container.remove({ force: true });
           container = null;
         }
         container ??= await this.docker.createContainer({
-            name: names.container,
-            Image: project.sandboxImage,
-            User: SANDBOX_UID,
-            WorkingDir: WORKSPACE,
-            Cmd: ['sleep', 'infinity'],
-            Env: ['HOME=/home/sandbox', 'CI=1', 'TERM=xterm-256color', 'NPM_CONFIG_UPDATE_NOTIFIER=false'],
-            Labels: { 'agent.managed': '1', 'agent.project': projectId, 'agent.owner': project.ownerUserId },
-            HostConfig: {
-              Mounts: [{ Type: 'volume', Source: names.volume, Target: WORKSPACE }],
-              Tmpfs: {
-                '/tmp': 'rw,nosuid,nodev,exec,size=512m',
-                '/home/sandbox': 'rw,nosuid,nodev,exec,size=512m,uid=1000,gid=1000',
-              },
-              ReadonlyRootfs: true,
-              CapDrop: ['ALL'],
-              SecurityOpt: ['no-new-privileges'],
-              Memory: limits.memMb * 1024 * 1024,
-              MemorySwap: limits.memMb * 1024 * 1024,
-              NanoCpus: Math.round(limits.cpu * 1e9),
-              PidsLimit: 512,
-              NetworkMode: networkName ?? 'none',
-              Runtime: this.config.SANDBOX_RUNTIME,
-              Init: true,
-              Privileged: false,
-              RestartPolicy: { Name: 'no' },
+          name: names.container,
+          Image: project.sandboxImage,
+          User: SANDBOX_UID,
+          WorkingDir: WORKSPACE,
+          Cmd: ['sleep', 'infinity'],
+          Env: ['HOME=/home/sandbox', 'CI=1', 'TERM=xterm-256color', 'NPM_CONFIG_UPDATE_NOTIFIER=false'],
+          Labels: { 'agent.managed': '1', 'agent.project': projectId, 'agent.owner': project.ownerUserId },
+          HostConfig: {
+            Mounts: [{ Type: 'volume', Source: names.volume, Target: WORKSPACE }],
+            Tmpfs: {
+              '/tmp': 'rw,nosuid,nodev,exec,size=512m',
+              '/home/sandbox': 'rw,nosuid,nodev,exec,size=512m,uid=1000,gid=1000',
             },
-          });
+            ReadonlyRootfs: true,
+            CapDrop: ['ALL'],
+            SecurityOpt: ['no-new-privileges'],
+            Memory: limits.memMb * 1024 * 1024,
+            MemorySwap: limits.memMb * 1024 * 1024,
+            NanoCpus: Math.round(limits.cpu * 1e9),
+            PidsLimit: 512,
+            NetworkMode: networkName ?? 'none',
+            Runtime: this.config.SANDBOX_RUNTIME,
+            Init: true,
+            Privileged: false,
+            RestartPolicy: { Name: 'no' },
+          },
+        });
         const inspect = await container.inspect();
         if (!inspect.State.Running) await container.start();
         await this.db
@@ -224,7 +255,12 @@ export class SandboxManager {
         await this.db.update(sandboxes).set({ status: 'failed' }).where(eq(sandboxes.id, row.id));
         if (err instanceof AppError) throw err;
         this.log.error({ projectId, err: errMessage(err) }, 'sandbox start failed');
-        throw new AppError('sandbox_unavailable', `The sandbox could not be started: ${errMessage(err)}`, undefined, true);
+        throw new AppError(
+          'sandbox_unavailable',
+          `The sandbox could not be started: ${errMessage(err)}`,
+          undefined,
+          true,
+        );
       }
     });
   }
@@ -245,7 +281,13 @@ export class SandboxManager {
       .select({ n: sql<number>`count(*)::int` })
       .from(sandboxes)
       .innerJoin(projects, eq(projects.id, sandboxes.projectId))
-      .where(and(eq(projects.ownerUserId, ownerUserId), eq(sandboxes.status, 'running'), ne(sandboxes.projectId, projectId)));
+      .where(
+        and(
+          eq(projects.ownerUserId, ownerUserId),
+          eq(sandboxes.status, 'running'),
+          ne(sandboxes.projectId, projectId),
+        ),
+      );
     if ((row?.n ?? 0) >= max) {
       throw new AppError(
         'sandbox_limit_reached',
@@ -275,7 +317,10 @@ export class SandboxManager {
       await this.docker.getVolume(name).inspect();
     } catch (err) {
       if (!isNotFound(err)) throw err;
-      await this.docker.createVolume({ Name: name, Labels: { 'agent.managed': '1', 'agent.project': projectId, 'agent.owner': ownerUserId } });
+      await this.docker.createVolume({
+        Name: name,
+        Labels: { 'agent.managed': '1', 'agent.project': projectId, 'agent.owner': ownerUserId },
+      });
     }
   }
 
@@ -328,7 +373,10 @@ export class SandboxManager {
       } catch (err) {
         if (!isNotFound(err) && !errMessage(err).includes('not running')) throw err;
       }
-      await this.db.update(sandboxes).set({ status: 'stopped', stoppedAt: new Date() }).where(eq(sandboxes.id, row.id));
+      await this.db
+        .update(sandboxes)
+        .set({ status: 'stopped', stoppedAt: new Date() })
+        .where(eq(sandboxes.id, row.id));
     });
   }
 
@@ -345,7 +393,11 @@ export class SandboxManager {
       } catch (err) {
         if (!isNotFound(err)) throw err;
       }
-      if (row) await this.db.update(sandboxes).set({ status: 'removed', containerId: null }).where(eq(sandboxes.id, row.id));
+      if (row)
+        await this.db
+          .update(sandboxes)
+          .set({ status: 'removed', containerId: null })
+          .where(eq(sandboxes.id, row.id));
     });
   }
 
@@ -359,7 +411,10 @@ export class SandboxManager {
   }
 
   private async touch(projectId: string): Promise<void> {
-    await this.db.update(sandboxes).set({ lastActivityAt: new Date() }).where(eq(sandboxes.projectId, projectId));
+    await this.db
+      .update(sandboxes)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(sandboxes.projectId, projectId));
   }
 
   private async diskUsageMb(container: Docker.Container, projectId: string): Promise<number> {
@@ -376,7 +431,10 @@ export class SandboxManager {
     if (!row) return;
     const used = await this.diskUsageMb(container, projectId);
     if (used >= row.diskMb) {
-      throw new AppError('sandbox_limit_reached', `The project uses ${used} MB, above its ${row.diskMb} MB disk limit. Delete files to continue.`);
+      throw new AppError(
+        'sandbox_limit_reached',
+        `The project uses ${used} MB, above its ${row.diskMb} MB disk limit. Delete files to continue.`,
+      );
     }
   }
 
@@ -426,9 +484,14 @@ export class SandboxManager {
     const durationMs = Date.now() - started;
     if (outcome.deadlineHit || outcome.aborted) {
       // Backstop: kill everything the sandbox user is running for this command tree.
-      await dockerExec(container, { cmd: ['sh', '-c', 'pkill -KILL -f "^timeout -k 2" || true'], deadlineMs: 10_000 }).catch(() => undefined);
+      await dockerExec(container, {
+        cmd: ['sh', '-c', 'pkill -KILL -f "^timeout -k 2" || true'],
+        deadlineMs: 10_000,
+      }).catch(() => undefined);
     }
-    const timedOut = outcome.deadlineHit || ((outcome.exitCode === 124 || outcome.exitCode === 137) && durationMs >= timeoutS * 1000 - 250);
+    const timedOut =
+      outcome.deadlineHit ||
+      ((outcome.exitCode === 124 || outcome.exitCode === 137) && durationMs >= timeoutS * 1000 - 250);
     await logger?.flush();
     if (executionId) {
       await this.db
@@ -457,7 +520,12 @@ export class SandboxManager {
   }
 
   /** Starts a long-running process (dev server) detached, output to a log file in /tmp. */
-  async startBackground(projectId: string, command: string, logName: string, actorUserId: string | null): Promise<string> {
+  async startBackground(
+    projectId: string,
+    command: string,
+    logName: string,
+    actorUserId: string | null,
+  ): Promise<string> {
     const container = await this.ensureRunning(projectId);
     await this.checkDisk(container, projectId);
     const row = await this.info(projectId);
@@ -526,12 +594,23 @@ export class SandboxManager {
     return entries;
   }
 
-  async readFile(projectId: string, rel: string): Promise<{ path: string; content: string; size: number; binary: boolean; truncated: boolean }> {
+  async readFile(
+    projectId: string,
+    rel: string,
+  ): Promise<{ path: string; content: string; size: number; binary: boolean; truncated: boolean }> {
     const abs = workspacePath(rel);
-    const stat = await this.exec({ projectId, kind: 'fs', actorUserId: null, log: false, timeoutS: 10, argv: ['stat', '-c', '%s %F', '--', abs] });
+    const stat = await this.exec({
+      projectId,
+      kind: 'fs',
+      actorUserId: null,
+      log: false,
+      timeoutS: 10,
+      argv: ['stat', '-c', '%s %F', '--', abs],
+    });
     if (stat.exitCode !== 0) throw new AppError('not_found', `File not found: ${relativeToWorkspace(abs)}`);
     const [sizeStr, ...typeParts] = stat.stdout.trim().split(' ');
-    if (!typeParts.join(' ').includes('regular')) throw new AppError('validation_failed', 'Not a regular file.');
+    if (!typeParts.join(' ').includes('regular'))
+      throw new AppError('validation_failed', 'Not a regular file.');
     const size = Number(sizeStr);
     const r = await this.exec({
       projectId,
@@ -542,10 +621,21 @@ export class SandboxManager {
       argv: ['head', '-c', `${MAX_FILE_READ_BYTES}`, '--', abs],
     });
     const binary = r.stdout.slice(0, 8000).includes('\u0000');
-    return { path: relativeToWorkspace(abs), content: binary ? '' : r.stdout, size, binary, truncated: size > MAX_FILE_READ_BYTES };
+    return {
+      path: relativeToWorkspace(abs),
+      content: binary ? '' : r.stdout,
+      size,
+      binary,
+      truncated: size > MAX_FILE_READ_BYTES,
+    };
   }
 
-  async writeFile(projectId: string, rel: string, content: string, actorUserId: string | null): Promise<{ path: string; bytes: number }> {
+  async writeFile(
+    projectId: string,
+    rel: string,
+    content: string,
+    actorUserId: string | null,
+  ): Promise<{ path: string; bytes: number }> {
     const abs = workspacePath(rel);
     const container = await this.ensureRunning(projectId);
     await this.checkDisk(container, projectId);
@@ -558,20 +648,35 @@ export class SandboxManager {
       argv: ['sh', '-c', 'mkdir -p -- "$(dirname -- "$1")" && cat > "$1"', 'sh', abs],
       stdin: content,
     });
-    if (r.exitCode !== 0) throw new AppError('validation_failed', `Could not write ${relativeToWorkspace(abs)}: ${r.stderr.trim().slice(0, 300)}`);
+    if (r.exitCode !== 0)
+      throw new AppError(
+        'validation_failed',
+        `Could not write ${relativeToWorkspace(abs)}: ${r.stderr.trim().slice(0, 300)}`,
+      );
     this.diskCache.delete(projectId);
     return { path: relativeToWorkspace(abs), bytes: Buffer.byteLength(content) };
   }
 
   async deleteFile(projectId: string, rel: string): Promise<void> {
     const abs = workspacePath(rel);
-    const r = await this.exec({ projectId, kind: 'fs', actorUserId: null, log: false, timeoutS: 30, argv: ['rm', '-rf', '--', abs] });
-    if (r.exitCode !== 0) throw new AppError('validation_failed', `Could not delete: ${r.stderr.trim().slice(0, 300)}`);
+    const r = await this.exec({
+      projectId,
+      kind: 'fs',
+      actorUserId: null,
+      log: false,
+      timeoutS: 30,
+      argv: ['rm', '-rf', '--', abs],
+    });
+    if (r.exitCode !== 0)
+      throw new AppError('validation_failed', `Could not delete: ${r.stderr.trim().slice(0, 300)}`);
     this.diskCache.delete(projectId);
   }
 
   /** Interactive TTY shell for the terminal panel. */
-  async openTerminal(projectId: string, actorUserId: string): Promise<{ stream: Duplex; resize: (cols: number, rows: number) => Promise<void>; executionId: string }> {
+  async openTerminal(
+    projectId: string,
+    actorUserId: string,
+  ): Promise<{ stream: Duplex; resize: (cols: number, rows: number) => Promise<void>; executionId: string }> {
     const container = await this.ensureRunning(projectId);
     const row = await this.info(projectId);
     if (!row) throw new AppError('sandbox_unavailable', 'Sandbox missing.');
@@ -585,7 +690,7 @@ export class SandboxManager {
       AttachStderr: true,
       Tty: true,
     });
-    const stream = (await exec.start({ hijack: true, stdin: true, Tty: true }));
+    const stream = await exec.start({ hijack: true, stdin: true, Tty: true });
     const [e] = await this.db
       .insert(executions)
       .values({ sandboxId: row.id, actorUserId, kind: 'shell', command: '[interactive terminal]' })
@@ -594,7 +699,11 @@ export class SandboxManager {
     const writer = new ExecLogWriter(this.db, e.id);
     stream.on('data', (b: Buffer) => writer.push('stdout', b.toString('utf8')));
     stream.on('close', () => {
-      void writer.flush().then(() => this.db.update(executions).set({ finishedAt: new Date() }).where(eq(executions.id, e.id)));
+      void writer
+        .flush()
+        .then(() =>
+          this.db.update(executions).set({ finishedAt: new Date() }).where(eq(executions.id, e.id)),
+        );
     });
     return {
       stream,
@@ -613,13 +722,19 @@ export class SandboxManager {
       .select({ projectId: sandboxes.projectId })
       .from(sandboxes)
       .where(and(eq(sandboxes.status, 'running'), lt(sandboxes.lastActivityAt, cutoff)));
-    for (const r of idle) await this.stop(r.projectId).catch((err: unknown) => this.log.warn({ err: errMessage(err) }, 'idle stop failed'));
+    for (const r of idle)
+      await this.stop(r.projectId).catch((err: unknown) =>
+        this.log.warn({ err: errMessage(err) }, 'idle stop failed'),
+      );
     return idle.length;
   }
 
   /** Aligns DB state with Docker after an API restart. */
   async reconcile(): Promise<void> {
-    const rows = await this.db.select().from(sandboxes).where(inArray(sandboxes.status, ['running', 'creating']));
+    const rows = await this.db
+      .select()
+      .from(sandboxes)
+      .where(inArray(sandboxes.status, ['running', 'creating']));
     for (const r of rows) {
       let running = false;
       if (r.containerId) {
@@ -629,7 +744,11 @@ export class SandboxManager {
           if (!isNotFound(err)) throw err;
         }
       }
-      if (!running) await this.db.update(sandboxes).set({ status: 'stopped', stoppedAt: new Date() }).where(eq(sandboxes.id, r.id));
+      if (!running)
+        await this.db
+          .update(sandboxes)
+          .set({ status: 'stopped', stoppedAt: new Date() })
+          .where(eq(sandboxes.id, r.id));
     }
   }
 }
@@ -668,7 +787,14 @@ class ExecLogWriter {
     this.pending = [];
     this.flushing = this.flushing.then(async () => {
       if (batch.length === 0) return;
-      await this.db.insert(executionLogs).values(batch.map((b) => ({ executionId: this.executionId, stream: b.stream, seq: this.seq++, chunk: b.chunk })));
+      await this.db.insert(executionLogs).values(
+        batch.map((b) => ({
+          executionId: this.executionId,
+          stream: b.stream,
+          seq: this.seq++,
+          chunk: b.chunk,
+        })),
+      );
     });
     return this.flushing;
   }

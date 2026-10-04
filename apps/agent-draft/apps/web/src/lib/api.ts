@@ -52,7 +52,12 @@ export const api = {
  */
 // The type parameter only types the parsed JSON frames handed to the caller.
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-export async function streamSse<E>(path: string, body: unknown, onEvent: (ev: E) => void, signal?: AbortSignal): Promise<void> {
+export async function streamSse<E>(
+  path: string,
+  body: unknown,
+  onEvent: (ev: E) => void,
+  signal?: AbortSignal,
+): Promise<void> {
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {

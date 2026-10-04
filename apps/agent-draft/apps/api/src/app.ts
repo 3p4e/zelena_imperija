@@ -64,7 +64,8 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   app.decorate('routeTable', routeTable);
   app.addHook('onRoute', (route) => {
     const methods = Array.isArray(route.method) ? route.method : [route.method];
-    for (const method of methods) routeTable.push({ method, url: route.url, public: route.config?.public === true });
+    for (const method of methods)
+      routeTable.push({ method, url: route.url, public: route.config?.public === true });
     if (route.config?.public) return;
     const existing = route.preHandler;
     const handlers = existing ? (Array.isArray(existing) ? existing : [existing]) : [];
@@ -80,10 +81,13 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       return reply.code(mapped.status).send(mapped.toBody());
     }
     if (err instanceof ZodError) {
-      return reply.code(400).send({ error: { code: 'validation_failed', message: 'Request validation failed.' } });
+      return reply
+        .code(400)
+        .send({ error: { code: 'validation_failed', message: 'Request validation failed.' } });
     }
     const status = typeof err.statusCode === 'number' ? err.statusCode : 500;
-    if (status === 429) return reply.code(429).send({ error: { code: 'rate_limited', message: 'Too many requests.' } });
+    if (status === 429)
+      return reply.code(429).send({ error: { code: 'rate_limited', message: 'Too many requests.' } });
     if (status >= 500) {
       req.log.error({ err: { name: err.name, message: err.message, code: err.code } }, 'unhandled error');
       return reply.code(500).send({ error: { code: 'internal', message: 'Internal error.' } });
@@ -91,7 +95,9 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     return reply.code(status).send({ error: { code: 'validation_failed', message: err.message } });
   });
 
-  app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: { code: 'not_found', message: 'Not found.' } }));
+  app.setNotFoundHandler((_req, reply) =>
+    reply.code(404).send({ error: { code: 'not_found', message: 'Not found.' } }),
+  );
 
   app.get('/healthz', { config: { public: true } }, async () => ({ ok: true }));
 

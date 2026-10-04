@@ -83,9 +83,16 @@ export function RightPanel({ project, canEdit }: { project: Project; canEdit: bo
       <div className="min-h-0 flex-1">
         <Suspense fallback={<Spinner />}>
           {tab === 'files' && <FilesPane project={project} canEdit={canEdit} />}
-          {tab === 'terminal' && (canEdit ? <TerminalPane project={project} /> : <p className="p-4 text-sm text-zinc-500">The terminal needs edit access.</p>)}
+          {tab === 'terminal' &&
+            (canEdit ? (
+              <TerminalPane project={project} />
+            ) : (
+              <p className="p-4 text-sm text-zinc-500">The terminal needs edit access.</p>
+            ))}
           {tab === 'tests' && <TestsPane project={project} canEdit={canEdit} />}
-          {tab === 'preview' && <PreviewPane project={project} canEdit={canEdit} ports={s?.previewPorts ?? []} />}
+          {tab === 'preview' && (
+            <PreviewPane project={project} canEdit={canEdit} ports={s?.previewPorts ?? []} />
+          )}
           {tab === 'activity' && <ActivityPane project={project} canEdit={canEdit} />}
           {tab === 'usage' && <UsagePane project={project} />}
         </Suspense>

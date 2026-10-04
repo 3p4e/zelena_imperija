@@ -25,7 +25,13 @@ export class HttpClient {
 
   async request(
     url: string,
-    init: { method: 'GET' | 'POST'; headers: Record<string, string>; body?: unknown; signal?: AbortSignal; timeoutMs?: number },
+    init: {
+      method: 'GET' | 'POST';
+      headers: Record<string, string>;
+      body?: unknown;
+      signal?: AbortSignal;
+      timeoutMs?: number;
+    },
   ): Promise<Response> {
     const signal = combineSignals(init.signal, init.timeoutMs ?? this.defaultTimeoutMs);
     let res: Response;
@@ -38,7 +44,8 @@ export class HttpClient {
       res = await this.fetchImpl(url, requestInit);
     } catch (err) {
       if (isAbortError(err)) {
-        if (init.signal?.aborted) throw new ProviderError('aborted', 'Request cancelled.', { retryable: false, cause: err });
+        if (init.signal?.aborted)
+          throw new ProviderError('aborted', 'Request cancelled.', { retryable: false, cause: err });
         throw new ProviderError('timeout', 'Provider did not respond in time.', { cause: err });
       }
       throw new ProviderError('unavailable', 'Could not reach the provider.', { cause: err });
@@ -57,13 +64,19 @@ export class HttpClient {
 
   /** Issues a request and yields parsed SSE messages. */
   async *sse(url: string, init: Parameters<HttpClient['request']>[1]): AsyncGenerator<SseMessage> {
-    const res = await this.request(url, { ...init, headers: { accept: 'text/event-stream', ...init.headers } });
+    const res = await this.request(url, {
+      ...init,
+      headers: { accept: 'text/event-stream', ...init.headers },
+    });
     if (!res.body) throw new ProviderError('unavailable', 'Provider returned an empty stream.');
     yield* parseSse(res.body, init.signal);
   }
 }
 
-export async function* parseSse(body: ReadableStream<Uint8Array>, signal?: AbortSignal): AsyncGenerator<SseMessage> {
+export async function* parseSse(
+  body: ReadableStream<Uint8Array>,
+  signal?: AbortSignal,
+): AsyncGenerator<SseMessage> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';

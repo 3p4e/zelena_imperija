@@ -10,7 +10,8 @@ function parseAll(kind: CliKind, lines: unknown[]) {
   const text = lines.map((l) => JSON.stringify(l)).join('\n') + '\n';
   const events: CliEvent[] = [];
   // Feed in awkward chunk sizes to exercise line buffering.
-  for (let i = 0; i < text.length; i += 17) for (const o of splitter.push(text.slice(i, i + 17))) events.push(...PARSERS[kind](o, state, names));
+  for (let i = 0; i < text.length; i += 17)
+    for (const o of splitter.push(text.slice(i, i + 17))) events.push(...PARSERS[kind](o, state, names));
   for (const o of splitter.end()) events.push(...PARSERS[kind](o, state, names));
   return { state, events };
 }
@@ -19,12 +20,48 @@ describe('Claude Code stream-json', () => {
   it('extracts session, text, tool calls/results and usage', () => {
     const { state, events } = parseAll('claude_code', [
       { type: 'system', subtype: 'init', session_id: 'sess-1', model: 'claude-x' },
-      { type: 'assistant', message: { content: [{ type: 'text', text: 'Creating file.' }, { type: 'tool_use', id: 'tu1', name: 'Write', input: { file_path: 'a.txt' } }] }, parent_tool_use_id: null },
-      { type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'tu1', content: [{ type: 'text', text: 'ok' }] }] }, parent_tool_use_id: null },
-      { type: 'assistant', message: { content: [{ type: 'text', text: 'Done.' }] }, parent_tool_use_id: 'sub' },
-      { type: 'result', subtype: 'success', is_error: false, session_id: 'sess-1', total_cost_usd: 0.1, usage: { input_tokens: 10, cache_creation_input_tokens: 5, cache_read_input_tokens: 20, output_tokens: 7 } },
+      {
+        type: 'assistant',
+        message: {
+          content: [
+            { type: 'text', text: 'Creating file.' },
+            { type: 'tool_use', id: 'tu1', name: 'Write', input: { file_path: 'a.txt' } },
+          ],
+        },
+        parent_tool_use_id: null,
+      },
+      {
+        type: 'user',
+        message: {
+          content: [{ type: 'tool_result', tool_use_id: 'tu1', content: [{ type: 'text', text: 'ok' }] }],
+        },
+        parent_tool_use_id: null,
+      },
+      {
+        type: 'assistant',
+        message: { content: [{ type: 'text', text: 'Done.' }] },
+        parent_tool_use_id: 'sub',
+      },
+      {
+        type: 'result',
+        subtype: 'success',
+        is_error: false,
+        session_id: 'sess-1',
+        total_cost_usd: 0.1,
+        usage: {
+          input_tokens: 10,
+          cache_creation_input_tokens: 5,
+          cache_read_input_tokens: 20,
+          output_tokens: 7,
+        },
+      },
     ]);
-    expect(state).toMatchObject({ sessionId: 'sess-1', model: 'claude-x', errorMessage: null, finished: true });
+    expect(state).toMatchObject({
+      sessionId: 'sess-1',
+      model: 'claude-x',
+      errorMessage: null,
+      finished: true,
+    });
     expect(state.usage).toEqual({ inputTokens: 15, outputTokens: 7, cachedInputTokens: 20 });
     expect(events).toEqual([
       { type: 'text', text: 'Creating file.' },
@@ -33,7 +70,9 @@ describe('Claude Code stream-json', () => {
     ]);
   });
   it('reports failures such as missing login', () => {
-    const { state } = parseAll('claude_code', [{ type: 'result', subtype: 'success', is_error: true, result: 'Invalid API key · Please run /login' }]);
+    const { state } = parseAll('claude_code', [
+      { type: 'result', subtype: 'success', is_error: true, result: 'Invalid API key · Please run /login' },
+    ]);
     expect(state.errorMessage).toContain('/login');
   });
 });
@@ -43,8 +82,21 @@ describe('Codex exec --json', () => {
     const { state, events } = parseAll('codex', [
       { type: 'thread.started', thread_id: 'th-1' },
       { type: 'turn.started' },
-      { type: 'item.started', item: { id: 'item_0', type: 'command_execution', command: 'bash -lc ls', status: 'in_progress' } },
-      { type: 'item.completed', item: { id: 'item_0', type: 'command_execution', command: 'bash -lc ls', aggregated_output: 'a.txt\n', exit_code: 0, status: 'completed' } },
+      {
+        type: 'item.started',
+        item: { id: 'item_0', type: 'command_execution', command: 'bash -lc ls', status: 'in_progress' },
+      },
+      {
+        type: 'item.completed',
+        item: {
+          id: 'item_0',
+          type: 'command_execution',
+          command: 'bash -lc ls',
+          aggregated_output: 'a.txt\n',
+          exit_code: 0,
+          status: 'completed',
+        },
+      },
       { type: 'item.completed', item: { id: 'item_1', type: 'reasoning', text: 'thinking' } },
       { type: 'item.completed', item: { id: 'item_2', type: 'agent_message', text: 'Listed files.' } },
       { type: 'turn.completed', usage: { input_tokens: 100, cached_input_tokens: 80, output_tokens: 9 } },
@@ -89,9 +141,20 @@ describe('cliArgv', () => {
   it('builds headless invocations without shell interpolation', () => {
     const evil = 'x"; rm -rf / #';
     expect(cliArgv('claude_code', evil, null)).toContain(evil);
-    expect(cliArgv('claude_code', 'p', 'sess')).toEqual(expect.arrayContaining(['--resume', 'sess', '--output-format', 'stream-json']));
-    expect(cliArgv('codex', 'p', 'th')).toEqual(expect.arrayContaining(['exec', '--json', 'resume', 'th', 'p']));
-    expect(cliArgv('gemini_cli', 'p', null)).toEqual(['gemini', '-p', 'p', '--output-format', 'stream-json', '--yolo']);
+    expect(cliArgv('claude_code', 'p', 'sess')).toEqual(
+      expect.arrayContaining(['--resume', 'sess', '--output-format', 'stream-json']),
+    );
+    expect(cliArgv('codex', 'p', 'th')).toEqual(
+      expect.arrayContaining(['exec', '--json', 'resume', 'th', 'p']),
+    );
+    expect(cliArgv('gemini_cli', 'p', null)).toEqual([
+      'gemini',
+      '-p',
+      'p',
+      '--output-format',
+      'stream-json',
+      '--yolo',
+    ]);
   });
   it('ignores non-JSON noise lines', () => {
     const s = new JsonLineSplitter();

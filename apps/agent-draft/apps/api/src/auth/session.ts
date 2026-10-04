@@ -21,7 +21,10 @@ export class SessionService {
     private readonly ttlHours: number,
   ) {}
 
-  async create(userId: string, meta: { ip?: string | undefined; userAgent?: string | undefined }): Promise<{ token: string; expiresAt: Date }> {
+  async create(
+    userId: string,
+    meta: { ip?: string | undefined; userAgent?: string | undefined },
+  ): Promise<{ token: string; expiresAt: Date }> {
     const token = newToken(32);
     const expiresAt = new Date(Date.now() + this.ttlHours * 3600_000);
     await this.db.insert(sessions).values({
@@ -101,7 +104,13 @@ export class LoginThrottle {
       const [row] = await this.db
         .select({ n: sql<number>`count(*)::int` })
         .from(loginAttempts)
-        .where(and(eq(loginAttempts.subject, subject), eq(loginAttempts.success, false), gt(loginAttempts.attemptedAt, since)));
+        .where(
+          and(
+            eq(loginAttempts.subject, subject),
+            eq(loginAttempts.success, false),
+            gt(loginAttempts.attemptedAt, since),
+          ),
+        );
       if ((row?.n ?? 0) >= limit) return true;
     }
     return false;

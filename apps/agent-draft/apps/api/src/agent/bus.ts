@@ -17,7 +17,12 @@ export class RunBus {
   private readonly channels = new Map<string, RunChannel>();
 
   open(conversationId: string): void {
-    this.channels.set(conversationId, { events: [], listeners: new Set(), closed: false, closeListeners: new Set() });
+    this.channels.set(conversationId, {
+      events: [],
+      listeners: new Set(),
+      closed: false,
+      closeListeners: new Set(),
+    });
   }
 
   emit(conversationId: string, ev: ChatStreamEvent): void {

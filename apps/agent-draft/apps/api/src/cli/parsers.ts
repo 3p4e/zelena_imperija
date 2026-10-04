@@ -15,7 +15,13 @@ export interface CliRunState {
 }
 
 export function newRunState(): CliRunState {
-  return { sessionId: null, model: null, usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 }, errorMessage: null, finished: false };
+  return {
+    sessionId: null,
+    model: null,
+    usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 },
+    errorMessage: null,
+    finished: false,
+  };
 }
 
 type Obj = Record<string, unknown>;
@@ -51,7 +57,13 @@ export const parseClaudeLine: CliLineParser = (line, state, toolNames) => {
         out.push({ type: 'tool_call', id, name, input: block.input ?? {} });
       } else if (block.type === 'tool_result') {
         const id = str(block.tool_use_id) ?? '';
-        out.push({ type: 'tool_result', id, name: toolNames.get(id) ?? 'tool', content: flattenContent(block.content), isError: block.is_error === true });
+        out.push({
+          type: 'tool_result',
+          id,
+          name: toolNames.get(id) ?? 'tool',
+          content: flattenContent(block.content),
+          isError: block.is_error === true,
+        });
       }
     }
   } else if (type === 'result') {
@@ -86,7 +98,9 @@ export const parseCodexLine: CliLineParser = (line, state, toolNames) => {
     }
   } else if (type === 'turn.failed') {
     state.finished = true;
-    state.errorMessage = isObj(line.error) ? (str(line.error.message) ?? 'Codex turn failed.') : 'Codex turn failed.';
+    state.errorMessage = isObj(line.error)
+      ? (str(line.error.message) ?? 'Codex turn failed.')
+      : 'Codex turn failed.';
   } else if (type === 'error') {
     state.errorMessage = str(line.message) ?? 'Codex reported an error.';
   } else if ((type === 'item.started' || type === 'item.completed') && isObj(line.item)) {
@@ -110,17 +124,38 @@ export const parseCodexLine: CliLineParser = (line, state, toolNames) => {
           type: 'tool_result',
           id,
           name: 'shell',
-          content: `${(str(item.aggregated_output) ?? '').trimEnd()}\n[exit code ${exit ?? 'unknown'}]`.trim(),
+          content:
+            `${(str(item.aggregated_output) ?? '').trimEnd()}\n[exit code ${exit ?? 'unknown'}]`.trim(),
           isError: exit !== 0 || item.status === 'failed',
         });
       }
-    } else if ((itemType === 'file_change' || itemType === 'mcp_tool_call' || itemType === 'web_search') && type === 'item.completed') {
-      const name = itemType === 'mcp_tool_call' ? `${str(item.server) ?? 'mcp'}.${str(item.tool) ?? 'tool'}` : itemType;
-      const input = itemType === 'file_change' ? { changes: item.changes } : itemType === 'mcp_tool_call' ? item.arguments : { query: item.query };
+    } else if (
+      (itemType === 'file_change' || itemType === 'mcp_tool_call' || itemType === 'web_search') &&
+      type === 'item.completed'
+    ) {
+      const name =
+        itemType === 'mcp_tool_call' ? `${str(item.server) ?? 'mcp'}.${str(item.tool) ?? 'tool'}` : itemType;
+      const input =
+        itemType === 'file_change'
+          ? { changes: item.changes }
+          : itemType === 'mcp_tool_call'
+            ? item.arguments
+            : { query: item.query };
       toolNames.set(id, name);
       out.push({ type: 'tool_call', id, name, input: input ?? {} });
-      const result = itemType === 'mcp_tool_call' ? (item.error ?? item.result) : itemType === 'file_change' ? item.changes : (item.query ?? '');
-      out.push({ type: 'tool_result', id, name, content: typeof result === 'string' ? result : JSON.stringify(result ?? {}), isError: item.status === 'failed' || !!item.error });
+      const result =
+        itemType === 'mcp_tool_call'
+          ? (item.error ?? item.result)
+          : itemType === 'file_change'
+            ? item.changes
+            : (item.query ?? '');
+      out.push({
+        type: 'tool_result',
+        id,
+        name,
+        content: typeof result === 'string' ? result : JSON.stringify(result ?? {}),
+        isError: item.status === 'failed' || !!item.error,
+      });
     }
   }
   return out;
@@ -145,7 +180,13 @@ export const parseGeminiLine: CliLineParser = (line, state, toolNames) => {
     const id = str(line.tool_id) ?? '';
     const isError = line.status === 'error';
     const err = isObj(line.error) ? str(line.error.message) : null;
-    out.push({ type: 'tool_result', id, name: toolNames.get(id) ?? 'tool', content: str(line.output) ?? err ?? '', isError });
+    out.push({
+      type: 'tool_result',
+      id,
+      name: toolNames.get(id) ?? 'tool',
+      content: str(line.output) ?? err ?? '',
+      isError,
+    });
   } else if (type === 'result') {
     state.finished = true;
     if (isObj(line.stats)) {
@@ -153,7 +194,10 @@ export const parseGeminiLine: CliLineParser = (line, state, toolNames) => {
       state.usage.outputTokens = num(line.stats.output_tokens);
       state.usage.cachedInputTokens = num(line.stats.cached);
     }
-    if (line.status === 'error') state.errorMessage = isObj(line.error) ? (str(line.error.message) ?? 'Gemini CLI failed.') : 'Gemini CLI failed.';
+    if (line.status === 'error')
+      state.errorMessage = isObj(line.error)
+        ? (str(line.error.message) ?? 'Gemini CLI failed.')
+        : 'Gemini CLI failed.';
   }
   return out;
 };
@@ -166,7 +210,8 @@ export const PARSERS: Record<CliKind, CliLineParser> = {
 
 function flattenContent(c: unknown): string {
   if (typeof c === 'string') return c;
-  if (Array.isArray(c)) return c.map((x) => (isObj(x) && typeof x.text === 'string' ? x.text : '')).join('\n');
+  if (Array.isArray(c))
+    return c.map((x) => (isObj(x) && typeof x.text === 'string' ? x.text : '')).join('\n');
   return '';
 }
 
@@ -228,13 +273,34 @@ export function cliArgv(kind: CliKind, prompt: string, resumeSessionId: string |
         ...(resumeSessionId ? ['resume', resumeSessionId, prompt] : ['-C', '/workspace', prompt]),
       ];
     case 'gemini_cli':
-      return ['gemini', '-p', prompt, '--output-format', 'stream-json', '--yolo', ...(resumeSessionId ? ['--resume', resumeSessionId] : [])];
+      return [
+        'gemini',
+        '-p',
+        prompt,
+        '--output-format',
+        'stream-json',
+        '--yolo',
+        ...(resumeSessionId ? ['--resume', resumeSessionId] : []),
+      ];
   }
 }
 
 /** Presence of the vendor's own credential file, checked without reading it. */
-export const CLI_LOGIN_MARKERS: Record<CliKind, { bin: string; credentialFile: string; loginHint: string }> = {
-  claude_code: { bin: 'claude', credentialFile: '.claude/.credentials.json', loginHint: 'docker compose run --rm cli-runner claude  (then run /login)' },
-  codex: { bin: 'codex', credentialFile: '.codex/auth.json', loginHint: 'docker compose run --rm cli-runner codex login --device-auth' },
-  gemini_cli: { bin: 'gemini', credentialFile: '.gemini/oauth_creds.json', loginHint: 'docker compose run --rm cli-runner gemini  (choose "Login with Google")' },
-};
+export const CLI_LOGIN_MARKERS: Record<CliKind, { bin: string; credentialFile: string; loginHint: string }> =
+  {
+    claude_code: {
+      bin: 'claude',
+      credentialFile: '.claude/.credentials.json',
+      loginHint: 'docker compose run --rm cli-runner claude  (then run /login)',
+    },
+    codex: {
+      bin: 'codex',
+      credentialFile: '.codex/auth.json',
+      loginHint: 'docker compose run --rm cli-runner codex login --device-auth',
+    },
+    gemini_cli: {
+      bin: 'gemini',
+      credentialFile: '.gemini/oauth_creds.json',
+      loginHint: 'docker compose run --rm cli-runner gemini  (choose "Login with Google")',
+    },
+  };

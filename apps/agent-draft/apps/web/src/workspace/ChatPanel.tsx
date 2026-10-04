@@ -16,7 +16,15 @@ interface MessagesResponse {
   messages: Message[];
 }
 
-export function ChatPanel({ project, conversation, canEdit }: { project: Project; conversation: Conversation; canEdit: boolean }) {
+export function ChatPanel({
+  project,
+  conversation,
+  canEdit,
+}: {
+  project: Project;
+  conversation: Conversation;
+  canEdit: boolean;
+}) {
   const qc = useQueryClient();
   const models = useModels();
   const [state, dispatch] = useReducer(chatReducer, initialChat);
@@ -47,7 +55,12 @@ export function ChatPanel({ project, conversation, canEdit }: { project: Project
       const controller = new AbortController();
       streamAbort.current = controller;
       try {
-        await streamSse<ChatStreamEvent>(path, body, (event) => dispatch({ type: 'event', event }), controller.signal);
+        await streamSse<ChatStreamEvent>(
+          path,
+          body,
+          (event) => dispatch({ type: 'event', event }),
+          controller.signal,
+        );
       } finally {
         if (streamAbort.current === controller) streamAbort.current = null;
         await refresh();
@@ -60,7 +73,8 @@ export function ChatPanel({ project, conversation, canEdit }: { project: Project
   useEffect(() => {
     if (!history.data) return;
     dispatch({ type: 'load', messages: history.data.messages, running: history.data.running });
-    if (history.data.running && !streamAbort.current) void follow(`/conversations/${conversation.id}/events`, null).catch(() => undefined);
+    if (history.data.running && !streamAbort.current)
+      void follow(`/conversations/${conversation.id}/events`, null).catch(() => undefined);
   }, [history.data, conversation.id, follow]);
 
   useEffect(() => () => streamAbort.current?.abort(), []);
@@ -70,10 +84,15 @@ export function ChatPanel({ project, conversation, canEdit }: { project: Project
   }, [state.messages]);
 
   const results = useMemo(() => resultIndex(state.messages), [state.messages]);
-  const modelNames = useMemo(() => new Map((models.data ?? []).map((o) => [o.model.id, o.model.displayName])), [models.data]);
+  const modelNames = useMemo(
+    () => new Map((models.data ?? []).map((o) => [o.model.id, o.model.displayName])),
+    [models.data],
+  );
 
   const selectionBody = (s: Selection): Record<string, unknown> =>
-    s.modelId || s.credentialMode ? { modelId: s.modelId, credentialMode: s.credentialMode, cliKind: s.cliKind } : {};
+    s.modelId || s.credentialMode
+      ? { modelId: s.modelId, credentialMode: s.credentialMode, cliKind: s.cliKind }
+      : {};
 
   const send = async (): Promise<void> => {
     const content = input.trim();
@@ -108,7 +127,11 @@ export function ChatPanel({ project, conversation, canEdit }: { project: Project
   const setConversationModel = async (s: Selection): Promise<void> => {
     setError(null);
     try {
-      await api.patch(`/conversations/${conversation.id}`, { modelId: s.modelId, credentialMode: s.credentialMode, cliKind: s.cliKind });
+      await api.patch(`/conversations/${conversation.id}`, {
+        modelId: s.modelId,
+        credentialMode: s.credentialMode,
+        cliKind: s.cliKind,
+      });
       await qc.invalidateQueries({ queryKey: qk.conversations(project.id) });
     } catch (err) {
       setError(errorMessage(err));
@@ -123,7 +146,11 @@ export function ChatPanel({ project, conversation, canEdit }: { project: Project
       <div className="flex items-center gap-2 border-b border-zinc-800 px-3 py-2">
         <h2 className="min-w-0 flex-1 truncate text-sm font-medium">{conversation.title}</h2>
         <ModelPicker
-          value={{ modelId: conversation.modelId, credentialMode: conversation.credentialMode, cliKind: conversation.cliKind }}
+          value={{
+            modelId: conversation.modelId,
+            credentialMode: conversation.credentialMode,
+            cliKind: conversation.cliKind,
+          }}
           onChange={(s) => void setConversationModel(s)}
           inheritLabel="Project / default model"
           disabled={!canEdit || state.running}
@@ -135,12 +162,18 @@ export function ChatPanel({ project, conversation, canEdit }: { project: Project
           <Spinner />
         ) : state.messages.length === 0 ? (
           <div className="mx-auto mt-16 max-w-md text-center text-sm text-zinc-500">
-            Describe what to build. The agent plans, edits files in the sandbox, runs and tests them, and shows the result in Preview.
+            Describe what to build. The agent plans, edits files in the sandbox, runs and tests them, and
+            shows the result in Preview.
           </div>
         ) : (
           <div className="mx-auto flex max-w-3xl flex-col gap-5">
             {state.messages.map((m) => (
-              <MessageView key={m.id} message={m} results={results} modelName={m.modelId ? (modelNames.get(m.modelId) ?? null) : null} />
+              <MessageView
+                key={m.id}
+                message={m}
+                results={results}
+                modelName={m.modelId ? (modelNames.get(m.modelId) ?? null) : null}
+              />
             ))}
           </div>
         )}
@@ -159,7 +192,11 @@ export function ChatPanel({ project, conversation, canEdit }: { project: Project
             <Textarea
               rows={3}
               value={input}
-              placeholder={state.running ? 'The agent is working…' : 'Message the agent (Enter to send, Shift+Enter for a new line)'}
+              placeholder={
+                state.running
+                  ? 'The agent is working…'
+                  : 'Message the agent (Enter to send, Shift+Enter for a new line)'
+              }
               disabled={state.running}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -171,10 +208,16 @@ export function ChatPanel({ project, conversation, canEdit }: { project: Project
             />
             <div className="flex items-center gap-2">
               <span className="text-xs text-zinc-500">This message:</span>
-              <ModelPicker value={override} onChange={setOverride} inheritLabel="Conversation model" disabled={state.running} />
+              <ModelPicker
+                value={override}
+                onChange={setOverride}
+                inheritLabel="Conversation model"
+                disabled={state.running}
+              />
               {state.lastUsage && (
                 <span className="text-[11px] text-zinc-500">
-                  last step {state.lastUsage.inputTokens}→{state.lastUsage.outputTokens} tok · {usd(state.lastUsage.estimatedCostUsd)}
+                  last step {state.lastUsage.inputTokens}→{state.lastUsage.outputTokens} tok ·{' '}
+                  {usd(state.lastUsage.estimatedCostUsd)}
                 </span>
               )}
               <div className="ml-auto flex gap-2">

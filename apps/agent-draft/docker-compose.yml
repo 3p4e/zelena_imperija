@@ -1,0 +1,135 @@
+# docker compose up --build
+# Services: caddy (TLS + static web + reverse proxy), api, postgres, docker-socket-proxy,
+# sandbox-image (one-shot build), sandbox-firewall (host rules). The cli-runner service is optional (profile "cli").
+name: lathe
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: agent
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U agent -d agent']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  # The API never touches the Docker socket directly. This proxy exposes only what the
+  # sandbox manager needs and refuses image builds, swarm, secrets, plugins and exec on non-sandbox containers' host.
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      EXEC: 1
+      NETWORKS: 1
+      VOLUMES: 1
+      IMAGES: 1
+      POST: 1
+      INFO: 1
+      VERSION: 1
+      PING: 1
+      BUILD: 0
+      COMMIT: 0
+      SECRETS: 0
+      SERVICES: 0
+      SWARM: 0
+      TASKS: 0
+      PLUGINS: 0
+      SYSTEM: 0
+      AUTH: 0
+      CONFIGS: 0
+      DISTRIBUTION: 0
+      NODES: 0
+      SESSION: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [docker-api]
+
+  sandbox-image:
+    build:
+      context: ./infra/sandbox
+    image: agent-sandbox-base:latest
+    restart: 'no'
+    entrypoint: ['true']
+
+  # Official vendor CLIs for the admin-only subscription mode. Used for the one-time interactive
+  # login (`docker compose run --rm cli-runner claude`); the API starts its own runs from this image.
+  cli-runner:
+    profiles: ['cli']
+    build:
+      context: ./infra/cli-runner
+    image: agent-cli-runner:latest
+    restart: 'no'
+    volumes:
+      - cli-home:/home/cli
+
+  # Applies the host firewall rules that keep sandboxes away from the host and LAN.
+  sandbox-firewall:
+    image: alpine:3.20
+    restart: 'no'
+    network_mode: host
+    cap_add: [NET_ADMIN]
+    volumes:
+      - ./infra/host/sandbox-firewall.sh:/firewall.sh:ro
+    command: sh -c "apk add --no-cache iptables >/dev/null && sh /firewall.sh"
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/api.Dockerfile
+      target: run
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sandbox-image:
+        condition: service_completed_successfully
+      sandbox-firewall:
+        condition: service_completed_successfully
+      docker-proxy:
+        condition: service_started
+    container_name: agent-api
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://agent:${POSTGRES_PASSWORD}@postgres:5432/agent
+      DOCKER_HOST: tcp://docker-proxy:2375
+      PORT: '4000'
+      SANDBOX_API_CONTAINER: agent-api
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
+    networks: [internal, docker-api]
+    # sandbox networks are attached at runtime by the API through the Docker API
+
+  caddy:
+    build:
+      context: .
+      dockerfile: infra/web.Dockerfile
+    restart: unless-stopped
+    depends_on: [api]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - '${HTTP_PORT:-8080}:80'
+      - '${HTTPS_PORT:-8443}:443'
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [internal]
+
+volumes:
+  pgdata:
+  caddy-data:
+  caddy-config:
+  cli-home:
+    name: ${CLI_HOME_VOLUME:-agent-cli-home}
+
+networks:
+  internal:
+  docker-api:
+    internal: true

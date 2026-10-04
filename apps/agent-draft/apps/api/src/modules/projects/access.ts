@@ -19,7 +19,12 @@ export interface ProjectAccess {
  * only to its owner and to users it is explicitly shared with. Unrelated users,
  * the admin included, get 404 so existence does not leak.
  */
-export async function projectFor(db: Db, user: SessionUser, projectId: unknown, need: Need): Promise<ProjectAccess> {
+export async function projectFor(
+  db: Db,
+  user: SessionUser,
+  projectId: unknown,
+  need: Need,
+): Promise<ProjectAccess> {
   const id = requireUuid(projectId, 'project id');
   const project = await db.query.projects.findFirst({ where: eq(projects.id, id) });
   if (!project) throw notFound('Project');
@@ -29,7 +34,8 @@ export async function projectFor(db: Db, user: SessionUser, projectId: unknown, 
   });
   if (!share) throw notFound('Project');
   if (need === 'owner') throw forbidden('Only the project owner can do this.');
-  if (need === 'edit' && share.permission !== 'edit') throw forbidden('You have read-only access to this project.');
+  if (need === 'edit' && share.permission !== 'edit')
+    throw forbidden('You have read-only access to this project.');
   return { project, permission: share.permission };
 }
 

@@ -24,5 +24,11 @@ export interface AppDeps {
   tools: ToolRegistry;
   agent: AgentRuntime;
   cli: CliRunner;
-  audit: (actorUserId: string | null, action: string, targetType: string, targetId: string | null, ip?: string) => Promise<void>;
+  audit: (
+    actorUserId: string | null,
+    action: string,
+    targetType: string,
+    targetId: string | null,
+    ip?: string,
+  ) => Promise<void>;
 }

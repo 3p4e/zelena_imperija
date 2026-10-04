@@ -90,7 +90,13 @@ export function UsersTab() {
                       <Button
                         size="sm"
                         variant={u.status === 'active' ? 'danger' : 'secondary'}
-                        onClick={() => void act(() => api.patch(`/admin/users/${u.id}/status`, { status: u.status === 'active' ? 'suspended' : 'active' }))}
+                        onClick={() =>
+                          void act(() =>
+                            api.patch(`/admin/users/${u.id}/status`, {
+                              status: u.status === 'active' ? 'suspended' : 'active',
+                            }),
+                          )
+                        }
                       >
                         {u.status === 'active' ? 'Suspend' : 'Reactivate'}
                       </Button>
@@ -109,7 +115,11 @@ export function UsersTab() {
               <span className="flex-1">{i.email}</span>
               <Badge>{i.role}</Badge>
               <span className="text-xs text-zinc-500">expires {new Date(i.expiresAt).toLocaleString()}</span>
-              <Button size="sm" variant="danger" onClick={() => void act(() => api.del(`/admin/invites/${i.id}`))}>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => void act(() => api.del(`/admin/invites/${i.id}`))}
+              >
                 Revoke
               </Button>
             </li>
@@ -128,7 +138,13 @@ export function UsersTab() {
   );
 }
 
-function CreateUser({ onLink, onDone }: { onLink: (title: string, url: string) => void; onDone: () => void }) {
+function CreateUser({
+  onLink,
+  onDone,
+}: {
+  onLink: (title: string, url: string) => void;
+  onDone: () => void;
+}) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'member' | 'admin'>('member');
@@ -138,7 +154,10 @@ function CreateUser({ onLink, onDone }: { onLink: (title: string, url: string) =
     setError(null);
     try {
       const r = await api.post<Invite & { emailed: boolean }>('/admin/invites', { email, role });
-      onLink(r.emailed ? `Invite emailed to ${email} — link for reference` : `Invite link for ${email}`, r.acceptUrl ?? '');
+      onLink(
+        r.emailed ? `Invite emailed to ${email} — link for reference` : `Invite link for ${email}`,
+        r.acceptUrl ?? '',
+      );
       setEmail('');
       onDone();
     } catch (err) {
@@ -148,7 +167,11 @@ function CreateUser({ onLink, onDone }: { onLink: (title: string, url: string) =
   const create = async (): Promise<void> => {
     setError(null);
     try {
-      const r = await api.post<{ setPasswordUrl: string | null }>('/admin/users', { email, displayName: name || email.split('@')[0], role });
+      const r = await api.post<{ setPasswordUrl: string | null }>('/admin/users', {
+        email,
+        displayName: name || email.split('@')[0],
+        role,
+      });
       if (r.setPasswordUrl) onLink(`Set-password link for ${email} (72 h)`, r.setPasswordUrl);
       setEmail('');
       setName('');
@@ -180,7 +203,10 @@ function CreateUser({ onLink, onDone }: { onLink: (title: string, url: string) =
           Create now
         </Button>
       </div>
-      <p className="mt-2 text-xs text-zinc-500">There is no public sign-up. Invites are emailed when SMTP is configured; otherwise copy the link shown.</p>
+      <p className="mt-2 text-xs text-zinc-500">
+        There is no public sign-up. Invites are emailed when SMTP is configured; otherwise copy the link
+        shown.
+      </p>
       <ErrorText error={error} />
     </Card>
   );
@@ -188,7 +214,15 @@ function CreateUser({ onLink, onDone }: { onLink: (title: string, url: string) =
 
 function LimitsDialog({ user, onClose }: { user: AdminUserRow; onClose: () => void }) {
   const qc = useQueryClient();
-  const [l, setL] = useState<MemberLimits>(user.limits ?? { sandboxCpu: 1, sandboxMemMb: 2048, sandboxDiskMb: 4096, maxContainers: 2, networkMode: 'egress' });
+  const [l, setL] = useState<MemberLimits>(
+    user.limits ?? {
+      sandboxCpu: 1,
+      sandboxMemMb: 2048,
+      sandboxDiskMb: 4096,
+      maxContainers: 2,
+      networkMode: 'egress',
+    },
+  );
   const [error, setError] = useState<string | null>(null);
   const save = async (reset: boolean): Promise<void> => {
     try {
@@ -200,7 +234,8 @@ function LimitsDialog({ user, onClose }: { user: AdminUserRow; onClose: () => vo
       setError(errorMessage(err));
     }
   };
-  const num = (k: keyof MemberLimits) => (e: React.ChangeEvent<HTMLInputElement>) => setL({ ...l, [k]: Number(e.target.value) });
+  const num = (k: keyof MemberLimits) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setL({ ...l, [k]: Number(e.target.value) });
   return (
     <Modal title={`Sandbox limits — ${user.email}`} open onClose={onClose}>
       <div className="grid grid-cols-2 gap-3">
@@ -217,7 +252,10 @@ function LimitsDialog({ user, onClose }: { user: AdminUserRow; onClose: () => vo
           <Input type="number" value={l.maxContainers} onChange={num('maxContainers')} />
         </Field>
         <Field label="Network">
-          <Select value={l.networkMode} onChange={(e) => setL({ ...l, networkMode: e.target.value as 'egress' | 'none' })}>
+          <Select
+            value={l.networkMode}
+            onChange={(e) => setL({ ...l, networkMode: e.target.value as 'egress' | 'none' })}
+          >
             <option value="egress">Internet (no host/LAN)</option>
             <option value="none">No network</option>
           </Select>
@@ -239,7 +277,8 @@ function ToolRestrictionsDialog({ user, onClose }: { user: AdminUserRow; onClose
   const tools = useQuery({ queryKey: ['tools'], queryFn: () => api.get<ToolCatalogEntry[]>('/tools') });
   const current = useQuery({
     queryKey: ['admin', 'restrictions', user.id],
-    queryFn: () => api.get<{ toolName: string; allowed: boolean }[]>(`/admin/users/${user.id}/tool-restrictions`),
+    queryFn: () =>
+      api.get<{ toolName: string; allowed: boolean }[]>(`/admin/users/${user.id}/tool-restrictions`),
   });
   const [overrides, setOverrides] = useState<Record<string, boolean> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -248,7 +287,9 @@ function ToolRestrictionsDialog({ user, onClose }: { user: AdminUserRow; onClose
 
   const save = async (): Promise<void> => {
     try {
-      const restrictions = (tools.data ?? []).map((t) => ({ toolName: t.name, allowed: effective(t) })).filter((r, i) => r.allowed !== ((tools.data ?? [])[i]?.source === 'builtin'));
+      const restrictions = (tools.data ?? [])
+        .map((t) => ({ toolName: t.name, allowed: effective(t) }))
+        .filter((r, i) => r.allowed !== ((tools.data ?? [])[i]?.source === 'builtin'));
       await api.put(`/admin/users/${user.id}/tool-restrictions`, { restrictions });
       onClose();
     } catch (err) {
@@ -258,12 +299,19 @@ function ToolRestrictionsDialog({ user, onClose }: { user: AdminUserRow; onClose
 
   return (
     <Modal title={`Tools for ${user.email}`} open onClose={onClose}>
-      <p className="mb-3 text-xs text-zinc-400">Built-in tools are allowed by default. MCP tools run with your server credentials and are denied unless you allow them.</p>
+      <p className="mb-3 text-xs text-zinc-400">
+        Built-in tools are allowed by default. MCP tools run with your server credentials and are denied
+        unless you allow them.
+      </p>
       <ul className="flex max-h-80 flex-col gap-1 overflow-auto text-sm">
         {tools.data?.map((t) => (
           <li key={t.name}>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={effective(t)} onChange={(e) => setOverrides({ ...state, [t.name]: e.target.checked })} />
+              <input
+                type="checkbox"
+                checked={effective(t)}
+                onChange={(e) => setOverrides({ ...state, [t.name]: e.target.checked })}
+              />
               <span className="font-mono text-xs">{t.name}</span>
               <Badge>{t.source}</Badge>
             </label>

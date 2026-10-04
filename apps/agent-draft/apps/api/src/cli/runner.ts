@@ -9,7 +9,14 @@ import { cliProviders, projects } from '../db/schema/index.js';
 import { AppError } from '../lib/errors.js';
 import type { SandboxManager } from '../sandbox/manager.js';
 import { demux } from '../sandbox/docker.js';
-import { CLI_LOGIN_MARKERS, JsonLineSplitter, PARSERS, cliArgv, newRunState, type CliEvent } from './parsers.js';
+import {
+  CLI_LOGIN_MARKERS,
+  JsonLineSplitter,
+  PARSERS,
+  cliArgv,
+  newRunState,
+  type CliEvent,
+} from './parsers.js';
 
 export interface CliRunRequest {
   kind: CliKind;
@@ -73,7 +80,8 @@ export class DockerCliRunner implements CliRunner {
 
   /** Runs `<bin> --version` and tests for the vendor credential file (existence only). */
   async check(kind: CliKind): Promise<CliProviderStatus> {
-    if (!this.enabled) throw new AppError('cli_unavailable', 'Subscription CLI mode is disabled (CLI_RUNNER_ENABLED=false).');
+    if (!this.enabled)
+      throw new AppError('cli_unavailable', 'Subscription CLI mode is disabled (CLI_RUNNER_ENABLED=false).');
     const m = CLI_LOGIN_MARKERS[kind];
     let binaryVersion: string | null = null;
     let loginState: 'logged_in' | 'logged_out' | 'unknown' = 'unknown';
@@ -84,8 +92,12 @@ export class DockerCliRunner implements CliRunner {
         '-c',
         `${m.bin} --version 2>&1 | head -n 1; if [ -f "$HOME/${m.credentialFile}" ]; then echo __LOGGED_IN__; else echo __LOGGED_OUT__; fi`,
       ]);
-      const lines = output.trim().split('\n');
-      binaryVersion = lines[0]?.slice(0, 120) ?? null;
+      // CLIs may print startup warnings first; take the line that carries a version number.
+      const lines = output
+        .trim()
+        .split('\n')
+        .filter((l) => !l.startsWith('__LOGGED'));
+      binaryVersion = (lines.find((l) => /\d+\.\d+\.\d+/.test(l)) ?? lines[0])?.trim().slice(0, 120) ?? null;
       loginState = output.includes('__LOGGED_IN__') ? 'logged_in' : 'logged_out';
       if (exitCode !== 0) lastError = `Check exited with ${exitCode}.`;
       if (loginState === 'logged_out') lastError = `Not logged in. On the server run: ${m.loginHint}`;
@@ -107,7 +119,8 @@ export class DockerCliRunner implements CliRunner {
       Env: ['HOME=/home/cli'],
       Labels: { 'agent.managed': '1', 'agent.cli': 'check' },
       HostConfig: {
-        Mounts: [{ Type: 'volume', Source: this.config.CLI_HOME_VOLUME, Target: '/home/cli', ReadOnly: true }],
+        // Writable: the CLIs create their config directories on startup. Credentials are only tested for existence.
+        Mounts: [{ Type: 'volume', Source: this.config.CLI_HOME_VOLUME, Target: '/home/cli' }],
         NetworkMode: 'none',
         CapDrop: ['ALL'],
         SecurityOpt: ['no-new-privileges'],
@@ -124,9 +137,14 @@ export class DockerCliRunner implements CliRunner {
   }
 
   async run(req: CliRunRequest): Promise<CliRunResult> {
-    if (!this.enabled) throw new AppError('cli_unavailable', 'Subscription CLI mode is disabled on this server.');
+    if (!this.enabled)
+      throw new AppError('cli_unavailable', 'Subscription CLI mode is disabled on this server.');
     const status = await this.status(req.kind);
-    if (!status.enabled) throw new AppError('cli_unavailable', `${req.kind} is not enabled. Enable it in Admin → Subscription CLIs.`);
+    if (!status.enabled)
+      throw new AppError(
+        'cli_unavailable',
+        `${req.kind} is not enabled. Enable it in Admin → Subscription CLIs.`,
+      );
     const project = await this.db.query.projects.findFirst({ where: eq(projects.id, req.projectId) });
     if (!project) throw new AppError('not_found', 'Project not found.');
 
@@ -199,18 +217,42 @@ export class DockerCliRunner implements CliRunner {
     } finally {
       clearTimeout(timer);
       req.signal.removeEventListener('abort', onAbort);
-      for (const line of splitter.end()) for (const ev of parse(line, state, toolNames)) queue = queue.then(() => req.onEvent(ev));
+      for (const line of splitter.end())
+        for (const ev of parse(line, state, toolNames)) queue = queue.then(() => req.onEvent(ev));
       await queue;
       await container.remove({ force: true }).catch(() => undefined);
     }
 
-    if (stopped) return { status: 'stopped', sessionId: state.sessionId, model: state.model, usage: state.usage, errorMessage: null };
+    if (stopped)
+      return {
+        status: 'stopped',
+        sessionId: state.sessionId,
+        model: state.model,
+        usage: state.usage,
+        errorMessage: null,
+      };
     if (exitCode !== 0 || state.errorMessage) {
-      const message = state.errorMessage ?? (stderrTail.trim() ? `CLI exited with ${exitCode}: ${stderrTail.trim().slice(-400)}` : `CLI exited with ${exitCode}.`);
+      const message =
+        state.errorMessage ??
+        (stderrTail.trim()
+          ? `CLI exited with ${exitCode}: ${stderrTail.trim().slice(-400)}`
+          : `CLI exited with ${exitCode}.`);
       this.log.warn({ kind: req.kind, exitCode }, 'cli run failed');
-      return { status: 'error', sessionId: state.sessionId, model: state.model, usage: state.usage, errorMessage: message };
+      return {
+        status: 'error',
+        sessionId: state.sessionId,
+        model: state.model,
+        usage: state.usage,
+        errorMessage: message,
+      };
     }
-    return { status: 'ok', sessionId: state.sessionId, model: state.model, usage: state.usage, errorMessage: null };
+    return {
+      status: 'ok',
+      sessionId: state.sessionId,
+      model: state.model,
+      usage: state.usage,
+      errorMessage: null,
+    };
   }
 }
 

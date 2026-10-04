@@ -31,7 +31,8 @@ export class ToolRegistry {
 
   register(tool: Tool): void {
     if (this.builtins.has(tool.name)) throw new Error(`duplicate tool ${tool.name}`);
-    if (tool.name.startsWith(MCP_TOOL_PREFIX)) throw new Error('built-in tool names may not use the mcp__ prefix');
+    if (tool.name.startsWith(MCP_TOOL_PREFIX))
+      throw new Error('built-in tool names may not use the mcp__ prefix');
     this.builtins.set(tool.name, tool);
   }
 
@@ -60,7 +61,12 @@ export class ToolRegistry {
         })
         .onConflictDoUpdate({
           target: toolCatalog.name,
-          set: { description: t.description, inputSchema: t.inputSchema, permission: t.permission, mcpServerId: t.mcpServerId },
+          set: {
+            description: t.description,
+            inputSchema: t.inputSchema,
+            permission: t.permission,
+            mcpServerId: t.mcpServerId,
+          },
         });
     }
     const names = tools.map((t) => t.name);
@@ -79,7 +85,12 @@ export class ToolRegistry {
 
   async connectServer(row: typeof mcpServers.$inferSelect): Promise<void> {
     try {
-      const env = row.envCiphertext && row.envNonce ? (JSON.parse(this.vault.openGlobal(`mcp:${row.id}`, { ciphertext: row.envCiphertext, nonce: row.envNonce })) as Record<string, string>) : {};
+      const env =
+        row.envCiphertext && row.envNonce
+          ? (JSON.parse(
+              this.vault.openGlobal(`mcp:${row.id}`, { ciphertext: row.envCiphertext, nonce: row.envNonce }),
+            ) as Record<string, string>)
+          : {};
       const cfg: McpServerConfig = {
         id: row.id,
         name: row.name,
@@ -99,7 +110,10 @@ export class ToolRegistry {
   }
 
   async enabledCatalogNames(): Promise<Set<string>> {
-    const rows = await this.db.select({ name: toolCatalog.name }).from(toolCatalog).where(eq(toolCatalog.enabled, true));
+    const rows = await this.db
+      .select({ name: toolCatalog.name })
+      .from(toolCatalog)
+      .where(eq(toolCatalog.enabled, true));
     return new Set(rows.map((r) => r.name));
   }
 
@@ -117,7 +131,9 @@ export class ToolRegistry {
   /** Tools an agent may offer to the model for this user: agent config ∩ enabled ∩ user policy. */
   async toolsFor(user: { id: string; role: 'admin' | 'member' }, agentToolNames: string[]): Promise<Tool[]> {
     const wantsAllMcp = agentToolNames.includes(MCP_WILDCARD);
-    const candidates = this.all().filter((t) => agentToolNames.includes(t.name) || (wantsAllMcp && t.source === 'mcp'));
+    const candidates = this.all().filter(
+      (t) => agentToolNames.includes(t.name) || (wantsAllMcp && t.source === 'mcp'),
+    );
     const out: Tool[] = [];
     for (const t of candidates) if (await this.isAllowedFor(user, t.name)) out.push(t);
     return out;
@@ -128,7 +144,10 @@ export class ToolRegistry {
     return this.db.select().from(mcpServers).where(isNull(mcpServers.ownerUserId));
   }
 
-  async catalogFor(user: { id: string; role: 'admin' | 'member' }): Promise<(typeof toolCatalog.$inferSelect & { allowedForMe: boolean })[]> {
+  async catalogFor(user: {
+    id: string;
+    role: 'admin' | 'member';
+  }): Promise<(typeof toolCatalog.$inferSelect & { allowedForMe: boolean })[]> {
     const rows = await this.db.select().from(toolCatalog);
     const out = [];
     for (const r of rows) out.push({ ...r, allowedForMe: await this.isAllowedFor(user, r.name) });

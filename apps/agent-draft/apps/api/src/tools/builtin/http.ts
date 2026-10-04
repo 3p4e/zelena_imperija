@@ -12,7 +12,8 @@ export function httpTools(sandbox: SandboxManager): Tool[] {
   return [
     defineTool({
       name: 'http_fetch',
-      description: 'Fetch a URL over HTTP(S) from the sandbox network and return status, headers and (truncated) body.',
+      description:
+        'Fetch a URL over HTTP(S) from the sandbox network and return status, headers and (truncated) body.',
       permission: 'network',
       schema: z.object({
         url: z.url().refine((u) => /^https?:\/\//i.test(u), 'Only http and https URLs are allowed.'),
@@ -21,7 +22,18 @@ export function httpTools(sandbox: SandboxManager): Tool[] {
         body: z.string().max(1_000_000).optional(),
       }),
       async run(ctx, a) {
-        const argv = ['curl', '-sS', '-L', '--max-redirs', '5', '--max-time', '30', '-i', '-X', a.method ?? 'GET'];
+        const argv = [
+          'curl',
+          '-sS',
+          '-L',
+          '--max-redirs',
+          '5',
+          '--max-time',
+          '30',
+          '-i',
+          '-X',
+          a.method ?? 'GET',
+        ];
         for (const [k, v] of Object.entries(a.headers ?? {})) argv.push('-H', `${k}: ${v}`);
         if (a.body !== undefined) argv.push('--data-binary', '@-');
         argv.push('--', a.url);
@@ -36,7 +48,8 @@ export function httpTools(sandbox: SandboxManager): Tool[] {
           signal: ctx.signal,
           timeoutS: 40,
         });
-        if (r.exitCode !== 0) return fail(clip(`Request failed (curl exit ${r.exitCode ?? 'unknown'}): ${r.stderr.trim()}`));
+        if (r.exitCode !== 0)
+          return fail(clip(`Request failed (curl exit ${r.exitCode ?? 'unknown'}): ${r.stderr.trim()}`));
         return ok(clip(r.stdout, 40_000));
       },
     }),

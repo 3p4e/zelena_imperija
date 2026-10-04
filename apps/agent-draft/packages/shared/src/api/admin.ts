@@ -13,7 +13,12 @@ export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 export const createInviteRequestSchema = z.object({
   email: emailSchema,
   role: z.enum(USER_ROLES).default('member'),
-  expiresInHours: z.number().int().min(1).max(24 * 30).default(72),
+  expiresInHours: z
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 30)
+    .default(72),
 });
 export const inviteSchema = z.object({
   id: z.uuid(),

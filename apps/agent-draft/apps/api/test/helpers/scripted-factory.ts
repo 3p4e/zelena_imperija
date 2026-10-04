@@ -1,5 +1,11 @@
 import type { ProviderKind } from '@agent/shared';
-import { ProviderError, type AIProvider, type ChatRequest, type ProviderConfig, type ProviderFactory } from '@agent/providers';
+import {
+  ProviderError,
+  type AIProvider,
+  type ChatRequest,
+  type ProviderConfig,
+  type ProviderFactory,
+} from '@agent/providers';
 import { MockProvider, type MockTurn } from '@agent/providers/testing';
 
 export interface FactoryCall {
@@ -47,7 +53,13 @@ export class ScriptedFactory {
     if (config.apiKey.startsWith('invalid-')) return new RejectingProvider(kind);
     const next = (): MockTurn => this.nextTurn();
     const record = (req: ChatRequest): void => {
-      this.requests.push({ kind, apiKey: config.apiKey, model: req.model, tools: (req.tools ?? []).map((t) => t.name), messages: req.messages });
+      this.requests.push({
+        kind,
+        apiKey: config.apiKey,
+        model: req.model,
+        tools: (req.tools ?? []).map((t) => t.name),
+        messages: req.messages,
+      });
     };
     const delay = (): number => this.chunkDelayMs;
     const provider: AIProvider = {
@@ -68,7 +80,8 @@ export class ScriptedFactory {
   }
 }
 
-const rejected = (): ProviderError => new ProviderError('auth', 'Provider rejected the credential (401).', { status: 401, retryable: false });
+const rejected = (): ProviderError =>
+  new ProviderError('auth', 'Provider rejected the credential (401).', { status: 401, retryable: false });
 
 class RejectingProvider implements AIProvider {
   constructor(readonly kind: ProviderKind) {}

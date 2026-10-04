@@ -12,7 +12,10 @@ export function parseBody<T>(schema: ZodType<T>, body: unknown): T {
 }
 
 export function requireUuid(value: unknown, name = 'id'): string {
-  if (typeof value !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {
+  if (
+    typeof value !== 'string' ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  ) {
     throw new AppError('validation_failed', `Invalid ${name}.`);
   }
   return value;

@@ -8,8 +8,30 @@ import { verifyPreviewToken } from '../../sandbox/preview-token.js';
 import { projectFor } from '../projects/access.js';
 import type { SessionUser } from '../../auth/session.js';
 
-const HOP_BY_HOP = new Set(['connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailer', 'transfer-encoding', 'upgrade', 'host', 'cookie', 'authorization', 'content-length']);
-const STRIP_RESPONSE = new Set(['connection', 'keep-alive', 'transfer-encoding', 'content-encoding', 'content-length', 'content-security-policy', 'x-frame-options', 'set-cookie']);
+const HOP_BY_HOP = new Set([
+  'connection',
+  'keep-alive',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+  'host',
+  'cookie',
+  'authorization',
+  'content-length',
+]);
+const STRIP_RESPONSE = new Set([
+  'connection',
+  'keep-alive',
+  'transfer-encoding',
+  'content-encoding',
+  'content-length',
+  'content-security-policy',
+  'x-frame-options',
+  'set-cookie',
+]);
 
 /**
  * Reverse proxy for sandbox previews: /preview/<signed token>/<path>.
@@ -26,7 +48,11 @@ export async function registerPreviewProxy(app: FastifyInstance, deps: AppDeps):
     scope.all('/preview/:token/*', { config: { public: true } }, async (req, reply) => {
       const params = req.params as { token: string; '*': string };
       const claims = verifyPreviewToken(deps.vault, params.token);
-      if (!claims) return reply.code(403).type('text/plain').send('Preview link is invalid or expired. Reopen the preview from the workspace.');
+      if (!claims)
+        return reply
+          .code(403)
+          .type('text/plain')
+          .send('Preview link is invalid or expired. Reopen the preview from the workspace.');
       const user = await deps.db.query.users.findFirst({ where: eq(users.id, claims.userId) });
       if (user?.status !== 'active') return reply.code(403).type('text/plain').send('Access denied.');
       const sessionUser: SessionUser = { ...user, sessionId: '' };
@@ -38,7 +64,10 @@ export async function registerPreviewProxy(app: FastifyInstance, deps: AppDeps):
       const sbx = await deps.sandbox.info(claims.projectId);
       const ports = sbx ? await deps.sandbox.previewPortsFor(sbx.id) : [];
       if (sbx?.status !== 'running' || !ports.some((p) => p.port === claims.port)) {
-        return reply.code(502).type('text/plain').send('The sandbox is not running or this port is no longer exposed.');
+        return reply
+          .code(502)
+          .type('text/plain')
+          .send('The sandbox is not running or this port is no longer exposed.');
       }
 
       let ip: string;
@@ -65,10 +94,15 @@ export async function registerPreviewProxy(app: FastifyInstance, deps: AppDeps):
           headers,
           redirect: 'manual',
           signal: AbortSignal.timeout(60_000),
-          ...(hasBody ? { body: Readable.toWeb(req.body as Readable) as ReadableStream, duplex: 'half' } : {}),
+          ...(hasBody
+            ? { body: Readable.toWeb(req.body as Readable) as ReadableStream, duplex: 'half' }
+            : {}),
         });
       } catch {
-        return reply.code(502).type('text/plain').send(`Nothing is answering on port ${claims.port} in the sandbox.`);
+        return reply
+          .code(502)
+          .type('text/plain')
+          .send(`Nothing is answering on port ${claims.port} in the sandbox.`);
       }
 
       reply.code(upstream.status);
@@ -80,7 +114,10 @@ export async function registerPreviewProxy(app: FastifyInstance, deps: AppDeps):
         }
         reply.header(key, value);
       });
-      reply.header('content-security-policy', "sandbox allow-scripts allow-forms allow-popups allow-modals allow-downloads; frame-ancestors 'self'");
+      reply.header(
+        'content-security-policy',
+        "sandbox allow-scripts allow-forms allow-popups allow-modals allow-downloads; frame-ancestors 'self'",
+      );
       reply.header('x-content-type-options', 'nosniff');
       reply.header('referrer-policy', 'no-referrer');
       if (!upstream.body) return reply.send();

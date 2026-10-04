@@ -132,7 +132,10 @@ export const fileEntrySchema = z.object({
 });
 export type FileEntry = z.infer<typeof fileEntrySchema>;
 
-export const writeFileSchema = z.object({ path: z.string().min(1).max(1024), content: z.string().max(5_000_000) });
+export const writeFileSchema = z.object({
+  path: z.string().min(1).max(1024),
+  content: z.string().max(5_000_000),
+});
 export const execRequestSchema = z.object({
   command: z.string().min(1).max(10_000),
   timeoutS: z.number().int().min(1).max(3600).optional(),

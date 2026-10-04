@@ -13,7 +13,10 @@ interface Share {
 export function ShareDialog({ project, onClose }: { project: Project; onClose: () => void }) {
   const qc = useQueryClient();
   const key = ['shares', project.id];
-  const shares = useQuery({ queryKey: key, queryFn: () => api.get<Share[]>(`/projects/${project.id}/shares`) });
+  const shares = useQuery({
+    queryKey: key,
+    queryFn: () => api.get<Share[]>(`/projects/${project.id}/shares`),
+  });
   const [email, setEmail] = useState('');
   const [permission, setPermission] = useState<'read' | 'edit'>('read');
   const [error, setError] = useState<string | null>(null);
@@ -32,13 +35,16 @@ export function ShareDialog({ project, onClose }: { project: Project; onClose: (
     <Modal title={`Share “${project.name}”`} open onClose={onClose}>
       <div className="flex flex-col gap-3 text-sm">
         <p className="text-xs text-zinc-400">
-          Read: see files, chat history and previews. Edit: also chat with the agent, edit files and run commands. Sandbox resources count against your limits.
+          Read: see files, chat history and previews. Edit: also chat with the agent, edit files and run
+          commands. Sandbox resources count against your limits.
         </p>
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            void run(() => api.put(`/projects/${project.id}/shares`, { email, permission })).then(() => setEmail(''));
+            void run(() => api.put(`/projects/${project.id}/shares`, { email, permission })).then(() =>
+              setEmail(''),
+            );
           }}
         >
           <Field label="User email">
@@ -58,17 +64,33 @@ export function ShareDialog({ project, onClose }: { project: Project; onClose: (
             <li key={s.userId} className="flex items-center justify-between px-3 py-2">
               <span>{s.email}</span>
               <div className="flex items-center gap-2">
-                <Select value={s.permission} onChange={(e) => void run(() => api.put(`/projects/${project.id}/shares`, { email: s.email, permission: e.target.value }))}>
+                <Select
+                  value={s.permission}
+                  onChange={(e) =>
+                    void run(() =>
+                      api.put(`/projects/${project.id}/shares`, {
+                        email: s.email,
+                        permission: e.target.value,
+                      }),
+                    )
+                  }
+                >
                   <option value="read">Read</option>
                   <option value="edit">Edit</option>
                 </Select>
-                <Button size="sm" variant="danger" onClick={() => void run(() => api.del(`/projects/${project.id}/shares/${s.userId}`))}>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => void run(() => api.del(`/projects/${project.id}/shares/${s.userId}`))}
+                >
                   Remove
                 </Button>
               </div>
             </li>
           ))}
-          {shares.data?.length === 0 && <li className="px-3 py-2 text-xs text-zinc-500">Not shared with anyone.</li>}
+          {shares.data?.length === 0 && (
+            <li className="px-3 py-2 text-xs text-zinc-500">Not shared with anyone.</li>
+          )}
         </ul>
       </div>
     </Modal>

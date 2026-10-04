@@ -29,32 +29,58 @@ export function SettingsTab() {
       setError(errorMessage(err));
     }
   };
-  const num = (k: keyof GlobalSettings) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: Number(e.target.value) });
-  const nullableNum = (k: 'adminCapPerTaskUsd' | 'adminCapPerDayUsd') => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [k]: e.target.value === '' ? null : Number(e.target.value) });
+  const num = (k: keyof GlobalSettings) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [k]: Number(e.target.value) });
+  const nullableNum =
+    (k: 'adminCapPerTaskUsd' | 'adminCapPerDayUsd') => (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm({ ...form, [k]: e.target.value === '' ? null : Number(e.target.value) });
 
   return (
     <div className="flex flex-col gap-5">
       <Card title="Your safety cap">
         <p className="mb-3 text-xs text-zinc-400">
-          A circuit breaker on your own spend, checked by the server before every model call. It is not a quota: raise it or switch it off at any time. Leave a field empty to remove that cap.
+          A circuit breaker on your own spend, checked by the server before every model call. It is not a
+          quota: raise it or switch it off at any time. Leave a field empty to remove that cap.
         </p>
         <label className="mb-3 flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={form.adminSafetyCapEnabled} onChange={(e) => setForm({ ...form, adminSafetyCapEnabled: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={form.adminSafetyCapEnabled}
+            onChange={(e) => setForm({ ...form, adminSafetyCapEnabled: e.target.checked })}
+          />
           Safety cap enabled
         </label>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Per task (USD)" hint="One agent turn, across all its steps.">
-            <Input type="number" step="0.01" min="0" value={form.adminCapPerTaskUsd ?? ''} onChange={nullableNum('adminCapPerTaskUsd')} />
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.adminCapPerTaskUsd ?? ''}
+              onChange={nullableNum('adminCapPerTaskUsd')}
+            />
           </Field>
           <Field label="Per day (USD, UTC)">
-            <Input type="number" step="0.01" min="0" value={form.adminCapPerDayUsd ?? ''} onChange={nullableNum('adminCapPerDayUsd')} />
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.adminCapPerDayUsd ?? ''}
+              onChange={nullableNum('adminCapPerDayUsd')}
+            />
           </Field>
         </div>
       </Card>
       <Card title="Defaults">
-        <Field label="Server default model" hint="Used when no message, conversation, project or user default applies.">
-          <ModelPicker value={{ modelId: form.defaultModelId, credentialMode: null, cliKind: null }} onChange={(s) => setForm({ ...form, defaultModelId: s.modelId })} inheritLabel="None" />
+        <Field
+          label="Server default model"
+          hint="Used when no message, conversation, project or user default applies."
+        >
+          <ModelPicker
+            value={{ modelId: form.defaultModelId, credentialMode: null, cliKind: null }}
+            onChange={(s) => setForm({ ...form, defaultModelId: s.modelId })}
+            inheritLabel="None"
+          />
         </Field>
         <div className="mt-3 grid grid-cols-3 gap-3">
           <Field label="Max agent steps per turn">
@@ -83,9 +109,16 @@ export function SettingsTab() {
           <Field label="Concurrent">
             <Input type="number" value={form.adminMaxContainers} onChange={num('adminMaxContainers')} />
           </Field>
-          <span className="col-span-4 mt-2 text-xs text-zinc-500">Members (default; override per member on the Users tab)</span>
+          <span className="col-span-4 mt-2 text-xs text-zinc-500">
+            Members (default; override per member on the Users tab)
+          </span>
           <Field label="CPUs">
-            <Input type="number" step="0.1" value={form.memberSandboxCpu} onChange={num('memberSandboxCpu')} />
+            <Input
+              type="number"
+              step="0.1"
+              value={form.memberSandboxCpu}
+              onChange={num('memberSandboxCpu')}
+            />
           </Field>
           <Field label="Memory (MB)">
             <Input type="number" value={form.memberSandboxMemMb} onChange={num('memberSandboxMemMb')} />

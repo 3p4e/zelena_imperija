@@ -2,7 +2,10 @@
 
 export function sseResponse(events: { event?: string; data: unknown }[], status = 200): Response {
   const text = events
-    .map((e) => `${e.event ? `event: ${e.event}\n` : ''}data: ${typeof e.data === 'string' ? e.data : JSON.stringify(e.data)}\n\n`)
+    .map(
+      (e) =>
+        `${e.event ? `event: ${e.event}\n` : ''}data: ${typeof e.data === 'string' ? e.data : JSON.stringify(e.data)}\n\n`,
+    )
     .join('');
   const encoder = new TextEncoder();
   // Split into uneven chunks to exercise the SSE buffer logic.
@@ -56,7 +59,12 @@ export function fetchSequence(responses: Response[]): { fetch: typeof fetch; cal
         body = init.body;
       }
     }
-    calls.push({ url: typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url, method: init?.method ?? 'GET', headers, body });
+    calls.push({
+      url: typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url,
+      method: init?.method ?? 'GET',
+      headers,
+      body,
+    });
     const next = queue.shift();
     if (!next) return Promise.reject(new Error('fetchSequence: no more responses'));
     return Promise.resolve(next);

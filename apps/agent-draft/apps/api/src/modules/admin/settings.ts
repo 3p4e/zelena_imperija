@@ -1,9 +1,25 @@
 import type { FastifyInstance } from 'fastify';
 import { and, eq, inArray } from 'drizzle-orm';
-import { CLI_KINDS, createSharedKeyGrantSchema, updateGlobalSettingsSchema, updateSharedKeyGrantSchema, type GlobalSettings, type SharedKeyGrant } from '@agent/shared';
+import {
+  CLI_KINDS,
+  createSharedKeyGrantSchema,
+  updateGlobalSettingsSchema,
+  updateSharedKeyGrantSchema,
+  type GlobalSettings,
+  type SharedKeyGrant,
+} from '@agent/shared';
 import { z } from 'zod';
 import type { AppDeps } from '../../deps.js';
-import { cliProviders, globalSettings, providers, sharedKeyGrantModels, sharedKeyGrants, toolCatalog, userKeys, users } from '../../db/schema/index.js';
+import {
+  cliProviders,
+  globalSettings,
+  providers,
+  sharedKeyGrantModels,
+  sharedKeyGrants,
+  toolCatalog,
+  userKeys,
+  users,
+} from '../../db/schema/index.js';
 import { currentUser } from '../../auth/plugin.js';
 import { AppError, notFound } from '../../lib/errors.js';
 import { parseBody, requireUuid } from '../../lib/validate.js';
@@ -46,8 +62,12 @@ export function registerAdminSettingsRoutes(app: FastifyInstance, deps: AppDeps)
       .update(globalSettings)
       .set({
         ...rest,
-        ...(adminCapPerTaskUsd !== undefined ? { adminCapPerTaskUsd: adminCapPerTaskUsd === null ? null : String(adminCapPerTaskUsd) } : {}),
-        ...(adminCapPerDayUsd !== undefined ? { adminCapPerDayUsd: adminCapPerDayUsd === null ? null : String(adminCapPerDayUsd) } : {}),
+        ...(adminCapPerTaskUsd !== undefined
+          ? { adminCapPerTaskUsd: adminCapPerTaskUsd === null ? null : String(adminCapPerTaskUsd) }
+          : {}),
+        ...(adminCapPerDayUsd !== undefined
+          ? { adminCapPerDayUsd: adminCapPerDayUsd === null ? null : String(adminCapPerDayUsd) }
+          : {}),
       })
       .where(eq(globalSettings.id, 1));
     await deps.audit(admin.id, 'admin.settings_update', 'settings', '1', req.ip);
@@ -61,7 +81,10 @@ export function registerAdminSettingsRoutes(app: FastifyInstance, deps: AppDeps)
       .innerJoin(providers, eq(providers.id, userKeys.providerId))
       .innerJoin(users, eq(users.id, g.memberUserId))
       .where(eq(userKeys.id, g.userKeyId));
-    const allowed = await db.select({ modelId: sharedKeyGrantModels.modelId }).from(sharedKeyGrantModels).where(eq(sharedKeyGrantModels.grantId, g.id));
+    const allowed = await db
+      .select({ modelId: sharedKeyGrantModels.modelId })
+      .from(sharedKeyGrantModels)
+      .where(eq(sharedKeyGrantModels.grantId, g.id));
     return {
       id: g.id,
       userKeyId: g.userKeyId,
@@ -86,17 +109,30 @@ export function registerAdminSettingsRoutes(app: FastifyInstance, deps: AppDeps)
   app.post('/admin/shared-grants', async (req, reply) => {
     const admin = currentUser(req);
     const body = parseBody(createSharedKeyGrantSchema, req.body);
-    const key = await db.query.userKeys.findFirst({ where: and(eq(userKeys.id, body.userKeyId), eq(userKeys.userId, admin.id)) });
-    if (!key || key.status === 'revoked') throw new AppError('validation_failed', 'Pick one of your own active keys to share.');
+    const key = await db.query.userKeys.findFirst({
+      where: and(eq(userKeys.id, body.userKeyId), eq(userKeys.userId, admin.id)),
+    });
+    if (!key || key.status === 'revoked')
+      throw new AppError('validation_failed', 'Pick one of your own active keys to share.');
     const member = await db.query.users.findFirst({ where: eq(users.id, body.memberUserId) });
-    if (member?.role !== 'member') throw new AppError('validation_failed', 'Shared keys can only be granted to members.');
+    if (member?.role !== 'member')
+      throw new AppError('validation_failed', 'Shared keys can only be granted to members.');
     const [row] = await db
       .insert(sharedKeyGrants)
-      .values({ userKeyId: key.id, memberUserId: member.id, dailyLimitUsd: String(body.dailyLimitUsd), monthlyLimitUsd: String(body.monthlyLimitUsd), enabled: body.enabled })
+      .values({
+        userKeyId: key.id,
+        memberUserId: member.id,
+        dailyLimitUsd: String(body.dailyLimitUsd),
+        monthlyLimitUsd: String(body.monthlyLimitUsd),
+        enabled: body.enabled,
+      })
       .onConflictDoNothing()
       .returning();
     if (!row) throw new AppError('conflict', 'This member already has a grant on that key.');
-    if (body.allowedModelIds.length > 0) await db.insert(sharedKeyGrantModels).values(body.allowedModelIds.map((modelId) => ({ grantId: row.id, modelId })));
+    if (body.allowedModelIds.length > 0)
+      await db
+        .insert(sharedKeyGrantModels)
+        .values(body.allowedModelIds.map((modelId) => ({ grantId: row.id, modelId })));
     await deps.audit(admin.id, 'admin.grant_create', 'grant', row.id, req.ip);
     return reply.code(201).send(await grantDto(row));
   });
@@ -116,7 +152,10 @@ export function registerAdminSettingsRoutes(app: FastifyInstance, deps: AppDeps)
       .where(eq(sharedKeyGrants.id, id));
     if (body.allowedModelIds !== undefined) {
       await db.delete(sharedKeyGrantModels).where(eq(sharedKeyGrantModels.grantId, id));
-      if (body.allowedModelIds.length > 0) await db.insert(sharedKeyGrantModels).values(body.allowedModelIds.map((modelId) => ({ grantId: id, modelId })));
+      if (body.allowedModelIds.length > 0)
+        await db
+          .insert(sharedKeyGrantModels)
+          .values(body.allowedModelIds.map((modelId) => ({ grantId: id, modelId })));
     }
     const updated = await db.query.sharedKeyGrants.findFirst({ where: eq(sharedKeyGrants.id, id) });
     if (!updated) throw notFound('Grant');
@@ -132,7 +171,11 @@ export function registerAdminSettingsRoutes(app: FastifyInstance, deps: AppDeps)
   app.patch('/admin/tools/:name', async (req) => {
     const name = (req.params as { name: string }).name;
     const body = parseBody(z.object({ enabled: z.boolean() }), req.body);
-    const rows = await db.update(toolCatalog).set({ enabled: body.enabled }).where(eq(toolCatalog.name, name)).returning({ name: toolCatalog.name });
+    const rows = await db
+      .update(toolCatalog)
+      .set({ enabled: body.enabled })
+      .where(eq(toolCatalog.name, name))
+      .returning({ name: toolCatalog.name });
     if (rows.length === 0) throw notFound('Tool');
     return { name, enabled: body.enabled };
   });
@@ -142,7 +185,10 @@ export function registerAdminSettingsRoutes(app: FastifyInstance, deps: AppDeps)
   app.patch('/admin/cli/:kind', async (req) => {
     const kind = parseBody(z.enum(CLI_KINDS), (req.params as { kind: string }).kind);
     const body = parseBody(z.object({ enabled: z.boolean() }), req.body);
-    await db.update(cliProviders).set({ enabled: body.enabled }).where(inArray(cliProviders.kind, [kind]));
+    await db
+      .update(cliProviders)
+      .set({ enabled: body.enabled })
+      .where(inArray(cliProviders.kind, [kind]));
     return deps.cli.status(kind);
   });
 

@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
-const boolString = z
-  .enum(['true', 'false', '1', '0'])
-  .transform((v) => v === 'true' || v === '1');
+const boolString = z.enum(['true', 'false', '1', '0']).transform((v) => v === 'true' || v === '1');
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -17,7 +15,11 @@ export const envSchema = z.object({
   /** 32 bytes, base64. Wraps per-user data-encryption keys. */
   MASTER_KEY: z.string().min(40),
   MASTER_KEY_VERSION: z.coerce.number().int().min(1).default(1),
-  SESSION_TTL_HOURS: z.coerce.number().int().min(1).default(24 * 14),
+  SESSION_TTL_HOURS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .default(24 * 14),
   /** Reject non-HTTPS requests that are not on localhost. */
   REQUIRE_HTTPS: boolString.default(true),
   /** Trust X-Forwarded-* from the reverse proxy. */

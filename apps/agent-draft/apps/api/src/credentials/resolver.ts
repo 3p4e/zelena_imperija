@@ -2,7 +2,14 @@ import { and, desc, eq } from 'drizzle-orm';
 import type { CredentialMode, ProviderKind } from '@agent/shared';
 import { kindRequiresApiKey } from '@agent/providers';
 import type { Db } from '../db/client.js';
-import { models, providers, sharedKeyGrantModels, sharedKeyGrants, userKeys, users } from '../db/schema/index.js';
+import {
+  models,
+  providers,
+  sharedKeyGrantModels,
+  sharedKeyGrants,
+  userKeys,
+  users,
+} from '../db/schema/index.js';
 import { AppError } from '../lib/errors.js';
 import type { KeyVault } from './vault.js';
 
@@ -18,7 +25,11 @@ export interface ResolvedModel {
   baseUrl: string | null;
   available: boolean;
   supportsTools: boolean;
-  pricing: { inputPricePerMtok: string | null; outputPricePerMtok: string | null; cachedInputPricePerMtok: string | null };
+  pricing: {
+    inputPricePerMtok: string | null;
+    outputPricePerMtok: string | null;
+    cachedInputPricePerMtok: string | null;
+  };
 }
 
 export interface ResolvedCredential {
@@ -51,7 +62,8 @@ export async function loadModel(db: Db, modelRef: string): Promise<ResolvedModel
     .where(eq(models.id, modelRef))
     .limit(1);
   if (!row) throw new AppError('model_unavailable', 'The selected model does not exist.');
-  if (!row.providerEnabled) throw new AppError('model_unavailable', `Provider ${row.providerSlug} is disabled.`);
+  if (!row.providerEnabled)
+    throw new AppError('model_unavailable', `Provider ${row.providerSlug} is disabled.`);
   return {
     id: row.id,
     modelId: row.modelId,
@@ -100,18 +112,28 @@ export async function resolveCredential(
 
   if (requested === 'byok' || requested === null || actor.role === 'admin') {
     const own = await db.query.userKeys.findFirst({
-      where: and(eq(userKeys.userId, actor.id), eq(userKeys.providerId, model.providerId), eq(userKeys.status, 'active')),
+      where: and(
+        eq(userKeys.userId, actor.id),
+        eq(userKeys.providerId, model.providerId),
+        eq(userKeys.status, 'active'),
+      ),
       orderBy: [desc(userKeys.updatedAt)],
     });
     if (own) {
-      const apiKey = await vault.openForUser(actor.id, KEY_PURPOSE, { ciphertext: own.ciphertext, nonce: own.nonce });
+      const apiKey = await vault.openForUser(actor.id, KEY_PURPOSE, {
+        ciphertext: own.ciphertext,
+        nonce: own.nonce,
+      });
       return { mode: 'byok', apiKey, baseUrl, userKeyId: own.id, sharedKeyGrantId: null };
     }
     if (actor.role === 'admin' && !kindRequiresApiKey(model.providerKind)) {
       return { mode: 'byok', apiKey: '', baseUrl, userKeyId: null, sharedKeyGrantId: null };
     }
     if (requested === 'byok' || actor.role === 'admin') {
-      throw new AppError('credential_missing', `No active API key for ${model.providerSlug}. Add one in Settings → API keys.`);
+      throw new AppError(
+        'credential_missing',
+        `No active API key for ${model.providerSlug}. Add one in Settings → API keys.`,
+      );
     }
   }
 
@@ -142,11 +164,17 @@ export async function resolveCredential(
       .from(sharedKeyGrantModels)
       .where(eq(sharedKeyGrantModels.grantId, g.grantId));
     if (allow.length > 0 && !allow.some((a) => a.modelId === model.id)) continue;
-    const apiKey = await vault.openForUser(g.ownerId, KEY_PURPOSE, { ciphertext: g.ciphertext, nonce: g.nonce });
+    const apiKey = await vault.openForUser(g.ownerId, KEY_PURPOSE, {
+      ciphertext: g.ciphertext,
+      nonce: g.nonce,
+    });
     return { mode: 'shared', apiKey, baseUrl, userKeyId: g.userKeyId, sharedKeyGrantId: g.grantId };
   }
   if (grants.length > 0) {
-    throw new AppError('forbidden', `Model ${model.displayName} is not in your allowlist for the shared ${model.providerSlug} key.`);
+    throw new AppError(
+      'forbidden',
+      `Model ${model.displayName} is not in your allowlist for the shared ${model.providerSlug} key.`,
+    );
   }
   throw new AppError(
     'credential_missing',

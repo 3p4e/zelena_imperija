@@ -60,7 +60,10 @@ export function ProjectSidebar({ projects, project, conversations, conversationI
           <li key={p.id}>
             <button
               onClick={() => onSelect(p.id)}
-              className={clsx('flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm', p.id === project?.id ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-400 hover:bg-zinc-900')}
+              className={clsx(
+                'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm',
+                p.id === project?.id ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-400 hover:bg-zinc-900',
+              )}
             >
               <span className="truncate">{p.name}</span>
               {p.myPermission !== 'owner' && <Badge tone="info">shared · {p.myPermission}</Badge>}
@@ -74,20 +77,37 @@ export function ProjectSidebar({ projects, project, conversations, conversationI
       {project && (
         <>
           <div className="mt-3 flex items-center justify-between border-t border-zinc-800 px-3 pt-3 pb-1">
-            <span className="truncate text-xs font-semibold tracking-wide text-zinc-500 uppercase">Conversations</span>
+            <span className="truncate text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+              Conversations
+            </span>
             <div className="flex">
               {project.myPermission === 'owner' && (
                 <>
-                  <Button size="sm" variant="ghost" onClick={() => setShareOpen(true)} aria-label="Share project">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShareOpen(true)}
+                    aria-label="Share project"
+                  >
                     <Share2 className="size-3.5" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setSettingsOpen(true)} aria-label="Project settings">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setSettingsOpen(true)}
+                    aria-label="Project settings"
+                  >
                     <Settings2 className="size-3.5" />
                   </Button>
                 </>
               )}
               {canEdit && (
-                <Button size="sm" variant="ghost" onClick={() => void newConversation()} aria-label="New conversation">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => void newConversation()}
+                  aria-label="New conversation"
+                >
                   <MessageSquarePlus className="size-3.5" />
                 </Button>
               )}
@@ -98,13 +118,22 @@ export function ProjectSidebar({ projects, project, conversations, conversationI
               <li key={c.id} className="group flex items-center">
                 <button
                   onClick={() => onSelect(project.id, c.id)}
-                  className={clsx('min-w-0 flex-1 truncate rounded px-2 py-1.5 text-left text-sm', c.id === conversationId ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-400 hover:bg-zinc-900')}
+                  className={clsx(
+                    'min-w-0 flex-1 truncate rounded px-2 py-1.5 text-left text-sm',
+                    c.id === conversationId ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-400 hover:bg-zinc-900',
+                  )}
                 >
-                  {c.status === 'running' && <span className="mr-1.5 inline-block size-1.5 animate-pulse rounded-full bg-amber-400" />}
+                  {c.status === 'running' && (
+                    <span className="mr-1.5 inline-block size-1.5 animate-pulse rounded-full bg-amber-400" />
+                  )}
                   {c.title}
                 </button>
                 {canEdit && (
-                  <button onClick={() => void deleteConversation(c.id)} className="hidden px-1 text-zinc-500 group-hover:block hover:text-red-400" aria-label="Delete conversation">
+                  <button
+                    onClick={() => void deleteConversation(c.id)}
+                    className="hidden px-1 text-zinc-500 group-hover:block hover:text-red-400"
+                    aria-label="Delete conversation"
+                  >
                     <Trash2 className="size-3.5" />
                   </button>
                 )}
@@ -118,13 +147,23 @@ export function ProjectSidebar({ projects, project, conversations, conversationI
       </div>
 
       <NewProjectDialog open={creating} onClose={() => setCreating(false)} onCreated={(id) => onSelect(id)} />
-      {project && settingsOpen && <ProjectSettingsDialog project={project} onClose={() => setSettingsOpen(false)} />}
+      {project && settingsOpen && (
+        <ProjectSettingsDialog project={project} onClose={() => setSettingsOpen(false)} />
+      )}
       {project && shareOpen && <ShareDialog project={project} onClose={() => setShareOpen(false)} />}
     </aside>
   );
 }
 
-function NewProjectDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (id: string) => void }) {
+function NewProjectDialog({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCreated: (id: string) => void;
+}) {
   const qc = useQueryClient();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');

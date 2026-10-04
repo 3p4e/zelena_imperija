@@ -13,7 +13,13 @@ export async function loadHistory(db: Db, conversationId: string): Promise<ChatM
   const rows = await db
     .select()
     .from(messages)
-    .where(and(eq(messages.conversationId, conversationId), eq(messages.superseded, false), inArray(messages.status, ['complete', 'stopped'])))
+    .where(
+      and(
+        eq(messages.conversationId, conversationId),
+        eq(messages.superseded, false),
+        inArray(messages.status, ['complete', 'stopped']),
+      ),
+    )
     .orderBy(asc(messages.seq));
   if (rows.length === 0) return [];
   const parts = await db
@@ -44,7 +50,12 @@ export async function loadHistory(db: Db, conversationId: string): Promise<ChatM
         content.push({ type: 'tool_call', id: p.toolCallId, name: p.toolName, arguments: p.arguments ?? {} });
       } else if (p.kind === 'tool_result' && p.toolCallId) {
         if (m.cliKind) continue;
-        content.push({ type: 'tool_result', toolCallId: p.toolCallId, content: p.resultText ?? '', isError: p.isError ?? false });
+        content.push({
+          type: 'tool_result',
+          toolCallId: p.toolCallId,
+          content: p.resultText ?? '',
+          isError: p.isError ?? false,
+        });
       }
     }
     if (content.length === 0) continue;
@@ -62,7 +73,9 @@ export function repairToolPairs(history: ChatMessage[]): ChatMessage[] {
     if (msg.role === 'tool') {
       // Drop tool results whose call is not in the preceding assistant message.
       const prev = out[out.length - 1];
-      const callIds = new Set(prev?.role === 'assistant' ? prev.content.filter((c) => c.type === 'tool_call').map((c) => c.id) : []);
+      const callIds = new Set(
+        prev?.role === 'assistant' ? prev.content.filter((c) => c.type === 'tool_call').map((c) => c.id) : [],
+      );
       const kept = msg.content.filter((c) => c.type === 'tool_result' && callIds.has(c.toolCallId));
       if (kept.length > 0) out.push({ role: 'tool', content: kept });
       continue;
@@ -72,15 +85,31 @@ export function repairToolPairs(history: ChatMessage[]): ChatMessage[] {
       const calls = msg.content.filter((c) => c.type === 'tool_call');
       if (calls.length === 0) continue;
       const next = history[i + 1];
-      const answered = new Set(next?.role === 'tool' ? next.content.filter((c) => c.type === 'tool_result').map((c) => c.toolCallId) : []);
+      const answered = new Set(
+        next?.role === 'tool'
+          ? next.content.filter((c) => c.type === 'tool_result').map((c) => c.toolCallId)
+          : [],
+      );
       const missing = calls.filter((c) => !answered.has(c.id));
       if (missing.length > 0 && next?.role !== 'tool') {
         out.push({
           role: 'tool',
-          content: missing.map((c) => ({ type: 'tool_result', toolCallId: c.id, content: 'Cancelled before execution.', isError: true })),
+          content: missing.map((c) => ({
+            type: 'tool_result',
+            toolCallId: c.id,
+            content: 'Cancelled before execution.',
+            isError: true,
+          })),
         });
       } else if (missing.length > 0 && next?.role === 'tool') {
-        next.content.push(...missing.map((c): ContentPart => ({ type: 'tool_result', toolCallId: c.id, content: 'Cancelled before execution.', isError: true })));
+        next.content.push(
+          ...missing.map((c): ContentPart => ({
+            type: 'tool_result',
+            toolCallId: c.id,
+            content: 'Cancelled before execution.',
+            isError: true,
+          })),
+        );
       }
     }
   }
@@ -88,10 +117,25 @@ export function repairToolPairs(history: ChatMessage[]): ChatMessage[] {
 }
 
 /** Drops the oldest turns until the transcript fits a rough character budget (≈3.5 chars/token). */
-export function fitToContext(history: ChatMessage[], contextWindowTokens: number, reserveTokens = 16_000): ChatMessage[] {
+export function fitToContext(
+  history: ChatMessage[],
+  contextWindowTokens: number,
+  reserveTokens = 16_000,
+): ChatMessage[] {
   const budgetChars = Math.max(8_000, (contextWindowTokens - reserveTokens) * 3.5);
   const size = (m: ChatMessage): number =>
-    m.content.reduce((n, c) => n + (c.type === 'text' || c.type === 'reasoning' ? c.text.length : c.type === 'tool_result' ? c.content.length : c.type === 'tool_call' ? JSON.stringify(c.arguments).length : 1000), 0);
+    m.content.reduce(
+      (n, c) =>
+        n +
+        (c.type === 'text' || c.type === 'reasoning'
+          ? c.text.length
+          : c.type === 'tool_result'
+            ? c.content.length
+            : c.type === 'tool_call'
+              ? JSON.stringify(c.arguments).length
+              : 1000),
+      0,
+    );
   let total = history.reduce((n, m) => n + size(m), 0);
   let start = 0;
   while (total > budgetChars && start < history.length - 1) {

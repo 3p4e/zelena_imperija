@@ -20,7 +20,8 @@ export function AppShell() {
     await navigate({ to: '/login' });
   };
 
-  const link = 'rounded px-2 py-1 text-sm text-zinc-400 hover:text-zinc-100 [&.active]:bg-zinc-800 [&.active]:text-zinc-100';
+  const link =
+    'rounded px-2 py-1 text-sm text-zinc-400 hover:text-zinc-100 [&.active]:bg-zinc-800 [&.active]:text-zinc-100';
   return (
     <div className="flex h-full flex-col">
       <header className="flex h-11 shrink-0 items-center gap-4 border-b border-zinc-800 bg-zinc-950 px-3">
@@ -45,7 +46,11 @@ export function AppShell() {
           <span>
             {user.displayName} · {user.role}
           </span>
-          <button onClick={() => void logout()} className="flex items-center gap-1 hover:text-zinc-100" aria-label="Log out">
+          <button
+            onClick={() => void logout()}
+            className="flex items-center gap-1 hover:text-zinc-100"
+            aria-label="Log out"
+          >
             <LogOut className="size-3.5" /> Log out
           </button>
         </div>

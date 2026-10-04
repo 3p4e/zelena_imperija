@@ -20,7 +20,10 @@ interface FileContent {
 
 export function FilesPane({ project, canEdit }: { project: Project; canEdit: boolean }) {
   const qc = useQueryClient();
-  const files = useQuery({ queryKey: qk.files(project.id), queryFn: () => api.get<{ entries: FileEntry[] }>(`/projects/${project.id}/files`) });
+  const files = useQuery({
+    queryKey: qk.files(project.id),
+    queryFn: () => api.get<{ entries: FileEntry[] }>(`/projects/${project.id}/files`),
+  });
   const [selected, setSelected] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState<string | null>(null);
@@ -29,7 +32,10 @@ export function FilesPane({ project, canEdit }: { project: Project; canEdit: boo
 
   const content = useQuery({
     queryKey: ['file', project.id, selected],
-    queryFn: () => api.get<FileContent>(`/projects/${project.id}/files/content?path=${encodeURIComponent(selected ?? '')}`),
+    queryFn: () =>
+      api.get<FileContent>(
+        `/projects/${project.id}/files/content?path=${encodeURIComponent(selected ?? '')}`,
+      ),
     enabled: !!selected,
   });
 
@@ -103,7 +109,10 @@ export function FilesPane({ project, canEdit }: { project: Project; canEdit: boo
             return (
               <div key={e.path} className="group flex items-center">
                 <button
-                  className={clsx('flex min-w-0 flex-1 items-center gap-1 py-0.5 pr-1 text-left hover:bg-zinc-900', selected === e.path && 'bg-zinc-800')}
+                  className={clsx(
+                    'flex min-w-0 flex-1 items-center gap-1 py-0.5 pr-1 text-left hover:bg-zinc-900',
+                    selected === e.path && 'bg-zinc-800',
+                  )}
                   style={{ paddingLeft: 8 + depth * 12 }}
                   onClick={() => {
                     if (e.type === 'dir') {
@@ -119,7 +128,11 @@ export function FilesPane({ project, canEdit }: { project: Project; canEdit: boo
                 >
                   {e.type === 'dir' ? (
                     <>
-                      {isCollapsed ? <ChevronRight className="size-3 shrink-0" /> : <ChevronDown className="size-3 shrink-0" />}
+                      {isCollapsed ? (
+                        <ChevronRight className="size-3 shrink-0" />
+                      ) : (
+                        <ChevronDown className="size-3 shrink-0" />
+                      )}
                       <Folder className="size-3.5 shrink-0 text-amber-500/80" />
                     </>
                   ) : (
@@ -128,7 +141,11 @@ export function FilesPane({ project, canEdit }: { project: Project; canEdit: boo
                   <span className="truncate">{name}</span>
                 </button>
                 {canEdit && (
-                  <button className="hidden px-1 text-zinc-500 group-hover:block hover:text-red-400" aria-label={`Delete ${e.path}`} onClick={() => void remove(e.path)}>
+                  <button
+                    className="hidden px-1 text-zinc-500 group-hover:block hover:text-red-400"
+                    aria-label={`Delete ${e.path}`}
+                    onClick={() => void remove(e.path)}
+                  >
                     <Trash2 className="size-3" />
                   </button>
                 )}
@@ -144,7 +161,14 @@ export function FilesPane({ project, canEdit }: { project: Project; canEdit: boo
               <span className="truncate font-mono text-zinc-300">{selected}</span>
               {draft !== null && <span className="text-amber-400">unsaved</span>}
               {canEdit && (
-                <Button size="sm" className="ml-auto" variant={draft !== null ? 'primary' : 'secondary'} disabled={draft === null} loading={saving} onClick={() => void save()}>
+                <Button
+                  size="sm"
+                  className="ml-auto"
+                  variant={draft !== null ? 'primary' : 'secondary'}
+                  disabled={draft === null}
+                  loading={saving}
+                  onClick={() => void save()}
+                >
                   <Save className="size-3.5" /> Save
                 </Button>
               )}
@@ -164,7 +188,13 @@ export function FilesPane({ project, canEdit }: { project: Project; canEdit: boo
                   language={languageFor(selected)}
                   value={draft ?? content.data?.content ?? ''}
                   onChange={(v) => setDraft(v ?? '')}
-                  options={{ readOnly: !canEdit || content.data?.truncated === true, minimap: { enabled: false }, fontSize: 13, scrollBeyondLastLine: false, automaticLayout: true }}
+                  options={{
+                    readOnly: !canEdit || content.data?.truncated === true,
+                    minimap: { enabled: false },
+                    fontSize: 13,
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                  }}
                   onMount={(editor) => {
                     editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => void save());
                   }}

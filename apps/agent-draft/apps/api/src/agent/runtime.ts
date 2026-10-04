@@ -1,12 +1,32 @@
 import { and, desc, eq, gt } from 'drizzle-orm';
 import type { Logger } from 'pino';
 import type { ApiErrorCode, CliKind, UsageStatus } from '@agent/shared';
-import { EMPTY_USAGE, ProviderError, type AIProvider, type ChatRequest, type ProviderFactory, type Usage } from '@agent/providers';
+import {
+  EMPTY_USAGE,
+  ProviderError,
+  type AIProvider,
+  type ChatRequest,
+  type ProviderFactory,
+  type Usage,
+} from '@agent/providers';
 import type { AppConfig } from '../config/env.js';
 import type { Db } from '../db/client.js';
-import { agentDefinitionTools, agentDefinitions, conversations, globalSettings, messageParts, messages, projects } from '../db/schema/index.js';
+import {
+  agentDefinitionTools,
+  agentDefinitions,
+  conversations,
+  globalSettings,
+  messageParts,
+  messages,
+  projects,
+} from '../db/schema/index.js';
 import type { KeyVault } from '../credentials/vault.js';
-import { loadModel, resolveCredential, type ResolvedCredential, type ResolvedModel } from '../credentials/resolver.js';
+import {
+  loadModel,
+  resolveCredential,
+  type ResolvedCredential,
+  type ResolvedModel,
+} from '../credentials/resolver.js';
 import { preflight } from '../credentials/preflight.js';
 import { estimateCostUsd } from '../metering/cost.js';
 import { recordUsage } from '../metering/usage.js';
@@ -78,8 +98,11 @@ export class AgentRuntime {
 
   async start(input: StartTurnInput): Promise<void> {
     const { db } = this.deps;
-    if (this.active.has(input.conversationId)) throw new AppError('conflict', 'The agent is already working in this conversation. Stop it first.');
-    const conversation = await db.query.conversations.findFirst({ where: eq(conversations.id, input.conversationId) });
+    if (this.active.has(input.conversationId))
+      throw new AppError('conflict', 'The agent is already working in this conversation. Stop it first.');
+    const conversation = await db.query.conversations.findFirst({
+      where: eq(conversations.id, input.conversationId),
+    });
     if (!conversation) throw new AppError('not_found', 'Conversation not found.');
     const project = await db.query.projects.findFirst({ where: eq(projects.id, conversation.projectId) });
     if (!project) throw new AppError('not_found', 'Project not found.');
@@ -113,7 +136,13 @@ export class AgentRuntime {
       throw err;
     }
 
-    const ctx: RunContext = { conversation, project, actor: input.actor, selection: input.selection, signal: controller.signal };
+    const ctx: RunContext = {
+      conversation,
+      project,
+      actor: input.actor,
+      selection: input.selection,
+      signal: controller.signal,
+    };
     void this.run(ctx).finally(() => {
       this.active.delete(input.conversationId);
       this.bus.close(input.conversationId);
@@ -123,7 +152,11 @@ export class AgentRuntime {
   private async supersedeLastAnswer(conversationId: string): Promise<void> {
     const { db } = this.deps;
     const lastUser = await db.query.messages.findFirst({
-      where: and(eq(messages.conversationId, conversationId), eq(messages.role, 'user'), eq(messages.superseded, false)),
+      where: and(
+        eq(messages.conversationId, conversationId),
+        eq(messages.role, 'user'),
+        eq(messages.superseded, false),
+      ),
       orderBy: [desc(messages.seq)],
     });
     if (!lastUser) throw new AppError('validation_failed', 'There is no message to regenerate.');
@@ -135,10 +168,16 @@ export class AgentRuntime {
 
   private async run(ctx: RunContext): Promise<void> {
     const final = await this.execute(ctx).catch((err: unknown) => {
-      this.deps.log.error({ err: errorSummary(err), conversationId: ctx.conversation.id }, 'run bookkeeping failed');
+      this.deps.log.error(
+        { err: errorSummary(err), conversationId: ctx.conversation.id },
+        'run bookkeeping failed',
+      );
       return 'error' as const;
     });
-    await this.deps.db.update(conversations).set({ status: final }).where(eq(conversations.id, ctx.conversation.id));
+    await this.deps.db
+      .update(conversations)
+      .set({ status: final })
+      .where(eq(conversations.id, ctx.conversation.id));
     this.bus.emit(ctx.conversation.id, { type: 'conversation_status', status: final });
   }
 
@@ -147,10 +186,21 @@ export class AgentRuntime {
     try {
       const selection = await resolveSelection(this.deps.db, ctx.actor.id, {
         message: ctx.selection,
-        conversation: { modelId: ctx.conversation.modelId, credentialMode: ctx.conversation.credentialMode, cliKind: ctx.conversation.cliKind },
-        project: { modelId: ctx.project.defaultModelId, credentialMode: ctx.project.defaultCredentialMode, cliKind: ctx.project.defaultCliKind },
+        conversation: {
+          modelId: ctx.conversation.modelId,
+          credentialMode: ctx.conversation.credentialMode,
+          cliKind: ctx.conversation.cliKind,
+        },
+        project: {
+          modelId: ctx.project.defaultModelId,
+          credentialMode: ctx.project.defaultCredentialMode,
+          cliKind: ctx.project.defaultCliKind,
+        },
       });
-      const outcome = selection.kind === 'cli' ? await this.runCli(ctx, selection.cliKind) : await this.runApi(ctx, selection.modelRef, selection.credentialMode);
+      const outcome =
+        selection.kind === 'cli'
+          ? await this.runCli(ctx, selection.cliKind)
+          : await this.runApi(ctx, selection.modelRef, selection.credentialMode);
       return outcome === 'stopped' ? 'stopped' : 'idle';
     } catch (err) {
       if (ctx.signal.aborted) return 'stopped';
@@ -161,32 +211,58 @@ export class AgentRuntime {
 
   private async reportError(ctx: RunContext, err: unknown): Promise<void> {
     const appErr = toAppError(err);
-    if (appErr.code === 'internal') this.deps.log.error({ err: errorSummary(err), conversationId: ctx.conversation.id }, 'agent run failed');
+    if (appErr.code === 'internal')
+      this.deps.log.error(
+        { err: errorSummary(err), conversationId: ctx.conversation.id },
+        'agent run failed',
+      );
     const w = await MessageWriter.create(this.deps.db, this.bus, ctx.conversation.id, 'assistant');
     await w.errorPart(appErr.message);
     await w.finish('error');
     w.end('error', { code: appErr.code, message: appErr.message });
   }
 
-  private async agentConfig(conversation: typeof conversations.$inferSelect): Promise<{ systemPrompt: string; toolNames: string[]; maxIterations: number }> {
+  private async agentConfig(
+    conversation: typeof conversations.$inferSelect,
+  ): Promise<{ systemPrompt: string; toolNames: string[]; maxIterations: number }> {
     const { db } = this.deps;
-    const agent = await db.query.agentDefinitions.findFirst({ where: eq(agentDefinitions.id, conversation.agentDefinitionId) });
-    if (!agent?.enabled) throw new AppError('validation_failed', 'The agent for this conversation is disabled.');
-    const toolRows = await db.select({ name: agentDefinitionTools.toolName }).from(agentDefinitionTools).where(eq(agentDefinitionTools.agentDefinitionId, agent.id));
+    const agent = await db.query.agentDefinitions.findFirst({
+      where: eq(agentDefinitions.id, conversation.agentDefinitionId),
+    });
+    if (!agent?.enabled)
+      throw new AppError('validation_failed', 'The agent for this conversation is disabled.');
+    const toolRows = await db
+      .select({ name: agentDefinitionTools.toolName })
+      .from(agentDefinitionTools)
+      .where(eq(agentDefinitionTools.agentDefinitionId, agent.id));
     const settings = await db.query.globalSettings.findFirst({ where: eq(globalSettings.id, 1) });
     const maxIterations = Math.min(agent.maxIterations, settings?.agentMaxIterations ?? agent.maxIterations);
     return { systemPrompt: agent.systemPrompt, toolNames: toolRows.map((t) => t.name), maxIterations };
   }
 
-  private async runApi(ctx: RunContext, modelRef: string, mode: 'byok' | 'shared' | null): Promise<'complete' | 'stopped'> {
+  private async runApi(
+    ctx: RunContext,
+    modelRef: string,
+    mode: 'byok' | 'shared' | null,
+  ): Promise<'complete' | 'stopped'> {
     const { db } = this.deps;
     const model = await loadModel(db, modelRef);
-    if (!model.available) throw new AppError('model_unavailable', `${model.displayName} is marked unavailable. Pick another model.`);
+    if (!model.available)
+      throw new AppError(
+        'model_unavailable',
+        `${model.displayName} is marked unavailable. Pick another model.`,
+      );
     const credential = await resolveCredential(db, this.deps.vault, ctx.actor, model, mode);
-    const provider = this.deps.providerFactory(model.providerKind, { apiKey: credential.apiKey, baseUrl: credential.baseUrl, timeoutMs: PROVIDER_TIMEOUT_MS });
+    const provider = this.deps.providerFactory(model.providerKind, {
+      apiKey: credential.apiKey,
+      baseUrl: credential.baseUrl,
+      timeoutMs: PROVIDER_TIMEOUT_MS,
+    });
     const agent = await this.agentConfig(ctx.conversation);
     const tools = model.supportsTools ? await this.deps.tools.toolsFor(ctx.actor, agent.toolNames) : [];
-    const contextWindow = (await db.query.models.findFirst({ where: (m, { eq: e }) => e(m.id, model.id) }))?.contextWindow ?? 128_000;
+    const contextWindow =
+      (await db.query.models.findFirst({ where: (m, { eq: e }) => e(m.id, model.id) }))?.contextWindow ??
+      128_000;
     const systemPrompt = `${agent.systemPrompt}\n\nProject: ${ctx.project.name}${ctx.project.description ? `\n${ctx.project.description}` : ''}`;
 
     let runCost = 0;
@@ -199,9 +275,20 @@ export class AgentRuntime {
         model: model.modelId,
         messages: [{ role: 'system', content: [{ type: 'text', text: systemPrompt }] }, ...history],
         signal: ctx.signal,
-        ...(tools.length > 0 ? { tools: tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema })) } : {}),
+        ...(tools.length > 0
+          ? {
+              tools: tools.map((t) => ({
+                name: t.name,
+                description: t.description,
+                inputSchema: t.inputSchema,
+              })),
+            }
+          : {}),
       };
-      const w = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'assistant', { modelId: model.id, credentialMode: credential.mode });
+      const w = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'assistant', {
+        modelId: model.id,
+        credentialMode: credential.mode,
+      });
       const step = await this.streamStep(ctx, provider, request, w, model, credential);
       if (step.status === 'stopped') {
         await w.flushOpen();
@@ -214,7 +301,9 @@ export class AgentRuntime {
       w.end('complete');
       if (step.toolCalls.length === 0) return 'complete';
 
-      const toolMsg = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'tool', { modelId: model.id });
+      const toolMsg = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'tool', {
+        modelId: model.id,
+      });
       for (const call of step.toolCalls) {
         const partId = await toolMsg.startPart('tool_result', { toolName: call.name, toolCallId: call.id });
         const result = ctx.signal.aborted
@@ -225,17 +314,31 @@ export class AgentRuntime {
       await toolMsg.finish('complete');
       if (ctx.signal.aborted) return 'stopped';
     }
-    const w = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'assistant', { modelId: model.id });
-    await w.errorPart(`Stopped after ${agent.maxIterations} steps (the agent's iteration limit). Send a message to continue.`);
+    const w = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'assistant', {
+      modelId: model.id,
+    });
+    await w.errorPart(
+      `Stopped after ${agent.maxIterations} steps (the agent's iteration limit). Send a message to continue.`,
+    );
     await w.finish('complete');
     w.end('complete');
     return 'complete';
   }
 
   /** Pre-flight gate; a block is metered as a zero-token record so it appears in usage history. */
-  private async gate(ctx: RunContext, model: ResolvedModel, credential: ResolvedCredential, runCost: number): Promise<void> {
+  private async gate(
+    ctx: RunContext,
+    model: ResolvedModel,
+    credential: ResolvedCredential,
+    runCost: number,
+  ): Promise<void> {
     try {
-      await preflight(this.deps.db, { actor: ctx.actor, credential, pricing: model.pricing, runCostUsd: runCost });
+      await preflight(this.deps.db, {
+        actor: ctx.actor,
+        credential,
+        pricing: model.pricing,
+        runCostUsd: runCost,
+      });
     } catch (err) {
       if (err instanceof AppError && (err.code === 'quota_exceeded' || err.code === 'safety_cap_reached')) {
         await recordUsage(this.deps.db, {
@@ -251,7 +354,12 @@ export class AgentRuntime {
     }
   }
 
-  private usageBase(ctx: RunContext, model: ResolvedModel, credential: ResolvedCredential, messageId: string | null) {
+  private usageBase(
+    ctx: RunContext,
+    model: ResolvedModel,
+    credential: ResolvedCredential,
+    messageId: string | null,
+  ) {
     return {
       userId: ctx.actor.id,
       projectId: ctx.project.id,
@@ -274,7 +382,11 @@ export class AgentRuntime {
     w: MessageWriter,
     model: ResolvedModel,
     credential: ResolvedCredential,
-  ): Promise<{ status: 'complete' | 'stopped'; toolCalls: { id: string; name: string; arguments: unknown }[]; costUsd: number | null }> {
+  ): Promise<{
+    status: 'complete' | 'stopped';
+    toolCalls: { id: string; name: string; arguments: unknown }[];
+    costUsd: number | null;
+  }> {
     const started = Date.now();
     let usage: Usage = EMPTY_USAGE;
     const toolCalls: { id: string; name: string; arguments: unknown }[] = [];
@@ -338,14 +450,30 @@ export class AgentRuntime {
         }
         const retryable = err instanceof ProviderError && err.retryable && !emitted && attempt < MAX_ATTEMPTS;
         if (!retryable) {
-          const status: UsageStatus = err instanceof ProviderError ? (err.code === 'rate_limited' ? 'rate_limited' : err.code === 'timeout' ? 'timeout' : 'error') : 'error';
-          await this.meter(ctx, model, credential, w.messageId, usage, started, status, err instanceof ProviderError ? err.code : 'internal');
+          const status: UsageStatus =
+            err instanceof ProviderError
+              ? err.code === 'rate_limited'
+                ? 'rate_limited'
+                : err.code === 'timeout'
+                  ? 'timeout'
+                  : 'error'
+              : 'error';
+          await this.meter(
+            ctx,
+            model,
+            credential,
+            w.messageId,
+            usage,
+            started,
+            status,
+            err instanceof ProviderError ? err.code : 'internal',
+          );
           await w.flushOpen();
           await w.finish('error');
           throw err;
         }
-        const wait = Math.min((err).retryAfterMs ?? 1000 * 2 ** (attempt - 1), 20_000);
-        this.deps.log.warn({ attempt, wait, code: (err).code }, 'retrying provider call');
+        const wait = Math.min(err.retryAfterMs ?? 1000 * 2 ** (attempt - 1), 20_000);
+        this.deps.log.warn({ attempt, wait, code: err.code }, 'retrying provider call');
         await sleep(wait, ctx.signal);
         if (ctx.signal.aborted) return { status: 'stopped', toolCalls, costUsd: null };
       }
@@ -398,7 +526,8 @@ export class AgentRuntime {
     w: MessageWriter,
   ): Promise<ToolResult> {
     const tool = tools.find((t) => t.name === call.name);
-    if (!tool) return { content: `Tool "${call.name}" is not available in this conversation.`, isError: true };
+    if (!tool)
+      return { content: `Tool "${call.name}" is not available in this conversation.`, isError: true };
     // Re-check at execution time: the admin may have changed restrictions mid-run.
     if (!(await this.deps.tools.isAllowedFor(ctx.actor, tool.name))) {
       return { content: `You are not permitted to use "${tool.name}".`, isError: true };
@@ -407,7 +536,8 @@ export class AgentRuntime {
     try {
       args = tool.parse(call.arguments);
     } catch (err) {
-      if (err instanceof ToolInputError) return { content: `Invalid arguments for ${tool.name}: ${err.message}`, isError: true };
+      if (err instanceof ToolInputError)
+        return { content: `Invalid arguments for ${tool.name}: ${err.message}`, isError: true };
       throw err;
     }
     const toolCtx: ToolContext = {
@@ -430,18 +560,28 @@ export class AgentRuntime {
 
   private async runCli(ctx: RunContext, cliKind: CliKind): Promise<'complete' | 'stopped'> {
     const { db } = this.deps;
-    if (ctx.actor.role !== 'admin') throw new AppError('forbidden', 'Subscription CLI mode is available to the admin only.');
+    if (ctx.actor.role !== 'admin')
+      throw new AppError('forbidden', 'Subscription CLI mode is available to the admin only.');
     const lastUser = await db
       .select({ text: messageParts.text })
       .from(messages)
       .innerJoin(messageParts, eq(messageParts.messageId, messages.id))
-      .where(and(eq(messages.conversationId, ctx.conversation.id), eq(messages.role, 'user'), eq(messages.superseded, false)))
+      .where(
+        and(
+          eq(messages.conversationId, ctx.conversation.id),
+          eq(messages.role, 'user'),
+          eq(messages.superseded, false),
+        ),
+      )
       .orderBy(desc(messages.seq))
       .limit(1);
     const prompt = lastUser[0]?.text;
     if (!prompt) throw new AppError('validation_failed', 'Nothing to send.');
 
-    const w = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'assistant', { credentialMode: 'subscription_cli', cliKind });
+    const w = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'assistant', {
+      credentialMode: 'subscription_cli',
+      cliKind,
+    });
     let textPart: string | null = null;
     const toolParts = new Map<string, string>();
     const started = Date.now();
@@ -459,7 +599,11 @@ export class AgentRuntime {
         } else if (ev.type === 'tool_call') {
           if (textPart) await w.endPart(textPart);
           textPart = null;
-          const pid = await w.startPart('tool_call', { toolName: ev.name, toolCallId: ev.id, arguments: ev.input });
+          const pid = await w.startPart('tool_call', {
+            toolName: ev.name,
+            toolCallId: ev.id,
+            arguments: ev.input,
+          });
           await w.setArguments(pid, ev.input);
           toolParts.set(ev.id, pid);
         } else {
@@ -521,11 +665,16 @@ function zeroUsage() {
 export function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err;
   if (err instanceof ProviderError) return fromProviderError(err);
-  return new AppError('internal' satisfies ApiErrorCode, 'Something went wrong while running the agent. Try again.');
+  return new AppError(
+    'internal' satisfies ApiErrorCode,
+    'Something went wrong while running the agent. Try again.',
+  );
 }
 
 function errorSummary(err: unknown): { name: string; message: string } {
-  return err instanceof Error ? { name: err.name, message: err.message.slice(0, 500) } : { name: 'unknown', message: String(err).slice(0, 500) };
+  return err instanceof Error
+    ? { name: err.name, message: err.message.slice(0, 500) }
+    : { name: 'unknown', message: String(err).slice(0, 500) };
 }
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {

@@ -41,6 +41,11 @@ export async function resolveSelection(
     return { kind: 'cli', cliKind };
   }
   const modelRef = ordered.find((l) => l.modelId)?.modelId;
-  if (!modelRef) throw new AppError('model_unavailable', 'No model selected and no default model is configured.');
-  return { kind: 'api', modelRef, credentialMode: (modeLayer?.credentialMode as 'byok' | 'shared' | undefined) ?? null };
+  if (!modelRef)
+    throw new AppError('model_unavailable', 'No model selected and no default model is configured.');
+  return {
+    kind: 'api',
+    modelRef,
+    credentialMode: (modeLayer?.credentialMode as 'byok' | 'shared' | undefined) ?? null,
+  };
 }

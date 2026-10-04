@@ -12,7 +12,12 @@ export function TerminalPane({ project }: { project: Project }) {
 
   useEffect(() => {
     if (!host.current) return;
-    const term = new Terminal({ fontSize: 13, fontFamily: 'ui-monospace, Menlo, monospace', theme: { background: '#09090b' }, cursorBlink: true });
+    const term = new Terminal({
+      fontSize: 13,
+      fontFamily: 'ui-monospace, Menlo, monospace',
+      theme: { background: '#09090b' },
+      cursorBlink: true,
+    });
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(host.current);
@@ -21,7 +26,8 @@ export function TerminalPane({ project }: { project: Project }) {
     const ws = new WebSocket(`${proto}://${location.host}/api/projects/${project.id}/terminal`);
     setStatus('connecting');
     const sendResize = (): void => {
-      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      if (ws.readyState === WebSocket.OPEN)
+        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
     };
     ws.onopen = () => {
       setStatus('open');

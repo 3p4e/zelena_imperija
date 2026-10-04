@@ -31,7 +31,8 @@ export function open(key: Buffer, sealed: Sealed, aad?: Buffer): Buffer {
 
 export function parseMasterKey(base64: string): Buffer {
   const buf = Buffer.from(base64, 'base64');
-  if (buf.length !== 32) throw new Error('MASTER_KEY must decode to exactly 32 bytes (generate with: openssl rand -base64 32)');
+  if (buf.length !== 32)
+    throw new Error('MASTER_KEY must decode to exactly 32 bytes (generate with: openssl rand -base64 32)');
   return buf;
 }
 

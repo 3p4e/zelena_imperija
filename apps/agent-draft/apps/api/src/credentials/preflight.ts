@@ -52,29 +52,44 @@ export async function preflight(db: Db, input: PreflightInput): Promise<void> {
   if (input.credential.mode !== 'shared' || !input.credential.sharedKeyGrantId) return;
   if (input.pricing.inputPricePerMtok === null || input.pricing.outputPricePerMtok === null) {
     // Unknown cost would make the quota unenforceable, so shared use of unpriced models is refused.
-    throw new AppError('forbidden', 'This model has no price in the registry, so it cannot be used on a shared key. Ask the admin to set its price, or use your own key.');
+    throw new AppError(
+      'forbidden',
+      'This model has no price in the registry, so it cannot be used on a shared key. Ask the admin to set its price, or use your own key.',
+    );
   }
   const grantId = input.credential.sharedKeyGrantId;
   await db.transaction(async (tx) => {
-    const [grant] = await tx.select().from(sharedKeyGrants).where(eq(sharedKeyGrants.id, grantId)).for('update');
+    const [grant] = await tx
+      .select()
+      .from(sharedKeyGrants)
+      .where(eq(sharedKeyGrants.id, grantId))
+      .for('update');
     if (!grant?.enabled) throw new AppError('forbidden', 'Your access to this shared key was revoked.');
     const daily = Number(grant.dailyLimitUsd);
     const monthly = Number(grant.monthlyLimitUsd);
     const spentToday = await spentOnGrantSince(tx, grantId, startOfUtcDay());
     if (spentToday >= daily) {
-      throw new AppError('quota_exceeded', `Daily quota on the shared key reached ($${daily.toFixed(2)}). It resets at 00:00 UTC. Your own API keys still work.`, {
-        scope: 'day',
-        limitUsd: daily,
-        spentUsd: spentToday,
-      });
+      throw new AppError(
+        'quota_exceeded',
+        `Daily quota on the shared key reached ($${daily.toFixed(2)}). It resets at 00:00 UTC. Your own API keys still work.`,
+        {
+          scope: 'day',
+          limitUsd: daily,
+          spentUsd: spentToday,
+        },
+      );
     }
     const spentMonth = await spentOnGrantSince(tx, grantId, startOfUtcMonth());
     if (spentMonth >= monthly) {
-      throw new AppError('quota_exceeded', `Monthly quota on the shared key reached ($${monthly.toFixed(2)}). Your own API keys still work.`, {
-        scope: 'month',
-        limitUsd: monthly,
-        spentUsd: spentMonth,
-      });
+      throw new AppError(
+        'quota_exceeded',
+        `Monthly quota on the shared key reached ($${monthly.toFixed(2)}). Your own API keys still work.`,
+        {
+          scope: 'month',
+          limitUsd: monthly,
+          spentUsd: spentMonth,
+        },
+      );
     }
   });
 }

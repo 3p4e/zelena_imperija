@@ -1,9 +1,23 @@
 import type { FastifyInstance } from 'fastify';
 import { and, asc, eq, inArray } from 'drizzle-orm';
-import { userDefaultsSchema, type AvailableModelOption, type CliKind, type CredentialMode } from '@agent/shared';
+import {
+  userDefaultsSchema,
+  type AvailableModelOption,
+  type CliKind,
+  type CredentialMode,
+} from '@agent/shared';
 import { kindRequiresApiKey } from '@agent/providers';
 import type { AppDeps } from '../../deps.js';
-import { cliProviders, models, providers, sharedKeyGrantModels, sharedKeyGrants, userDefaults, userKeys, users } from '../../db/schema/index.js';
+import {
+  cliProviders,
+  models,
+  providers,
+  sharedKeyGrantModels,
+  sharedKeyGrants,
+  userDefaults,
+  userKeys,
+  users,
+} from '../../db/schema/index.js';
 import { currentUser } from '../../auth/plugin.js';
 import { parseBody } from '../../lib/validate.js';
 import { modelDto } from '../dto.js';
@@ -14,7 +28,11 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
 
   app.get('/providers', async (req) => {
     const user = currentUser(req);
-    const rows = await db.select().from(providers).where(eq(providers.enabled, true)).orderBy(asc(providers.displayName));
+    const rows = await db
+      .select()
+      .from(providers)
+      .where(eq(providers.enabled, true))
+      .orderBy(asc(providers.displayName));
     return rows.map((p) => ({
       id: p.id,
       kind: p.kind,
@@ -49,9 +67,19 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
         .from(sharedKeyGrants)
         .innerJoin(userKeys, eq(userKeys.id, sharedKeyGrants.userKeyId))
         .innerJoin(users, eq(users.id, userKeys.userId))
-        .where(and(eq(sharedKeyGrants.memberUserId, user.id), eq(sharedKeyGrants.enabled, true), eq(userKeys.status, 'active'), eq(users.role, 'admin')));
+        .where(
+          and(
+            eq(sharedKeyGrants.memberUserId, user.id),
+            eq(sharedKeyGrants.enabled, true),
+            eq(userKeys.status, 'active'),
+            eq(users.role, 'admin'),
+          ),
+        );
       for (const g of grants) {
-        const allow = await db.select({ modelId: sharedKeyGrantModels.modelId }).from(sharedKeyGrantModels).where(eq(sharedKeyGrantModels.grantId, g.grantId));
+        const allow = await db
+          .select({ modelId: sharedKeyGrantModels.modelId })
+          .from(sharedKeyGrantModels)
+          .where(eq(sharedKeyGrantModels.grantId, g.grantId));
         const current = sharedModels.get(g.providerId);
         if (allow.length === 0 || current === 'all') sharedModels.set(g.providerId, 'all');
         else {
@@ -65,7 +93,8 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
     const out: AvailableModelOption[] = [];
     for (const { m, p } of rows) {
       const modes: CredentialMode[] = [];
-      if (ownProviders.has(p.id) || (user.role === 'admin' && !kindRequiresApiKey(p.kind))) modes.push('byok');
+      if (ownProviders.has(p.id) || (user.role === 'admin' && !kindRequiresApiKey(p.kind)))
+        modes.push('byok');
       const s = sharedModels.get(p.id);
       const priced = m.inputPricePerMtok !== null && m.outputPricePerMtok !== null;
       if (priced && (s === 'all' || s?.has(m.id))) modes.push('shared');
@@ -86,7 +115,10 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
   app.get('/me/defaults', async (req) => {
     const user = currentUser(req);
     const row = await db.query.userDefaults.findFirst({ where: eq(userDefaults.userId, user.id) });
-    return { defaultModelId: row?.defaultModelId ?? null, defaultCredentialMode: row?.defaultCredentialMode ?? null };
+    return {
+      defaultModelId: row?.defaultModelId ?? null,
+      defaultCredentialMode: row?.defaultCredentialMode ?? null,
+    };
   });
 
   app.put('/me/defaults', async (req) => {
@@ -94,13 +126,23 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
     const body = parseBody(userDefaultsSchema, req.body);
     assertModeAllowed(user, body.defaultCredentialMode);
     if (body.defaultModelId) {
-      const exists = await db.select({ id: models.id }).from(models).where(inArray(models.id, [body.defaultModelId]));
+      const exists = await db
+        .select({ id: models.id })
+        .from(models)
+        .where(inArray(models.id, [body.defaultModelId]));
       if (exists.length === 0) return { error: { code: 'validation_failed', message: 'Unknown model.' } };
     }
     await db
       .insert(userDefaults)
-      .values({ userId: user.id, defaultModelId: body.defaultModelId, defaultCredentialMode: body.defaultCredentialMode })
-      .onConflictDoUpdate({ target: userDefaults.userId, set: { defaultModelId: body.defaultModelId, defaultCredentialMode: body.defaultCredentialMode } });
+      .values({
+        userId: user.id,
+        defaultModelId: body.defaultModelId,
+        defaultCredentialMode: body.defaultCredentialMode,
+      })
+      .onConflictDoUpdate({
+        target: userDefaults.userId,
+        set: { defaultModelId: body.defaultModelId, defaultCredentialMode: body.defaultCredentialMode },
+      });
     return body;
   });
 }

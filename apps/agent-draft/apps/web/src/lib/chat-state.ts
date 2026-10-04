@@ -12,10 +12,15 @@ export interface ChatState {
 
 export const initialChat: ChatState = { messages: [], running: false, lastUsage: null };
 
-export type ChatAction = { type: 'load'; messages: Message[]; running: boolean } | { type: 'event'; event: ChatStreamEvent };
+export type ChatAction =
+  { type: 'load'; messages: Message[]; running: boolean } | { type: 'event'; event: ChatStreamEvent };
 
 function mapPart(messages: UiMessage[], partId: string, fn: (p: UiPart) => UiPart): UiMessage[] {
-  return messages.map((m) => (m.parts.some((p) => p.id === partId) ? { ...m, parts: m.parts.map((p) => (p.id === partId ? fn(p) : p)) } : m));
+  return messages.map((m) =>
+    m.parts.some((p) => p.id === partId)
+      ? { ...m, parts: m.parts.map((p) => (p.id === partId ? fn(p) : p)) }
+      : m,
+  );
 }
 
 /** Applies server events to the transcript; the server stays authoritative and is re-fetched after each run. */
@@ -73,7 +78,9 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return {
         ...state,
         messages: mapPart(state.messages, ev.partId, (p) =>
-          p.kind === 'tool_result' || p.kind === 'tool_call' ? { ...p, progress: (p.progress ?? '') + ev.delta } : { ...p, text: (p.text ?? '') + ev.delta },
+          p.kind === 'tool_result' || p.kind === 'tool_call'
+            ? { ...p, progress: (p.progress ?? '') + ev.delta }
+            : { ...p, text: (p.text ?? '') + ev.delta },
         ),
       };
     case 'part_end':
@@ -81,12 +88,27 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case 'tool_result':
       return {
         ...state,
-        messages: mapPart(state.messages, ev.partId, (p) => ({ ...p, resultText: ev.resultText, isError: ev.isError, streaming: false })),
+        messages: mapPart(state.messages, ev.partId, (p) => ({
+          ...p,
+          resultText: ev.resultText,
+          isError: ev.isError,
+          streaming: false,
+        })),
       };
     case 'usage':
-      return { ...state, lastUsage: { inputTokens: ev.inputTokens, outputTokens: ev.outputTokens, estimatedCostUsd: ev.estimatedCostUsd } };
+      return {
+        ...state,
+        lastUsage: {
+          inputTokens: ev.inputTokens,
+          outputTokens: ev.outputTokens,
+          estimatedCostUsd: ev.estimatedCostUsd,
+        },
+      };
     case 'message_end':
-      return { ...state, messages: state.messages.map((m) => (m.id === ev.messageId ? { ...m, status: ev.status } : m)) };
+      return {
+        ...state,
+        messages: state.messages.map((m) => (m.id === ev.messageId ? { ...m, status: ev.status } : m)),
+      };
     case 'conversation_status':
       return { ...state, running: ev.status === 'running' };
   }

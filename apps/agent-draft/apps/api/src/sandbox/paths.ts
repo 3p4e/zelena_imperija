@@ -18,7 +18,8 @@ export function workspacePath(input: string, opts: { allowRoot?: boolean } = {})
     if (opts.allowRoot) return abs;
     throw new AppError('validation_failed', 'Path must point to a file or directory inside the project.');
   }
-  if (!abs.startsWith(`${WORKSPACE}/`)) throw new AppError('validation_failed', 'Path escapes the project workspace.');
+  if (!abs.startsWith(`${WORKSPACE}/`))
+    throw new AppError('validation_failed', 'Path escapes the project workspace.');
   return abs;
 }
 

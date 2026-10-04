@@ -33,7 +33,8 @@ export function gitTools(sandbox: SandboxManager): Tool[] {
       description: 'Show uncommitted changes (or staged changes with staged=true).',
       permission: 'read',
       schema: z.object({ staged: z.boolean().optional(), path: z.string().max(1024).optional() }),
-      run: (ctx, a) => git(ctx, ['diff', ...(a.staged ? ['--cached'] : []), ...(a.path ? ['--', a.path] : [])]),
+      run: (ctx, a) =>
+        git(ctx, ['diff', ...(a.staged ? ['--cached'] : []), ...(a.path ? ['--', a.path] : [])]),
     }),
     defineTool({
       name: 'git_log',

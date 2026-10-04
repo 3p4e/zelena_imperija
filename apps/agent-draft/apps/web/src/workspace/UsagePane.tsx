@@ -11,7 +11,9 @@ export function UsagePane({ project }: { project: Project }) {
       {usage.isLoading && <Spinner />}
       {usage.error && <ErrorText error={errorMessage(usage.error)} />}
       {usage.data && <UsageView summary={usage.data} />}
-      {project.myPermission !== 'owner' && <p className="mt-3 text-[11px] text-zinc-500">Showing only your own usage in this shared project.</p>}
+      {project.myPermission !== 'owner' && (
+        <p className="mt-3 text-[11px] text-zinc-500">Showing only your own usage in this shared project.</p>
+      )}
     </div>
   );
 }

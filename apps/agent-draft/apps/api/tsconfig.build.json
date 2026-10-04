@@ -1,5 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "outDir": "dist", "rootDir": "src", "types": ["node"], "lib": ["ES2023", "DOM", "DOM.AsyncIterable"], "declaration": false },
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    "lib": ["ES2023", "DOM", "DOM.AsyncIterable"],
+    "declaration": false
+  },
   "include": ["src"]
 }

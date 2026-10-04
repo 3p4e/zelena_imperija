@@ -1,5 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { adminClient, createMember, modelRef, newProject, providerId, startHarness, type Client, type Harness } from '../helpers/harness.js';
+import {
+  adminClient,
+  createMember,
+  modelRef,
+  newProject,
+  providerId,
+  startHarness,
+  type Client,
+  type Harness,
+} from '../helpers/harness.js';
 
 // gpt-5 is seeded at $1.25 / Mtok input: one million input tokens ≈ $1.25.
 const EXPENSIVE = { inputTokens: 1_000_000, outputTokens: 10 };
@@ -20,7 +29,10 @@ describe('G. member quotas on admin-shared keys', () => {
     h = await startHarness('wf_g');
     admin = await adminClient(h);
     ({ client: member, id: memberId } = await createMember(h, admin, 'mia@test.local'));
-    const key = await admin.post<{ id: string }>('/api/keys', { providerId: await providerId(admin, 'openai'), apiKey: ADMIN_KEY });
+    const key = await admin.post<{ id: string }>('/api/keys', {
+      providerId: await providerId(admin, 'openai'),
+      apiKey: ADMIN_KEY,
+    });
     gpt5 = await modelRef(admin, 'openai', 'gpt-5');
     gpt41 = await modelRef(admin, 'openai', 'gpt-4.1');
     const grant = await admin.post<{ id: string }>('/api/admin/shared-grants', {
@@ -44,13 +56,24 @@ describe('G. member quotas on admin-shared keys', () => {
   });
 
   it('uses the shared key until the daily quota is spent, then blocks server-side', async () => {
-    const first = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'one', modelId: gpt5, credentialMode: 'shared' });
+    const first = await member.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'one',
+      modelId: gpt5,
+      credentialMode: 'shared',
+    });
     expect(first.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'complete' });
     expect(h.factory.lastRequest()).toMatchObject({ apiKey: ADMIN_KEY, model: 'gpt-5' });
 
     const before = h.factory.requests.length;
-    const second = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'two', modelId: gpt5, credentialMode: 'shared' });
-    expect(second.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'error', errorCode: 'quota_exceeded' });
+    const second = await member.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'two',
+      modelId: gpt5,
+      credentialMode: 'shared',
+    });
+    expect(second.events.find((e) => e.type === 'message_end')).toMatchObject({
+      status: 'error',
+      errorCode: 'quota_exceeded',
+    });
     expect(h.factory.requests.length).toBe(before);
 
     const records = await member.get<{ status: string; credentialSource: string }[]>('/api/usage/records');
@@ -60,37 +83,66 @@ describe('G. member quotas on admin-shared keys', () => {
   });
 
   it('rejects models outside the allowlist on the shared key', async () => {
-    const run = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'x', modelId: gpt41, credentialMode: 'shared' });
-    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'error', errorCode: 'forbidden' });
+    const run = await member.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'x',
+      modelId: gpt41,
+      credentialMode: 'shared',
+    });
+    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({
+      status: 'error',
+      errorCode: 'forbidden',
+    });
   });
 
   it('still lets the member use their own key (explicit BYOK and auto mode)', async () => {
     await member.post('/api/keys', { providerId: await providerId(member, 'openai'), apiKey: MEMBER_KEY });
-    const byok = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'mine', modelId: gpt5, credentialMode: 'byok' });
+    const byok = await member.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'mine',
+      modelId: gpt5,
+      credentialMode: 'byok',
+    });
     expect(byok.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'complete' });
     expect(h.factory.lastRequest()?.apiKey).toBe(MEMBER_KEY);
 
-    const auto = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'auto', modelId: gpt41 });
+    const auto = await member.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'auto',
+      modelId: gpt41,
+    });
     expect(auto.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'complete' });
     expect(h.factory.lastRequest()).toMatchObject({ apiKey: MEMBER_KEY, model: 'gpt-4.1' });
   });
 
   it('enforces the monthly quota independently of the daily one', async () => {
     await admin.patch(`/api/admin/shared-grants/${grantId}`, { dailyLimitUsd: 1000, monthlyLimitUsd: 1 });
-    const run = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'm', modelId: gpt5, credentialMode: 'shared' });
+    const run = await member.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'm',
+      modelId: gpt5,
+      credentialMode: 'shared',
+    });
     const end = run.events.find((e) => e.type === 'message_end');
     expect(end).toMatchObject({ status: 'error', errorCode: 'quota_exceeded' });
     expect(JSON.stringify(run.events)).toContain('Monthly quota');
   });
 
   it('refuses shared use of a model without registry prices (quota would be unenforceable)', async () => {
-    await admin.patch(`/api/admin/shared-grants/${grantId}`, { dailyLimitUsd: 1000, monthlyLimitUsd: 1000, allowedModelIds: [] });
+    await admin.patch(`/api/admin/shared-grants/${grantId}`, {
+      dailyLimitUsd: 1000,
+      monthlyLimitUsd: 1000,
+      allowedModelIds: [],
+    });
     await admin.patch(`/api/admin/models/${gpt41}`, { inputPricePerMtok: null });
     const models = await member.get<{ model: { id: string }; credentialModes: string[] }[]>('/api/models');
     expect(models.body.find((m) => m.model.id === gpt41)?.credentialModes).toEqual(['byok']);
     const before = h.factory.requests.length;
-    const run = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'free?', modelId: gpt41, credentialMode: 'shared' });
-    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'error', errorCode: 'forbidden' });
+    const run = await member.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'free?',
+      modelId: gpt41,
+      credentialMode: 'shared',
+    });
+    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({
+      status: 'error',
+      errorCode: 'forbidden',
+    });
     expect(JSON.stringify(run.events)).toContain('no price');
     expect(h.factory.requests.length).toBe(before);
     await admin.patch(`/api/admin/models/${gpt41}`, { inputPricePerMtok: 2 });
@@ -98,7 +150,14 @@ describe('G. member quotas on admin-shared keys', () => {
 
   it('a disabled grant cannot be used', async () => {
     await admin.patch(`/api/admin/shared-grants/${grantId}`, { enabled: false, monthlyLimitUsd: 1000 });
-    const run = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'd', modelId: gpt5, credentialMode: 'shared' });
-    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'error', errorCode: 'credential_missing' });
+    const run = await member.sse(`/api/conversations/${conversationId}/messages`, {
+      content: 'd',
+      modelId: gpt5,
+      credentialMode: 'shared',
+    });
+    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({
+      status: 'error',
+      errorCode: 'credential_missing',
+    });
   });
 });

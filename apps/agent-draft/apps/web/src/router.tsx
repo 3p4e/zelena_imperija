@@ -9,11 +9,22 @@ import { AdminPage } from './pages/AdminPage';
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> });
 
-const tokenSearch = (s: Record<string, unknown>): { token?: string } => (typeof s.token === 'string' ? { token: s.token } : {});
+const tokenSearch = (s: Record<string, unknown>): { token?: string } =>
+  typeof s.token === 'string' ? { token: s.token } : {};
 
 const loginRoute = createRoute({ getParentRoute: () => rootRoute, path: '/login', component: LoginPage });
-const inviteRoute = createRoute({ getParentRoute: () => rootRoute, path: '/invite', validateSearch: tokenSearch, component: InvitePage });
-const resetRoute = createRoute({ getParentRoute: () => rootRoute, path: '/reset-password', validateSearch: tokenSearch, component: ResetPasswordPage });
+const inviteRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/invite',
+  validateSearch: tokenSearch,
+  component: InvitePage,
+});
+const resetRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  validateSearch: tokenSearch,
+  component: ResetPasswordPage,
+});
 
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: 'app', component: AppShell });
 
@@ -30,15 +41,25 @@ const workspaceRoute = createRoute({
   }),
   component: WorkspacePage,
 });
-const settingsRoute = createRoute({ getParentRoute: () => appRoute, path: '/settings', component: SettingsPage });
+const settingsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/settings',
+  component: SettingsPage,
+});
 const adminRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/admin',
-  validateSearch: (s: Record<string, unknown>): { tab?: string } => (typeof s.tab === 'string' ? { tab: s.tab } : {}),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+    typeof s.tab === 'string' ? { tab: s.tab } : {},
   component: AdminPage,
 });
 
-const routeTree = rootRoute.addChildren([loginRoute, inviteRoute, resetRoute, appRoute.addChildren([workspaceRoute, settingsRoute, adminRoute])]);
+const routeTree = rootRoute.addChildren([
+  loginRoute,
+  inviteRoute,
+  resetRoute,
+  appRoute.addChildren([workspaceRoute, settingsRoute, adminRoute]),
+]);
 
 export const router = createRouter({ routeTree, defaultPreload: false });
 
