@@ -1,6 +1,6 @@
 export * from './types.js';
 export * from './errors.js';
-export { BaseProvider, collectStream, EMPTY_USAGE } from './base.js';
+export { BaseProvider, collectStream, EMPTY_USAGE, newToolCallId } from './base.js';
 export { HttpClient, parseSse } from './http.js';
 export { AnthropicProvider, buildAnthropicBody } from './adapters/anthropic.js';
 export { OpenAICompatibleProvider, toOAIMessages } from './adapters/openai-compatible.js';

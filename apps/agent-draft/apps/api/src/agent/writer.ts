@@ -39,7 +39,7 @@ export class MessageWriter {
       .returning({ id: messages.id });
     if (!row) throw new Error('failed to create message');
     const w = new MessageWriter(db, bus, conversationId, row.id);
-    if (role === 'assistant') bus.emit(conversationId, { type: 'message_start', messageId: row.id, conversationId, modelId: meta.modelId ?? null });
+    bus.emit(conversationId, { type: 'message_start', messageId: row.id, conversationId, role, modelId: meta.modelId ?? null });
     return w;
   }
 
@@ -61,6 +61,7 @@ export class MessageWriter {
     this.buffers.set(row.id, { kind, text: extra.text ?? '', progress: 0 });
     this.bus.emit(this.conversationId, {
       type: 'part_start',
+      messageId: this.messageId,
       partId: row.id,
       seq,
       kind,
@@ -119,5 +120,15 @@ export class MessageWriter {
 
   async finish(status: 'complete' | 'stopped' | 'error'): Promise<void> {
     await this.db.update(messages).set({ status }).where(eq(messages.id, this.messageId));
+  }
+
+  /** Marks the message finished on the bus (assistant messages only; the UI shows status per answer). */
+  end(status: 'complete' | 'stopped' | 'error', error?: { code: string; message: string }): void {
+    this.bus.emit(this.conversationId, {
+      type: 'message_end',
+      messageId: this.messageId,
+      status,
+      ...(error ? { errorCode: error.code, errorMessage: error.message } : {}),
+    });
   }
 }

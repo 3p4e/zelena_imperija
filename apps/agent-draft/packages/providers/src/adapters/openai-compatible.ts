@@ -1,5 +1,5 @@
 import type { ProviderKind } from '@agent/shared';
-import { BaseProvider, safeJson } from '../base.js';
+import { BaseProvider, newToolCallId, safeJson } from '../base.js';
 import { HttpClient } from '../http.js';
 import { ProviderError } from '../errors.js';
 import type {
@@ -174,7 +174,7 @@ export class OpenAICompatibleProvider extends BaseProvider {
         for (const tc of delta?.tool_calls ?? []) {
           let entry = calls.get(tc.index);
           if (!entry) {
-            entry = { id: tc.id ?? `call_${tc.index}`, name: tc.function?.name ?? '', args: '', started: false };
+            entry = { id: tc.id ?? newToolCallId(), name: tc.function?.name ?? '', args: '', started: false };
             calls.set(tc.index, entry);
           }
           if (tc.id) entry.id = tc.id;

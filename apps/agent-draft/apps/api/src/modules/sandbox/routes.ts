@@ -10,6 +10,7 @@ import { openSse } from '../../lib/sse.js';
 import { parseBody, requireUuid } from '../../lib/validate.js';
 import { signPreviewToken } from '../../sandbox/preview-token.js';
 import { iso } from '../dto.js';
+import { runTestCommand } from '../../tools/builtin/shell.js';
 import { projectFor } from '../projects/access.js';
 
 const pathQuery = z.object({ path: z.string().min(1).max(1024) });
@@ -160,6 +161,33 @@ export function registerSandboxRoutes(app: FastifyInstance, deps: AppDeps): void
       .orderBy(desc(testRuns.createdAt))
       .limit(50);
     return list.map((t) => ({ ...t, createdAt: t.createdAt.toISOString() }));
+  });
+
+  /** Runs a test command from the Tests panel; streams output and records a structured result. */
+  app.post('/projects/:id/test-runs', async (req, reply) => {
+    const user = currentUser(req);
+    const { project } = await projectFor(db, user, pid(req), 'edit');
+    const body = parseBody(execRequestSchema, req.body);
+    await sandbox.ensureRunning(project.id);
+    const sse = openSse(req, reply);
+    const controller = new AbortController();
+    sse.onClose(() => controller.abort());
+    try {
+      const { exec, summary } = await runTestCommand(sandbox, db, {
+        projectId: project.id,
+        command: body.command,
+        timeoutS: body.timeoutS,
+        actorUserId: user.id,
+        signal: controller.signal,
+        onOutput: (chunk) => sse.send({ type: 'stdout', chunk }),
+      });
+      sse.send({ type: 'stdout', chunk: `\n${summary.text}\n` });
+      sse.send({ type: 'exit', exitCode: exec.exitCode, timedOut: exec.timedOut, executionId: exec.executionId });
+    } catch (err) {
+      sse.send({ type: 'stderr', chunk: err instanceof AppError ? err.message : 'Test run failed.' });
+      sse.send({ type: 'exit', exitCode: null, timedOut: false });
+    }
+    sse.close();
   });
 
   app.post('/projects/:id/preview-ports', async (req) => {

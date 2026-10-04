@@ -102,6 +102,11 @@ export async function collectStream(stream: AsyncIterable<StreamEvent>): Promise
   return { content, usage, finishReason };
 }
 
+/** Unique id for tool calls whose provider did not supply one; ids must never repeat within a conversation. */
+export function newToolCallId(): string {
+  return `call_${globalThis.crypto.randomUUID().replace(/-/g, '').slice(0, 20)}`;
+}
+
 export function safeJson(text: string): unknown {
   if (!text.trim()) return {};
   try {

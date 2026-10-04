@@ -1,11 +1,10 @@
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
 import type { Db } from '../../db/client.js';
 import { testRuns } from '../../db/schema/index.js';
 import type { SandboxManager, ExecResult } from '../../sandbox/manager.js';
 import { clip, defineTool, fail, ok } from '../define.js';
 import type { Tool } from '../types.js';
-import { parseTestSummary } from './test-parse.js';
+import { parseTestSummary, type TestSummary } from './test-parse.js';
 
 function formatExec(r: ExecResult): string {
   const parts: string[] = [];
@@ -56,35 +55,59 @@ export function shellTools(sandbox: SandboxManager, db: Db): Tool[] {
       permission: 'exec',
       schema: z.object({ command: z.string().min(1).max(2000), timeout_s: z.number().int().min(1).max(3600).optional() }),
       async run(ctx, args) {
-        const r = await sandbox.exec({
+        const { exec, summary } = await runTestCommand(sandbox, db, {
           projectId: ctx.projectId,
           command: args.command,
-          ...(args.timeout_s ? { timeoutS: args.timeout_s } : {}),
-          kind: 'test',
+          timeoutS: args.timeout_s,
           actorUserId: ctx.actorUserId,
           conversationId: ctx.conversationId,
           messagePartId: ctx.messagePartId,
           signal: ctx.signal,
-          onOutput: (_s, chunk) => ctx.onProgress?.(chunk),
+          onOutput: (chunk) => ctx.onProgress?.(chunk),
         });
-        const summary = parseTestSummary(`${r.stdout}\n${r.stderr}`, r.exitCode);
-        if (r.executionId) {
-          await db.insert(testRuns).values({
-            executionId: r.executionId,
-            framework: summary.framework,
-            total: summary.total,
-            passed: summary.passed,
-            failed: summary.failed,
-            summary: summary.text,
-          });
-        }
-        const text = `${summary.text}\n\n${formatExec(r)}`;
-        return r.exitCode === 0 ? ok(text) : fail(text);
+        const text = `${summary.text}\n\n${formatExec(exec)}`;
+        return exec.exitCode === 0 ? ok(text) : fail(text);
       },
     }),
   ];
 }
 
-export async function latestTestRunFor(db: Db, executionId: string): Promise<typeof testRuns.$inferSelect | undefined> {
-  return db.query.testRuns.findFirst({ where: eq(testRuns.executionId, executionId) });
+/** Runs a test command in the sandbox and records a structured test run. Shared by the agent tool and the Tests panel. */
+export async function runTestCommand(
+  sandbox: SandboxManager,
+  db: Db,
+  p: {
+    projectId: string;
+    command: string;
+    timeoutS?: number | undefined;
+    actorUserId: string;
+    conversationId?: string | null;
+    messagePartId?: string | null;
+    signal?: AbortSignal | undefined;
+    onOutput?: (chunk: string) => void;
+  },
+): Promise<{ exec: ExecResult; summary: TestSummary }> {
+  const exec = await sandbox.exec({
+    projectId: p.projectId,
+    command: p.command,
+    ...(p.timeoutS ? { timeoutS: p.timeoutS } : {}),
+    kind: 'test',
+    actorUserId: p.actorUserId,
+    conversationId: p.conversationId ?? null,
+    messagePartId: p.messagePartId ?? null,
+    signal: p.signal,
+    onOutput: (_s, chunk) => p.onOutput?.(chunk),
+  });
+  const summary = parseTestSummary(`${exec.stdout}\n${exec.stderr}`, exec.exitCode);
+  if (exec.executionId) {
+    await db.insert(testRuns).values({
+      executionId: exec.executionId,
+      framework: summary.framework,
+      total: summary.total,
+      passed: summary.passed,
+      failed: summary.failed,
+      summary: summary.text,
+    });
+  }
+  return { exec, summary };
 }

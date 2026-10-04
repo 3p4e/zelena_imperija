@@ -7,3 +7,4 @@ playwright-report
 test-results
 .turbo
 data/
+apps/web/test-results

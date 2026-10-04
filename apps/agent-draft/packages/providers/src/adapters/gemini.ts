@@ -1,5 +1,5 @@
 import type { ProviderKind } from '@agent/shared';
-import { BaseProvider } from '../base.js';
+import { BaseProvider, newToolCallId } from '../base.js';
 import { HttpClient } from '../http.js';
 import { ProviderError } from '../errors.js';
 import type { ChatMessage, ChatRequest, FinishReason, ModelInfo, ProviderConfig, StreamEvent, Usage } from '../types.js';
@@ -98,7 +98,6 @@ export class GeminiProvider extends BaseProvider {
 
     let usage: Usage | null = null;
     let finish: FinishReason = 'stop';
-    let callIndex = 0;
     let sawToolCall = false;
 
     for await (const msg of sse) {
@@ -108,7 +107,7 @@ export class GeminiProvider extends BaseProvider {
         for (const part of cand.content?.parts ?? []) {
           if (part.functionCall) {
             sawToolCall = true;
-            const id = part.functionCall.id ?? `call_${callIndex++}`;
+            const id = part.functionCall.id ?? newToolCallId();
             const argsText = JSON.stringify(part.functionCall.args ?? {});
             yield { type: 'tool_call_start', id, name: part.functionCall.name };
             yield { type: 'tool_call_delta', id, argumentsDelta: argsText };

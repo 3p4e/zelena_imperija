@@ -83,6 +83,19 @@ describe('G. member quotas on admin-shared keys', () => {
     expect(JSON.stringify(run.events)).toContain('Monthly quota');
   });
 
+  it('refuses shared use of a model without registry prices (quota would be unenforceable)', async () => {
+    await admin.patch(`/api/admin/shared-grants/${grantId}`, { dailyLimitUsd: 1000, monthlyLimitUsd: 1000, allowedModelIds: [] });
+    await admin.patch(`/api/admin/models/${gpt41}`, { inputPricePerMtok: null });
+    const models = await member.get<{ model: { id: string }; credentialModes: string[] }[]>('/api/models');
+    expect(models.body.find((m) => m.model.id === gpt41)?.credentialModes).toEqual(['byok']);
+    const before = h.factory.requests.length;
+    const run = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'free?', modelId: gpt41, credentialMode: 'shared' });
+    expect(run.events.find((e) => e.type === 'message_end')).toMatchObject({ status: 'error', errorCode: 'forbidden' });
+    expect(JSON.stringify(run.events)).toContain('no price');
+    expect(h.factory.requests.length).toBe(before);
+    await admin.patch(`/api/admin/models/${gpt41}`, { inputPricePerMtok: 2 });
+  });
+
   it('a disabled grant cannot be used', async () => {
     await admin.patch(`/api/admin/shared-grants/${grantId}`, { enabled: false, monthlyLimitUsd: 1000 });
     const run = await member.sse(`/api/conversations/${conversationId}/messages`, { content: 'd', modelId: gpt5, credentialMode: 'shared' });

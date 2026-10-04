@@ -67,7 +67,8 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
       const modes: CredentialMode[] = [];
       if (ownProviders.has(p.id) || (user.role === 'admin' && !kindRequiresApiKey(p.kind))) modes.push('byok');
       const s = sharedModels.get(p.id);
-      if (s === 'all' || s?.has(m.id)) modes.push('shared');
+      const priced = m.inputPricePerMtok !== null && m.outputPricePerMtok !== null;
+      if (priced && (s === 'all' || s?.has(m.id))) modes.push('shared');
       if (modes.length === 0 && user.role === 'member') continue;
       out.push({ model: modelDto(m, p), credentialModes: modes });
     }

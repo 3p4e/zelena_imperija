@@ -1,5 +1,5 @@
 import type { ProviderKind } from '@agent/shared';
-import { BaseProvider } from '../base.js';
+import { BaseProvider, newToolCallId } from '../base.js';
 import { ProviderError } from '../errors.js';
 import type { ChatRequest, ModelInfo, StreamEvent, Usage } from '../types.js';
 
@@ -76,7 +76,7 @@ export class MockProvider extends BaseProvider {
       yield { type: 'text_delta', text: chunk };
     }
     if (turn.kind === 'tool_call') {
-      const id = `mock_call_${this.cursor}`;
+      const id = newToolCallId();
       yield { type: 'tool_call_start', id, name: turn.name };
       yield { type: 'tool_call_delta', id, argumentsDelta: JSON.stringify(turn.arguments) };
       yield { type: 'tool_call_end', id, name: turn.name, arguments: turn.arguments };

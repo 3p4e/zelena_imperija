@@ -8,6 +8,8 @@ import type { ResolvedCredential } from './resolver.js';
 export interface PreflightInput {
   actor: { id: string; role: 'admin' | 'member' };
   credential: Pick<ResolvedCredential, 'mode' | 'sharedKeyGrantId'>;
+  /** Registry prices of the model; shared-key use requires both so quotas can be enforced. */
+  pricing: { inputPricePerMtok: string | null; outputPricePerMtok: string | null };
   /** Cost already spent by the current agent run (for the admin per-task cap). */
   runCostUsd: number;
 }
@@ -48,6 +50,10 @@ export async function preflight(db: Db, input: PreflightInput): Promise<void> {
   }
 
   if (input.credential.mode !== 'shared' || !input.credential.sharedKeyGrantId) return;
+  if (input.pricing.inputPricePerMtok === null || input.pricing.outputPricePerMtok === null) {
+    // Unknown cost would make the quota unenforceable, so shared use of unpriced models is refused.
+    throw new AppError('forbidden', 'This model has no price in the registry, so it cannot be used on a shared key. Ask the admin to set its price, or use your own key.');
+  }
   const grantId = input.credential.sharedKeyGrantId;
   await db.transaction(async (tx) => {
     const [grant] = await tx.select().from(sharedKeyGrants).where(eq(sharedKeyGrants.id, grantId)).for('update');

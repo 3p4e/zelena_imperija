@@ -27,7 +27,7 @@ describe('B/C. provider and model selection', () => {
     const run = await admin.sse(`/api/conversations/${conversationId}/messages`, { content: 'hi', modelId: claude });
 
     // The user's message is echoed first; the assistant's stream starts at message_start.
-    const start = run.events.findIndex((e) => e.type === 'message_start');
+    const start = run.events.findIndex((e) => e.type === 'message_start' && e.role === 'assistant');
     expect(start).toBeGreaterThan(-1);
     const deltas = run.events.slice(start).filter((e) => e.type === 'part_delta');
     expect(deltas.length).toBeGreaterThan(3);

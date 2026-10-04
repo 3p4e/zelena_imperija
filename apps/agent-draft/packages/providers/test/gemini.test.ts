@@ -27,11 +27,16 @@ describe('GeminiProvider', () => {
       ],
       tools: [{ name: 'fs_read', description: 'r', inputSchema: { type: 'object', additionalProperties: false } }],
     });
-    expect(res.content).toEqual([
+    expect(res.content.slice(0, 2)).toEqual([
       { type: 'reasoning', text: 'plan' },
       { type: 'text', text: 'Hello ' },
-      { type: 'tool_call', id: 'call_0', name: 'fs_read', arguments: { path: 'x' } },
     ]);
+    expect(res.content[2]).toMatchObject({ type: 'tool_call', name: 'fs_read', arguments: { path: 'x' } });
+    // Gemini omits call ids; generated ids must be unique so results pair with the right call across turns.
+    const id = (res.content[2] as { id: string }).id;
+    expect(id).toMatch(/^call_[0-9a-f]{20}$/);
+    const again = await new GeminiProvider({ apiKey: KEY, fetch: fetchSequence([sseResponse([{ data: { candidates: [{ content: { parts: [{ functionCall: { name: 'x', args: {} } }] } }] } }])]).fetch }).chat({ model: 'm', messages: [] });
+    expect((again.content[0] as { id: string }).id).not.toBe(id);
     expect(res.usage).toMatchObject({ inputTokens: 10, outputTokens: 6, cachedInputTokens: 3, reasoningTokens: 2 });
     expect(res.finishReason).toBe('tool_calls');
     expect(calls[0]?.url).toBe('https://generativelanguage.googleapis.com/v1beta/models/gemini-x:streamGenerateContent?alt=sse');

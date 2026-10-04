@@ -32,7 +32,7 @@ export interface Harness {
   close: () => Promise<void>;
 }
 
-export async function startHarness(name: string, overrides: Record<string, string> = {}): Promise<Harness> {
+export async function startHarness(name: string, overrides: Record<string, string> = {}, listenPort = 0): Promise<Harness> {
   const url = await freshDatabase(name);
   const config = loadConfig({
     ...process.env,
@@ -62,7 +62,7 @@ export async function startHarness(name: string, overrides: Record<string, strin
   const docker = createDocker(config.DOCKER_HOST);
   const deps = await buildDeps({ config, db: db.db, log, docker, providerFactory: factory.create, mailer });
   const app = await buildApp(deps);
-  await app.listen({ port: 0, host: '127.0.0.1' });
+  await app.listen({ port: listenPort, host: '127.0.0.1' });
   const address = app.server.address();
   const port = typeof address === 'object' && address ? address.port : 0;
   return {

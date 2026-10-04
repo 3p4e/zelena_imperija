@@ -165,7 +165,7 @@ export class AgentRuntime {
     const w = await MessageWriter.create(this.deps.db, this.bus, ctx.conversation.id, 'assistant');
     await w.errorPart(appErr.message);
     await w.finish('error');
-    this.bus.emit(ctx.conversation.id, { type: 'message_end', status: 'error', errorCode: appErr.code, errorMessage: appErr.message });
+    w.end('error', { code: appErr.code, message: appErr.message });
   }
 
   private async agentConfig(conversation: typeof conversations.$inferSelect): Promise<{ systemPrompt: string; toolNames: string[]; maxIterations: number }> {
@@ -206,12 +206,12 @@ export class AgentRuntime {
       if (step.status === 'stopped') {
         await w.flushOpen();
         await w.finish('stopped');
-        this.bus.emit(ctx.conversation.id, { type: 'message_end', status: 'stopped' });
+        w.end('stopped');
         return 'stopped';
       }
       runCost += step.costUsd ?? 0;
       await w.finish('complete');
-      this.bus.emit(ctx.conversation.id, { type: 'message_end', status: 'complete' });
+      w.end('complete');
       if (step.toolCalls.length === 0) return 'complete';
 
       const toolMsg = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'tool', { modelId: model.id });
@@ -228,14 +228,14 @@ export class AgentRuntime {
     const w = await MessageWriter.create(db, this.bus, ctx.conversation.id, 'assistant', { modelId: model.id });
     await w.errorPart(`Stopped after ${agent.maxIterations} steps (the agent's iteration limit). Send a message to continue.`);
     await w.finish('complete');
-    this.bus.emit(ctx.conversation.id, { type: 'message_end', status: 'complete' });
+    w.end('complete');
     return 'complete';
   }
 
   /** Pre-flight gate; a block is metered as a zero-token record so it appears in usage history. */
   private async gate(ctx: RunContext, model: ResolvedModel, credential: ResolvedCredential, runCost: number): Promise<void> {
     try {
-      await preflight(this.deps.db, { actor: ctx.actor, credential, runCostUsd: runCost });
+      await preflight(this.deps.db, { actor: ctx.actor, credential, pricing: model.pricing, runCostUsd: runCost });
     } catch (err) {
       if (err instanceof AppError && (err.code === 'quota_exceeded' || err.code === 'safety_cap_reached')) {
         await recordUsage(this.deps.db, {
@@ -498,17 +498,18 @@ export class AgentRuntime {
     if (result.status === 'stopped') {
       await w.flushOpen();
       await w.finish('stopped');
-      this.bus.emit(ctx.conversation.id, { type: 'message_end', status: 'stopped' });
+      w.end('stopped');
       return 'stopped';
     }
     if (result.status === 'error') {
-      await w.errorPart(result.errorMessage ?? 'The CLI run failed.');
+      const message = result.errorMessage ?? 'The CLI run failed.';
+      await w.errorPart(message);
       await w.finish('error');
-      this.bus.emit(ctx.conversation.id, { type: 'message_end', status: 'error', errorCode: 'cli_unavailable', errorMessage: result.errorMessage ?? 'CLI failed' });
+      w.end('error', { code: 'cli_unavailable', message });
       return 'complete';
     }
     await w.finish('complete');
-    this.bus.emit(ctx.conversation.id, { type: 'message_end', status: 'complete' });
+    w.end('complete');
     return 'complete';
   }
 }
