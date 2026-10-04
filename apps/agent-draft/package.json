@@ -1,0 +1,31 @@
+{
+  "name": "agent-draft",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Self-hosted AI coding-agent platform",
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "pnpm -r --filter './packages/*' --filter './apps/*' run build",
+    "dev": "pnpm -r --parallel --filter './apps/*' run dev",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "test:unit": "pnpm --filter @agent/providers --filter @agent/api --filter @agent/shared run test",
+    "test:e2e": "pnpm --filter @agent/api run test:e2e",
+    "test:sandbox": "pnpm --filter @agent/api run test:sandbox",
+    "db:generate": "pnpm --filter @agent/api run db:generate",
+    "db:migrate": "pnpm --filter @agent/api run db:migrate",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.0"
+  }
+}
