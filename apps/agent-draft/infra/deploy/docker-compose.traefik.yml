@@ -1,10 +1,10 @@
 # BACK_LOG on a shared Docker host that already runs Traefik (host network, entrypoint
-# "websecure", resolver "letsencrypt"). Self-contained: builds from the public Git repo, mounts no
-# local files, publishes no ports. Required env: PUBLIC_HOST, POSTGRES_PASSWORD, MASTER_KEY,
+# "websecure", resolver "letsencrypt"). Mounts no local files and publishes no ports.
+# Deploy docker-compose.build.yml first so the images exist. Required env: PUBLIC_HOST, POSTGRES_PASSWORD, MASTER_KEY,
 # ADMIN_EMAIL, ADMIN_PASSWORD.
 name: back_log
 
-x-src: &src https://github.com/3p4e/zelena_imperija.git#draft/ai-agent-platform:apps/agent-draft
+# Images come from docker-compose.build.yml (built on this host); they are never pulled.
 
 services:
   postgres:
@@ -53,13 +53,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks: [docker-api]
 
-  sandbox-image:
-    build:
-      context: https://github.com/3p4e/zelena_imperija.git#draft/ai-agent-platform:apps/agent-draft/infra/sandbox
-    image: agent-sandbox-base:latest
-    restart: 'no'
-    entrypoint: ['true']
-
   # Keeps sandboxes (10.89.0.0/16) away from the host and every private range, including the
   # published ports of the other stacks on this machine. Rules are idempotent; re-run after a reboot.
   sandbox-firewall:
@@ -90,17 +83,13 @@ services:
         echo "sandbox firewall applied via $$IPT"
 
   api:
-    build:
-      context: *src
-      dockerfile: infra/api.Dockerfile
-      target: run
+    image: back-log-api:latest
+    pull_policy: never
     container_name: back_log-api
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
-      sandbox-image:
-        condition: service_completed_successfully
       sandbox-firewall:
         condition: service_completed_successfully
       docker-proxy:
@@ -123,9 +112,8 @@ services:
     networks: [internal, docker-api]
 
   web:
-    build:
-      context: *src
-      dockerfile: infra/web.Dockerfile
+    image: back-log-web:latest
+    pull_policy: never
     restart: unless-stopped
     depends_on: [api]
     environment:

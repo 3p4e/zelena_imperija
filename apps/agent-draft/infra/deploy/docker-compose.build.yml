@@ -1,0 +1,21 @@
+# Phase 1: builds the BACK_LOG images on the Docker host from the public Git repo.
+# Hostinger's Docker manager pulls but never builds, so the images are built here once and the
+# runtime stack (docker-compose.traefik.yml) uses them as local images. Re-deploy this to upgrade.
+name: back_log
+
+services:
+  builder:
+    image: docker:cli
+    restart: 'no'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - sh
+      - -ec
+      - |
+        SRC='https://github.com/3p4e/zelena_imperija.git#draft/ai-agent-platform:apps/agent-draft'
+        SBX='https://github.com/3p4e/zelena_imperija.git#draft/ai-agent-platform:apps/agent-draft/infra/sandbox'
+        docker build -t agent-sandbox-base:latest "$$SBX"
+        docker build -t back-log-api:latest -f infra/api.Dockerfile --target run "$$SRC"
+        docker build -t back-log-web:latest -f infra/web.Dockerfile "$$SRC"
+        echo BUILD_DONE
