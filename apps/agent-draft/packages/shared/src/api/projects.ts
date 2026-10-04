@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  CLI_KINDS,
   CONVERSATION_STATUSES,
   CREDENTIAL_MODES,
   MESSAGE_ROLES,
@@ -17,6 +18,7 @@ export const projectSchema = z.object({
   description: z.string().nullable(),
   defaultModelId: z.uuid().nullable(),
   defaultCredentialMode: z.enum(CREDENTIAL_MODES).nullable(),
+  defaultCliKind: z.enum(CLI_KINDS).nullable(),
   sandboxImage: z.string(),
   status: z.enum(PROJECT_STATUSES),
   myPermission: z.enum(['owner', ...SHARE_PERMISSIONS]),
@@ -30,6 +32,7 @@ export const createProjectSchema = z.object({
   description: z.string().trim().max(2000).nullable().optional(),
   defaultModelId: z.uuid().nullable().optional(),
   defaultCredentialMode: z.enum(CREDENTIAL_MODES).nullable().optional(),
+  defaultCliKind: z.enum(CLI_KINDS).nullable().optional(),
 });
 export const updateProjectSchema = createProjectSchema
   .extend({ status: z.enum(PROJECT_STATUSES), sandboxImage: z.string().trim().min(1).max(200) })
@@ -52,6 +55,7 @@ export const conversationSchema = z.object({
   agentDefinitionId: z.uuid(),
   modelId: z.uuid().nullable(),
   credentialMode: z.enum(CREDENTIAL_MODES).nullable(),
+  cliKind: z.enum(CLI_KINDS).nullable(),
   status: z.enum(CONVERSATION_STATUSES),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -63,6 +67,7 @@ export const createConversationSchema = z.object({
   agentDefinitionId: z.uuid().optional(),
   modelId: z.uuid().nullable().optional(),
   credentialMode: z.enum(CREDENTIAL_MODES).nullable().optional(),
+  cliKind: z.enum(CLI_KINDS).nullable().optional(),
 });
 export const updateConversationSchema = createConversationSchema.partial();
 
@@ -86,22 +91,25 @@ export const messageSchema = z.object({
   seq: z.number().int(),
   status: z.enum(MESSAGE_STATUSES),
   modelId: z.uuid().nullable(),
-  parentMessageId: z.uuid().nullable(),
+  credentialMode: z.enum(CREDENTIAL_MODES).nullable(),
+  cliKind: z.enum(CLI_KINDS).nullable(),
   parts: z.array(messagePartSchema),
   createdAt: z.iso.datetime(),
 });
 export type Message = z.infer<typeof messageSchema>;
 
 export const sendMessageSchema = z.object({
-  content: z.string().min(1).max(200_000),
+  content: z.string().trim().min(1).max(200_000),
   modelId: z.uuid().nullable().optional(),
   credentialMode: z.enum(CREDENTIAL_MODES).nullable().optional(),
+  cliKind: z.enum(CLI_KINDS).nullable().optional(),
 });
 export type SendMessageRequest = z.infer<typeof sendMessageSchema>;
 
 export const regenerateSchema = z.object({
   modelId: z.uuid().nullable().optional(),
   credentialMode: z.enum(CREDENTIAL_MODES).nullable().optional(),
+  cliKind: z.enum(CLI_KINDS).nullable().optional(),
 });
 
 export const sandboxInfoSchema = z.object({

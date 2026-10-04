@@ -117,6 +117,12 @@ export const updateSharedKeyGrantSchema = createSharedKeyGrantSchema
   .omit({ userKeyId: true, memberUserId: true })
   .partial();
 
+export const userDefaultsSchema = z.object({
+  defaultModelId: z.uuid().nullable(),
+  defaultCredentialMode: z.enum(CREDENTIAL_MODES).nullable(),
+});
+export type UserDefaults = z.infer<typeof userDefaultsSchema>;
+
 /** What a user can actually pick in the model dropdown. */
 export const availableModelOptionSchema = z.object({
   model: modelSchema,

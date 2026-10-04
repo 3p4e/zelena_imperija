@@ -1,0 +1,90 @@
+import { z } from 'zod';
+import { eq } from 'drizzle-orm';
+import type { Db } from '../../db/client.js';
+import { testRuns } from '../../db/schema/index.js';
+import type { SandboxManager, ExecResult } from '../../sandbox/manager.js';
+import { clip, defineTool, fail, ok } from '../define.js';
+import type { Tool } from '../types.js';
+import { parseTestSummary } from './test-parse.js';
+
+function formatExec(r: ExecResult): string {
+  const parts: string[] = [];
+  if (r.stdout) parts.push(r.stdout);
+  if (r.stderr) parts.push(`[stderr]\n${r.stderr}`);
+  if (r.timedOut) parts.push('[command timed out and was killed]');
+  else if (r.aborted) parts.push('[command cancelled]');
+  else parts.push(`[exit code ${r.exitCode ?? 'unknown'}]`);
+  return clip(parts.join('\n'));
+}
+
+export function shellTools(sandbox: SandboxManager, db: Db): Tool[] {
+  return [
+    defineTool({
+      name: 'shell_exec',
+      description:
+        'Run a non-interactive bash command in /workspace and return its output. For long-running servers set background=true (output goes to a log file) and then call preview_register.',
+      permission: 'exec',
+      schema: z.object({
+        command: z.string().min(1).max(10_000),
+        timeout_s: z.number().int().min(1).max(3600).optional().describe('Kill the command after this many seconds.'),
+        background: z.boolean().optional(),
+      }),
+      async run(ctx, args) {
+        if (args.background) {
+          const log = await sandbox.startBackground(ctx.projectId, args.command, `bg-${Date.now()}`, ctx.actorUserId);
+          return ok(`Started in background. Output is written to ${log}; read it with: tail -n 50 ${log}`);
+        }
+        const r = await sandbox.exec({
+          projectId: ctx.projectId,
+          command: args.command,
+          ...(args.timeout_s ? { timeoutS: args.timeout_s } : {}),
+          kind: 'shell',
+          actorUserId: ctx.actorUserId,
+          conversationId: ctx.conversationId,
+          messagePartId: ctx.messagePartId,
+          signal: ctx.signal,
+          onOutput: (_s, chunk) => ctx.onProgress?.(chunk),
+        });
+        const text = formatExec(r);
+        return r.exitCode === 0 ? ok(text) : fail(text);
+      },
+    }),
+    defineTool({
+      name: 'test_run',
+      description:
+        'Run the project test command (e.g. "npm test", "pytest -q") and record a structured result shown in the Tests panel.',
+      permission: 'exec',
+      schema: z.object({ command: z.string().min(1).max(2000), timeout_s: z.number().int().min(1).max(3600).optional() }),
+      async run(ctx, args) {
+        const r = await sandbox.exec({
+          projectId: ctx.projectId,
+          command: args.command,
+          ...(args.timeout_s ? { timeoutS: args.timeout_s } : {}),
+          kind: 'test',
+          actorUserId: ctx.actorUserId,
+          conversationId: ctx.conversationId,
+          messagePartId: ctx.messagePartId,
+          signal: ctx.signal,
+          onOutput: (_s, chunk) => ctx.onProgress?.(chunk),
+        });
+        const summary = parseTestSummary(`${r.stdout}\n${r.stderr}`, r.exitCode);
+        if (r.executionId) {
+          await db.insert(testRuns).values({
+            executionId: r.executionId,
+            framework: summary.framework,
+            total: summary.total,
+            passed: summary.passed,
+            failed: summary.failed,
+            summary: summary.text,
+          });
+        }
+        const text = `${summary.text}\n\n${formatExec(r)}`;
+        return r.exitCode === 0 ? ok(text) : fail(text);
+      },
+    }),
+  ];
+}
+
+export async function latestTestRunFor(db: Db, executionId: string): Promise<typeof testRuns.$inferSelect | undefined> {
+  return db.query.testRuns.findFirst({ where: eq(testRuns.executionId, executionId) });
+}

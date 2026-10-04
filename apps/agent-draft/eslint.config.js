@@ -20,6 +20,8 @@ export default tseslint.config(
       '@typescript-eslint/no-confusing-void-expression': 'off',
       '@typescript-eslint/no-non-null-assertion': 'error',
       'no-console': 'error',
+      // Fastify hooks and plugins are async by contract even when a body has nothing to await.
+      '@typescript-eslint/require-await': 'off',
     },
   },
   {
