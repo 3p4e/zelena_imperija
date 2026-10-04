@@ -65,7 +65,8 @@ export class MockProvider extends BaseProvider {
     this.cursor++;
     if (!turn) throw new ProviderError('unknown', 'Mock script has no turns.');
     if (turn.kind === 'error') {
-      throw new ProviderError(turn.code, turn.message, { status: turn.status, retryable: false });
+      // Retryability follows the error code, exactly like the real adapters.
+      throw new ProviderError(turn.code, turn.message, { status: turn.status });
     }
     const delay = this.script.chunkDelayMs ?? 0;
     const text = turn.kind === 'text' ? turn.text : (turn.text ?? '');

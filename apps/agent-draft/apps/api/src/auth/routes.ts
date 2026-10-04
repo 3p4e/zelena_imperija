@@ -43,7 +43,8 @@ export function toMe(req: FastifyRequest, deps: AppDeps): MeResponse {
 }
 
 export function registerAuthRoutes(app: FastifyInstance, deps: AppDeps): void {
-  app.post('/auth/login', { config: { public: true, rateLimit: { max: deps.config.LOGIN_RATE_LIMIT_MAX * 3, timeWindow: '15 minutes' } } }, async (req, reply) => {
+  // Coarse per-IP flood guard; credential guessing is handled by the DB-backed throttle below.
+  app.post('/auth/login', { config: { public: true, rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (req, reply) => {
     const body = parseBody(loginRequestSchema, req.body);
     const subjects = [`email:${body.email}`, `ip:${req.ip}`];
     if (await deps.loginThrottle.isBlocked(subjects)) {

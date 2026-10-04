@@ -110,7 +110,7 @@ export const parseCodexLine: CliLineParser = (line, state, toolNames) => {
           type: 'tool_result',
           id,
           name: 'shell',
-          content: `${str(item.aggregated_output) ?? ''}\n[exit code ${exit ?? 'unknown'}]`.trim(),
+          content: `${(str(item.aggregated_output) ?? '').trimEnd()}\n[exit code ${exit ?? 'unknown'}]`.trim(),
           isError: exit !== 0 || item.status === 'failed',
         });
       }

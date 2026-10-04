@@ -80,8 +80,14 @@ export class SessionService {
   }
 }
 
-/** DB-backed login throttle keyed by email and by IP; survives restarts and multiple API replicas. */
+/**
+ * DB-backed login throttle; survives restarts. Failures are counted per email
+ * (stops password guessing on one account) and per IP with a higher ceiling
+ * (stops spraying many accounts) so one noisy IP cannot lock everyone out.
+ */
 export class LoginThrottle {
+  static readonly IP_MULTIPLIER = 5;
+
   constructor(
     private readonly db: Db,
     private readonly max: number,
@@ -91,11 +97,12 @@ export class LoginThrottle {
   async isBlocked(subjects: string[]): Promise<boolean> {
     const since = new Date(Date.now() - this.windowMinutes * 60_000);
     for (const subject of subjects) {
+      const limit = subject.startsWith('ip:') ? this.max * LoginThrottle.IP_MULTIPLIER : this.max;
       const [row] = await this.db
         .select({ n: sql<number>`count(*)::int` })
         .from(loginAttempts)
         .where(and(eq(loginAttempts.subject, subject), eq(loginAttempts.success, false), gt(loginAttempts.attemptedAt, since)));
-      if ((row?.n ?? 0) >= this.max) return true;
+      if ((row?.n ?? 0) >= limit) return true;
     }
     return false;
   }
@@ -104,7 +111,10 @@ export class LoginThrottle {
     if (subjects.length === 0) return;
     await this.db.insert(loginAttempts).values(subjects.map((subject) => ({ subject, success })));
     if (success) {
-      for (const subject of subjects) await this.db.delete(loginAttempts).where(eq(loginAttempts.subject, subject));
+      // Only the account's own counter resets; an IP's failures stand until the window passes.
+      for (const subject of subjects.filter((s) => !s.startsWith('ip:'))) {
+        await this.db.delete(loginAttempts).where(eq(loginAttempts.subject, subject));
+      }
     }
   }
 }

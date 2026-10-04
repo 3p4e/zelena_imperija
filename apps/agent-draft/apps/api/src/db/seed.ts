@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import argon2 from 'argon2';
 import type { AppConfig } from '../config/env.js';
 import type { Db } from './client.js';
-import { BUILTIN_TOOL_NAMES, PRIMARY_AGENT_SLUG, PRIMARY_AGENT_SYSTEM_PROMPT, SEED_PROVIDERS } from './seed-data.js';
+import { PRIMARY_AGENT_TOOLS, PRIMARY_AGENT_SLUG, PRIMARY_AGENT_SYSTEM_PROMPT, SEED_PROVIDERS } from './seed-data.js';
 import { agentDefinitionTools, agentDefinitions, cliProviders, globalSettings, models, providers, users } from './schema/index.js';
 import { CLI_KINDS } from '@agent/shared';
 
@@ -82,7 +82,7 @@ export async function runSeed(db: Db, config: Pick<AppConfig, 'ADMIN_EMAIL' | 'A
     if (row) {
       await db
         .insert(agentDefinitionTools)
-        .values(BUILTIN_TOOL_NAMES.map((toolName) => ({ agentDefinitionId: row.id, toolName })))
+        .values(PRIMARY_AGENT_TOOLS.map((toolName) => ({ agentDefinitionId: row.id, toolName })))
         .onConflictDoNothing();
     }
   }

@@ -25,6 +25,10 @@ declare module 'fastify' {
     /** Marks a route as reachable without a session. Everything else requires one. */
     public?: boolean;
   }
+  interface FastifyInstance {
+    /** Every registered route with its auth requirement; used by the security test suite. */
+    routeTable: { method: string; url: string; public: boolean }[];
+  }
 }
 
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
@@ -34,7 +38,8 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     loggerInstance: deps.log,
     trustProxy: deps.config.TRUST_PROXY,
     bodyLimit: 6 * 1024 * 1024,
-    disableRequestLogging: deps.config.NODE_ENV === 'test',
+    // Signed preview tokens are passed as a path parameter.
+    routerOptions: { maxParamLength: 512 },
   });
 
   await app.register(cookie);
@@ -55,9 +60,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   });
 
   // Default-deny: every route requires a session unless it opted into `public`.
+  const routeTable: FastifyInstance['routeTable'] = [];
+  app.decorate('routeTable', routeTable);
   app.addHook('onRoute', (route) => {
+    const methods = Array.isArray(route.method) ? route.method : [route.method];
+    for (const method of methods) routeTable.push({ method, url: route.url, public: route.config?.public === true });
     if (route.config?.public) return;
-    if (route.url === '/healthz') return;
     const existing = route.preHandler;
     const handlers = existing ? (Array.isArray(existing) ? existing : [existing]) : [];
     if (!handlers.includes(requireAuth)) route.preHandler = [requireAuth, ...handlers];

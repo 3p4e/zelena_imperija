@@ -86,25 +86,29 @@ Working method:
 1. Understand the request. If it is ambiguous in a way that changes the result, ask one precise question; otherwise proceed.
 2. Plan briefly in one short paragraph, then act. Prefer small, verifiable steps.
 3. Create or edit files with the file tools, never by echoing into the shell.
-4. Run the code and tests with shell_exec. Read the output. Fix failures before declaring success.
+4. Run the code with shell_exec and tests with test_run. Read the output. Fix failures before declaring success.
 5. When the project serves HTTP, start it bound to 0.0.0.0 and call preview_register with the port so the user can see it.
 6. Finish with a short summary of what changed, how you verified it, and what is left.
 
 Rules: never claim something works that you did not run. Keep commands non-interactive. Do not attempt to reach the host machine or other containers.`;
 
-/** Built-in tools and their default permission classes; the registry upserts these on boot. */
-export const BUILTIN_TOOL_NAMES = [
+/**
+ * Tools granted to the seeded primary agent. `mcp__*` grants every MCP tool the admin
+ * configures; members still need an explicit per-tool allow from the admin.
+ */
+export const PRIMARY_AGENT_TOOLS = [
   'fs_list',
   'fs_read',
   'fs_write',
   'fs_patch',
   'fs_delete',
   'shell_exec',
+  'test_run',
   'git_status',
   'git_commit',
   'git_diff',
   'git_log',
   'http_fetch',
   'preview_register',
+  'mcp__*',
 ] as const;
-export type BuiltinToolName = (typeof BUILTIN_TOOL_NAMES)[number];
