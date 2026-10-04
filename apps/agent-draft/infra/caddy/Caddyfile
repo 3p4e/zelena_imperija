@@ -1,3 +1,10 @@
+{
+	# Behind another TLS terminator (e.g. Traefik) keep its X-Forwarded-Proto so the API sees HTTPS.
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
 # Single entry point. SITE_ADDRESS is a hostname (automatic HTTPS via ACME) or
 # ":80" for plain HTTP on localhost / behind another TLS terminator.
 {$SITE_ADDRESS::80} {

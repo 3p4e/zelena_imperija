@@ -1,0 +1,148 @@
+# BACK_LOG on a shared Docker host that already runs Traefik (host network, entrypoint
+# "websecure", resolver "letsencrypt"). Self-contained: builds from the public Git repo, mounts no
+# local files, publishes no ports. Required env: PUBLIC_HOST, POSTGRES_PASSWORD, MASTER_KEY,
+# ADMIN_EMAIL, ADMIN_PASSWORD.
+name: back_log
+
+x-src: &src https://github.com/3p4e/zelena_imperija.git#draft/ai-agent-platform:apps/agent-draft
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: agent
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U agent -d agent']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      EXEC: 1
+      NETWORKS: 1
+      VOLUMES: 1
+      IMAGES: 1
+      POST: 1
+      INFO: 1
+      VERSION: 1
+      PING: 1
+      BUILD: 0
+      COMMIT: 0
+      SECRETS: 0
+      SERVICES: 0
+      SWARM: 0
+      TASKS: 0
+      PLUGINS: 0
+      SYSTEM: 0
+      AUTH: 0
+      CONFIGS: 0
+      DISTRIBUTION: 0
+      NODES: 0
+      SESSION: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [docker-api]
+
+  sandbox-image:
+    build:
+      context: https://github.com/3p4e/zelena_imperija.git#draft/ai-agent-platform:apps/agent-draft/infra/sandbox
+    image: agent-sandbox-base:latest
+    restart: 'no'
+    entrypoint: ['true']
+
+  # Keeps sandboxes (10.89.0.0/16) away from the host and every private range, including the
+  # published ports of the other stacks on this machine. Rules are idempotent; re-run after a reboot.
+  sandbox-firewall:
+    image: alpine:3.20
+    restart: 'no'
+    network_mode: host
+    cap_add: [NET_ADMIN]
+    command:
+      - sh
+      - -c
+      - |
+        set -eu
+        apk add --no-cache iptables iptables-legacy >/dev/null
+        IPT=iptables
+        iptables-legacy -S DOCKER-USER >/dev/null 2>&1 && IPT=iptables-legacy
+        POOL=10.89.0.0/16
+        $$IPT -N AGENT-SANDBOX 2>/dev/null || $$IPT -F AGENT-SANDBOX
+        $$IPT -A AGENT-SANDBOX -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+        $$IPT -A AGENT-SANDBOX -s 0.0.0.254/0.0.0.255 -d $$POOL -j RETURN
+        for c in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254.0.0/16 100.64.0.0/10; do
+          $$IPT -A AGENT-SANDBOX -s $$POOL -d $$c -j DROP
+        done
+        $$IPT -A AGENT-SANDBOX -j RETURN
+        $$IPT -N DOCKER-USER 2>/dev/null || true
+        $$IPT -C DOCKER-USER -j AGENT-SANDBOX 2>/dev/null || $$IPT -I DOCKER-USER 1 -j AGENT-SANDBOX
+        $$IPT -C INPUT -s $$POOL -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 2>/dev/null || $$IPT -I INPUT 1 -s $$POOL -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+        $$IPT -C INPUT -s $$POOL -j DROP 2>/dev/null || $$IPT -I INPUT 2 -s $$POOL -j DROP
+        echo "sandbox firewall applied via $$IPT"
+
+  api:
+    build:
+      context: *src
+      dockerfile: infra/api.Dockerfile
+      target: run
+    container_name: back_log-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sandbox-image:
+        condition: service_completed_successfully
+      sandbox-firewall:
+        condition: service_completed_successfully
+      docker-proxy:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: '4000'
+      DATABASE_URL: postgres://agent:${POSTGRES_PASSWORD}@postgres:5432/agent
+      DOCKER_HOST: tcp://docker-proxy:2375
+      SANDBOX_API_CONTAINER: back_log-api
+      SANDBOX_PREFIX: back-log-sbx
+      PUBLIC_URL: https://${PUBLIC_HOST}
+      REQUIRE_HTTPS: 'true'
+      TRUST_PROXY: 'true'
+      MASTER_KEY: ${MASTER_KEY}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      CLI_RUNNER_ENABLED: 'false'
+      NODE_USE_ENV_PROXY: '0'
+    networks: [internal, docker-api]
+
+  web:
+    build:
+      context: *src
+      dockerfile: infra/web.Dockerfile
+    restart: unless-stopped
+    depends_on: [api]
+    environment:
+      SITE_ADDRESS: ':80'
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: back_log_internal
+      traefik.http.routers.back-log.rule: Host(`${PUBLIC_HOST}`)
+      traefik.http.routers.back-log.entrypoints: websecure
+      traefik.http.routers.back-log.tls.certresolver: letsencrypt
+      traefik.http.services.back-log.loadbalancer.server.port: '80'
+    networks: [internal]
+
+volumes:
+  pgdata:
+
+networks:
+  internal:
+  docker-api:
+    internal: true
