@@ -1,11 +1,11 @@
-# BACK_LOG — deployment review (KVM4, 2026-10-05)
+# ANVIL — deployment review (KVM4, 2026-10-05)
 
-Live at https://back-log.srv1231216.hstgr.cloud (Hostinger VPS 1231216, Traefik, Let's Encrypt).
+Live at https://anvil.srv1231216.hstgr.cloud (Hostinger VPS 1231216, Traefik, Let's Encrypt).
 
 ## How it was deployed
-1. `infra/deploy/docker-compose.build.yml` (project `back_log_build`): one-shot builder that builds
-   `agent-sandbox-base`, `back-log-api`, `back-log-web` from the public repo; ends with `BUILD_DONE`. Removed afterwards.
-2. `infra/deploy/docker-compose.traefik.yml` (project `back_log`): runtime stack using the local images
+1. `infra/deploy/docker-compose.build.yml` (project `anvil_build`): one-shot builder that builds
+   `agent-sandbox-base`, `anvil-api`, `anvil-web` from the public repo; ends with `BUILD_DONE`. Removed afterwards.
+2. `infra/deploy/docker-compose.traefik.yml` (project `anvil`): runtime stack using the local images
    (`pull_policy: never`). Env: `PUBLIC_HOST`, `POSTGRES_PASSWORD`, `MASTER_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
    Hostinger's Docker manager pulls but never builds, hence the two phases.
 
@@ -23,4 +23,4 @@ Live at https://back-log.srv1231216.hstgr.cloud (Hostinger VPS 1231216, Traefik,
 - Set the repository back to private after each build (it was public only so the builder could clone).
 - Rotate the Hostinger API credential that was printed in an earlier session.
 - Change the generated admin password on first login; never commit `MASTER_KEY` / passwords.
-- Upgrade path: redeploy the build stack, then redeploy `back_log`.
+- Upgrade path: redeploy the build stack, then redeploy `anvil`.

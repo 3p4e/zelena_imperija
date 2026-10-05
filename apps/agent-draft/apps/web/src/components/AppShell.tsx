@@ -29,7 +29,7 @@ export function AppShell() {
       <header className="flex h-11 shrink-0 items-center gap-4 border-b border-zinc-800 bg-zinc-950 px-3">
         <Link to="/" search={{}} className="flex items-center gap-2 font-semibold tracking-tight">
           <img src="/favicon.svg" alt="" className="size-5" />
-          BACK_LOG
+          ANVIL
         </Link>
         <nav className="flex gap-1">
           <Link to="/" search={{}} className={link} activeOptions={{ exact: true, includeSearch: false }}>

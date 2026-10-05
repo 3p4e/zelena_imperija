@@ -1,7 +1,7 @@
 # docker compose up --build
 # Services: caddy (TLS + static web + reverse proxy), api, postgres, docker-socket-proxy,
 # sandbox-image (one-shot build), sandbox-firewall (host rules). The cli-runner service is optional (profile "cli").
-name: back_log
+name: anvil
 
 services:
   postgres:

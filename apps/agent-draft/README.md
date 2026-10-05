@@ -1,4 +1,4 @@
-# BACK_LOG — self-hosted AI coding-agent platform (draft)
+# ANVIL — self-hosted AI coding-agent platform (draft)
 
 A private workspace where an AI agent plans, edits files, runs commands and tests inside an isolated
 Docker sandbox per project, and shows the result in a live preview. One admin, optional invited members.

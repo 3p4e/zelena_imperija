@@ -1,8 +1,8 @@
-# BACK_LOG on a shared Docker host that already runs Traefik (host network, entrypoint
+# ANVIL on a shared Docker host that already runs Traefik (host network, entrypoint
 # "websecure", resolver "letsencrypt"). Mounts no local files and publishes no ports.
 # Deploy docker-compose.build.yml first so the images exist. Required env: PUBLIC_HOST, POSTGRES_PASSWORD, MASTER_KEY,
 # ADMIN_EMAIL, ADMIN_PASSWORD.
-name: back_log
+name: anvil
 
 # Images come from docker-compose.build.yml (built on this host); they are never pulled.
 
@@ -83,9 +83,9 @@ services:
         echo "sandbox firewall applied via $$IPT"
 
   api:
-    image: back-log-api:latest
+    image: anvil-api:latest
     pull_policy: never
-    container_name: back_log-api
+    container_name: anvil-api
     restart: unless-stopped
     depends_on:
       postgres:
@@ -99,8 +99,8 @@ services:
       PORT: '4000'
       DATABASE_URL: postgres://agent:${POSTGRES_PASSWORD}@postgres:5432/agent
       DOCKER_HOST: tcp://docker-proxy:2375
-      SANDBOX_API_CONTAINER: back_log-api
-      SANDBOX_PREFIX: back-log-sbx
+      SANDBOX_API_CONTAINER: anvil-api
+      SANDBOX_PREFIX: anvil-sbx
       PUBLIC_URL: https://${PUBLIC_HOST}
       REQUIRE_HTTPS: 'true'
       TRUST_PROXY: 'true'
@@ -112,7 +112,7 @@ services:
     networks: [internal, docker-api]
 
   web:
-    image: back-log-web:latest
+    image: anvil-web:latest
     pull_policy: never
     restart: unless-stopped
     depends_on: [api]
@@ -120,11 +120,11 @@ services:
       SITE_ADDRESS: ':80'
     labels:
       traefik.enable: 'true'
-      traefik.docker.network: back_log_internal
-      traefik.http.routers.back-log.rule: Host(`${PUBLIC_HOST}`)
-      traefik.http.routers.back-log.entrypoints: websecure
-      traefik.http.routers.back-log.tls.certresolver: letsencrypt
-      traefik.http.services.back-log.loadbalancer.server.port: '80'
+      traefik.docker.network: anvil_internal
+      traefik.http.routers.anvil.rule: Host(`${PUBLIC_HOST}`)
+      traefik.http.routers.anvil.entrypoints: websecure
+      traefik.http.routers.anvil.tls.certresolver: letsencrypt
+      traefik.http.services.anvil.loadbalancer.server.port: '80'
     networks: [internal]
 
 volumes:

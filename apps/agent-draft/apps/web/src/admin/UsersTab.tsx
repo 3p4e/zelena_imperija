@@ -125,7 +125,7 @@ interface InviteInfo {
 
 export function inviteText(i: Pick<InviteInfo, 'email' | 'temporaryPassword' | 'loginUrl'>): string {
   return [
-    'You have been given access to BACK_LOG.',
+    'You have been given access to ANVIL.',
     '',
     `Sign in: ${i.loginUrl}`,
     `Username: ${i.email}`,
