@@ -86,23 +86,67 @@ test.describe.serial('workspace UI (real API + sandbox, scripted model)', () => 
   }) => {
     await login(page, ADMIN.email, ADMIN.password);
     await page.getByRole('link', { name: 'Admin' }).click();
-    await page.getByLabel('Email').fill('member@test.local');
-    await page.getByLabel('Name (for direct create)').fill('Member');
-    await page.getByRole('button', { name: 'Create now' }).click();
-    const link = await page.getByRole('dialog').locator('input').inputValue();
-    expect(link).toContain('/reset-password?token=');
+    await page.getByLabel('Email (becomes the username)').fill('member@test.local');
+    await page.getByLabel('Name (optional)').fill('Member');
+    await page.getByRole('button', { name: 'Create & generate invite' }).click();
+    const invite = await page.locator('#invite-text').inputValue();
+    const oneTime = /One-time password: (\S+)/.exec(invite)?.[1] ?? '';
 
     const memberPage = await (await browser.newContext()).newPage();
-    await memberPage.goto(new URL(link).pathname + new URL(link).search);
-    await memberPage.getByLabel('New password').fill('member-password-1');
+    await memberPage.goto('/login');
+    await memberPage.getByLabel('Email').fill('member@test.local');
+    await memberPage.getByLabel('Password').fill(oneTime);
+    await memberPage.getByRole('button', { name: 'Sign in' }).click();
+    await memberPage.getByLabel('One-time password').fill(oneTime);
+    await memberPage.getByLabel('New password (min. 10 characters)').fill('member-password-1');
+    await memberPage.getByLabel('Repeat new password').fill('member-password-1');
     await memberPage.getByRole('button', { name: 'Set password' }).click();
-    await expect(memberPage.getByText('Password updated')).toBeVisible();
-    await login(memberPage, 'member@test.local', 'member-password-1');
+    await expect(memberPage.getByRole('link', { name: 'Workspace' })).toBeVisible();
     await expect(memberPage.getByRole('link', { name: 'Admin' })).toHaveCount(0);
     await memberPage.goto('/admin');
     await expect(memberPage.getByRole('button', { name: 'Users' })).toHaveCount(0);
     // The admin's project is not visible to the member.
     await memberPage.goto('/');
     await expect(memberPage.getByText('UI site')).toHaveCount(0);
+  });
+});
+
+test.describe.serial('one-time password invite', () => {
+  test('admin creates a user, copies the invite; the user must set their own password at first sign-in', async ({
+    browser,
+  }) => {
+    const adminCtx = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
+    const admin = await adminCtx.newPage();
+    await login(admin, ADMIN.email, ADMIN.password);
+    await admin.getByRole('link', { name: 'Admin' }).click();
+    await admin.getByLabel('Email (becomes the username)').fill('nina@test.local');
+    await admin.getByRole('button', { name: 'Create & generate invite' }).click();
+
+    const invite = admin.locator('#invite-text');
+    await expect(invite).toBeVisible();
+    const text = await invite.inputValue();
+    expect(text).toContain('Username: nina@test.local');
+    const password = /One-time password: (\S+)/.exec(text)?.[1] ?? '';
+    expect(password).toHaveLength(16);
+    await admin.getByRole('button', { name: 'Copy invite' }).click();
+    await expect(admin.getByRole('button', { name: 'Copied' })).toBeVisible();
+    expect(await admin.evaluate(() => navigator.clipboard.readText())).toBe(text);
+    await adminCtx.close();
+
+    const userCtx = await browser.newContext();
+    const user = await userCtx.newPage();
+    await user.goto('/login');
+    await user.getByLabel('Email').fill('nina@test.local');
+    await user.getByLabel('Password').fill(password);
+    await user.getByRole('button', { name: 'Sign in' }).click();
+    await expect(user.getByRole('heading', { name: 'Choose your own password' })).toBeVisible();
+    await expect(user.getByRole('link', { name: 'Workspace' })).toHaveCount(0);
+
+    await user.getByLabel('One-time password').fill(password);
+    await user.getByLabel('New password (min. 10 characters)').fill('nina-own-password-1');
+    await user.getByLabel('Repeat new password').fill('nina-own-password-1');
+    await user.getByRole('button', { name: 'Set password' }).click();
+    await expect(user.getByRole('link', { name: 'Workspace' })).toBeVisible();
+    await userCtx.close();
   });
 });

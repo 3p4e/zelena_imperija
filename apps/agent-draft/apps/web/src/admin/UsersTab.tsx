@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AdminUserRow, Invite, MemberLimits, ToolCatalogEntry } from '@agent/shared';
+import type { AdminUserRow, MemberLimits, ToolCatalogEntry } from '@agent/shared';
 import { api, errorMessage } from '../lib/api';
 import { relativeTime } from '../lib/format';
 import { Badge, Button, Card, ErrorText, Field, Input, Modal, Select } from '../components/ui';
 
 const usersKey = ['admin', 'users'];
-const invitesKey = ['admin', 'invites'];
 
 export function UsersTab() {
   const qc = useQueryClient();
   const users = useQuery({ queryKey: usersKey, queryFn: () => api.get<AdminUserRow[]>('/admin/users') });
-  const invites = useQuery({ queryKey: invitesKey, queryFn: () => api.get<Invite[]>('/admin/invites') });
   const [error, setError] = useState<string | null>(null);
-  const [link, setLink] = useState<{ title: string; url: string } | null>(null);
+  const [invite, setInvite] = useState<InviteInfo | null>(null);
   const [limitsFor, setLimitsFor] = useState<AdminUserRow | null>(null);
   const [toolsFor, setToolsFor] = useState<AdminUserRow | null>(null);
 
@@ -22,7 +20,6 @@ export function UsersTab() {
     try {
       await fn();
       await qc.invalidateQueries({ queryKey: usersKey });
-      await qc.invalidateQueries({ queryKey: invitesKey });
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -31,10 +28,9 @@ export function UsersTab() {
   return (
     <div className="flex flex-col gap-5">
       <CreateUser
-        onLink={(title, url) => setLink({ title, url })}
+        onInvite={setInvite}
         onDone={() => {
           void qc.invalidateQueries({ queryKey: usersKey });
-          void qc.invalidateQueries({ queryKey: invitesKey });
         }}
       />
       <ErrorText error={error} />
@@ -60,7 +56,8 @@ export function UsersTab() {
                   <Badge tone={u.role === 'admin' ? 'warn' : 'neutral'}>{u.role}</Badge>
                 </td>
                 <td>
-                  <Badge tone={u.status === 'active' ? 'good' : 'bad'}>{u.status}</Badge>
+                  <Badge tone={u.status === 'active' ? 'good' : 'bad'}>{u.status}</Badge>{' '}
+                  {u.mustChangePassword && <Badge tone="warn">one-time password</Badge>}
                 </td>
                 <td className="text-xs text-zinc-400">{relativeTime(u.lastSeenAt)}</td>
                 <td>
@@ -79,12 +76,16 @@ export function UsersTab() {
                       size="sm"
                       onClick={() =>
                         void act(async () => {
-                          const r = await api.post<{ url: string }>(`/admin/users/${u.id}/reset-link`);
-                          setLink({ title: `Password reset link for ${u.email} (24 h)`, url: r.url });
+                          const r = await api.post<{
+                            email: string;
+                            temporaryPassword: string;
+                            loginUrl: string;
+                          }>(`/admin/users/${u.id}/reset-password`);
+                          setInvite({ ...r, title: `New one-time password for ${r.email}` });
                         })
                       }
                     >
-                      Reset link
+                      New one-time password
                     </Button>
                     {u.role === 'member' && (
                       <Button
@@ -108,71 +109,94 @@ export function UsersTab() {
           </tbody>
         </table>
       </Card>
-      <Card title="Pending invites">
-        <ul className="divide-y divide-zinc-800 text-sm">
-          {invites.data?.map((i) => (
-            <li key={i.id} className="flex items-center gap-3 py-2">
-              <span className="flex-1">{i.email}</span>
-              <Badge>{i.role}</Badge>
-              <span className="text-xs text-zinc-500">expires {new Date(i.expiresAt).toLocaleString()}</span>
-              <Button
-                size="sm"
-                variant="danger"
-                onClick={() => void act(() => api.del(`/admin/invites/${i.id}`))}
-              >
-                Revoke
-              </Button>
-            </li>
-          ))}
-          {invites.data?.length === 0 && <li className="py-2 text-xs text-zinc-500">No pending invites.</li>}
-        </ul>
-      </Card>
-
-      <Modal title={link?.title ?? ''} open={!!link} onClose={() => setLink(null)}>
-        <p className="mb-2 text-xs text-zinc-400">Share this link privately. It works once.</p>
-        <Input readOnly value={link?.url ?? ''} onFocus={(e) => e.currentTarget.select()} />
-      </Modal>
+      <InviteModal invite={invite} onClose={() => setInvite(null)} />
       {limitsFor && <LimitsDialog user={limitsFor} onClose={() => setLimitsFor(null)} />}
       {toolsFor && <ToolRestrictionsDialog user={toolsFor} onClose={() => setToolsFor(null)} />}
     </div>
   );
 }
 
-function CreateUser({
-  onLink,
-  onDone,
-}: {
-  onLink: (title: string, url: string) => void;
-  onDone: () => void;
-}) {
+interface InviteInfo {
+  title: string;
+  email: string;
+  temporaryPassword: string;
+  loginUrl: string;
+}
+
+export function inviteText(i: Pick<InviteInfo, 'email' | 'temporaryPassword' | 'loginUrl'>): string {
+  return [
+    'You have been given access to BACK_LOG.',
+    '',
+    `Sign in: ${i.loginUrl}`,
+    `Username: ${i.email}`,
+    `One-time password: ${i.temporaryPassword}`,
+    '',
+    'You will be asked to choose your own password at first sign-in. This one-time password stops working once you do.',
+  ].join('\n');
+}
+
+function InviteModal({ invite, onClose }: { invite: InviteInfo | null; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const text = invite ? inviteText(invite) : '';
+  const copy = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access can be blocked (non-secure context, permissions): fall back to manual copy.
+      (document.getElementById('invite-text') as HTMLTextAreaElement | null)?.select();
+      setCopyFailed(true);
+    }
+  };
+  return (
+    <Modal
+      title={invite?.title ?? ''}
+      open={!!invite}
+      onClose={() => {
+        setCopied(false);
+        setCopyFailed(false);
+        onClose();
+      }}
+    >
+      <p className="mb-2 text-xs text-zinc-400">
+        This is the only time the one-time password is shown. Copy it and send it privately.
+      </p>
+      <textarea
+        id="invite-text"
+        readOnly
+        rows={8}
+        value={text}
+        onFocus={(e) => e.currentTarget.select()}
+        className="w-full rounded border border-zinc-700 bg-zinc-950 p-2 font-mono text-xs"
+      />
+      <div className="mt-3 flex items-center justify-end gap-3">
+        {copyFailed && (
+          <span className="text-xs text-amber-400">Copy blocked — press Ctrl+C on the selected text.</span>
+        )}
+        <Button variant="primary" onClick={() => void copy()}>
+          {copied ? 'Copied' : 'Copy invite'}
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+function CreateUser({ onInvite, onDone }: { onInvite: (i: InviteInfo) => void; onDone: () => void }) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'member' | 'admin'>('member');
   const [error, setError] = useState<string | null>(null);
 
-  const invite = async (): Promise<void> => {
-    setError(null);
-    try {
-      const r = await api.post<Invite & { emailed: boolean }>('/admin/invites', { email, role });
-      onLink(
-        r.emailed ? `Invite emailed to ${email} — link for reference` : `Invite link for ${email}`,
-        r.acceptUrl ?? '',
-      );
-      setEmail('');
-      onDone();
-    } catch (err) {
-      setError(errorMessage(err));
-    }
-  };
   const create = async (): Promise<void> => {
     setError(null);
     try {
-      const r = await api.post<{ setPasswordUrl: string | null }>('/admin/users', {
-        email,
-        displayName: name || email.split('@')[0],
-        role,
-      });
-      if (r.setPasswordUrl) onLink(`Set-password link for ${email} (72 h)`, r.setPasswordUrl);
+      const r = await api.post<{ email: string; temporaryPassword: string; loginUrl: string }>(
+        '/admin/users',
+        { email, displayName: name || email.split('@')[0], role },
+      );
+      onInvite({ ...r, title: `Invite for ${r.email}` });
       setEmail('');
       setName('');
       onDone();
@@ -183,11 +207,11 @@ function CreateUser({
 
   return (
     <Card title="Add a user">
-      <div className="grid grid-cols-[2fr_1.5fr_1fr_auto_auto] items-end gap-2">
-        <Field label="Email">
+      <div className="grid grid-cols-[2fr_1.5fr_1fr_auto] items-end gap-2">
+        <Field label="Email (becomes the username)">
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
-        <Field label="Name (for direct create)">
+        <Field label="Name (optional)">
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
         <Field label="Role">
@@ -196,16 +220,13 @@ function CreateUser({
             <option value="admin">Admin</option>
           </Select>
         </Field>
-        <Button variant="primary" disabled={!email} onClick={() => void invite()}>
-          Send invite
-        </Button>
-        <Button disabled={!email} onClick={() => void create()}>
-          Create now
+        <Button variant="primary" disabled={!email} onClick={() => void create()}>
+          Create &amp; generate invite
         </Button>
       </div>
       <p className="mt-2 text-xs text-zinc-500">
-        There is no public sign-up. Invites are emailed when SMTP is configured; otherwise copy the link
-        shown.
+        The account is created with a generated one-time password that the user must replace at first sign-in.
+        You get a copy button to paste the invite anywhere. There is no public sign-up.
       </p>
       <ErrorText error={error} />
     </Card>

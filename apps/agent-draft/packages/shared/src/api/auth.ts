@@ -14,6 +14,8 @@ export const userPublicSchema = z.object({
   role: z.enum(USER_ROLES),
   status: z.enum(USER_STATUSES),
   createdAt: z.iso.datetime(),
+  /** True while the user still holds an admin-issued one-time password. */
+  mustChangePassword: z.boolean(),
 });
 export type UserPublic = z.infer<typeof userPublicSchema>;
 

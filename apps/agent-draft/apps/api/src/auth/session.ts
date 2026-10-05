@@ -12,6 +12,7 @@ export interface SessionUser {
   role: 'admin' | 'member';
   status: 'active' | 'suspended';
   createdAt: Date;
+  mustChangePassword: boolean;
   sessionId: string;
 }
 
@@ -48,6 +49,7 @@ export class SessionService {
         role: users.role,
         status: users.status,
         createdAt: users.createdAt,
+        mustChangePassword: users.mustChangePassword,
         lastSeenAt: sessions.lastSeenAt,
       })
       .from(sessions)
@@ -66,6 +68,7 @@ export class SessionService {
       role: row.role,
       status: row.status,
       createdAt: row.createdAt,
+      mustChangePassword: row.mustChangePassword,
       sessionId: row.sessionId,
     };
   }

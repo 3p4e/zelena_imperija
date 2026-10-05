@@ -15,7 +15,7 @@ import { hashToken, newToken } from '../lib/crypto.js';
 import { parseBody } from '../lib/validate.js';
 import { hashPassword, verifyPassword } from './password.js';
 import { SESSION_COOKIE } from './session.js';
-import { currentUser, requireAuth } from './plugin.js';
+import { currentUser } from './plugin.js';
 
 export function setSessionCookie(deps: AppDeps, reply: FastifyReply, token: string, expiresAt: Date): void {
   reply.setCookie(SESSION_COOKIE, token, {
@@ -37,6 +37,7 @@ export function toMe(req: FastifyRequest, deps: AppDeps): MeResponse {
       role: u.role,
       status: u.status,
       createdAt: u.createdAt.toISOString(),
+      mustChangePassword: u.mustChangePassword,
     },
     capabilities: {
       admin: u.role === 'admin',
@@ -75,13 +76,13 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AppDeps): void {
     },
   );
 
-  app.post('/auth/logout', { preHandler: requireAuth }, async (req, reply) => {
+  app.post('/auth/logout', { config: { allowPasswordChange: true } }, async (req, reply) => {
     if (req.sessionToken) await deps.sessions.destroy(req.sessionToken);
     reply.clearCookie(SESSION_COOKIE, { path: '/' });
     return { ok: true };
   });
 
-  app.get('/auth/me', { preHandler: requireAuth }, async (req) => toMe(req, deps));
+  app.get('/auth/me', { config: { allowPasswordChange: true } }, async (req) => toMe(req, deps));
 
   app.post('/auth/invites/accept', { config: { public: true } }, async (req, reply) => {
     const body = parseBody(acceptInviteRequestSchema, req.body);
@@ -169,16 +170,19 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AppDeps): void {
     },
   );
 
-  app.post('/auth/password', { preHandler: requireAuth }, async (req) => {
+  app.post('/auth/password', { config: { allowPasswordChange: true } }, async (req) => {
     const user = currentUser(req);
     const body = parseBody(changePasswordSchema, req.body);
     const row = await deps.db.query.users.findFirst({ where: eq(users.id, user.id) });
     if (!(await verifyPassword(row?.passwordHash ?? null, body.currentPassword))) {
       throw new AppError('forbidden', 'Current password is incorrect.');
     }
+    if (body.newPassword === body.currentPassword) {
+      throw new AppError('validation_failed', 'Choose a new password that differs from the current one.');
+    }
     await deps.db
       .update(users)
-      .set({ passwordHash: await hashPassword(body.newPassword) })
+      .set({ passwordHash: await hashPassword(body.newPassword), mustChangePassword: false })
       .where(eq(users.id, user.id));
     return { ok: true };
   });

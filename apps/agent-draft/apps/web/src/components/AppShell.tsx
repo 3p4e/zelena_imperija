@@ -4,6 +4,7 @@ import { LogOut } from 'lucide-react';
 import { api } from '../lib/api';
 import { useMe } from '../lib/queries';
 import { Spinner } from './ui';
+import { ForcePasswordChange } from '../pages/ForcePasswordChange';
 
 /** Authenticated layout: top bar plus the routed page. Unauthenticated users go to /login. */
 export function AppShell() {
@@ -13,6 +14,7 @@ export function AppShell() {
   if (me.isLoading) return <Spinner />;
   if (!me.data) return <Navigate to="/login" />;
   const { user, capabilities } = me.data;
+  if (user.mustChangePassword) return <ForcePasswordChange email={user.email} />;
 
   const logout = async (): Promise<void> => {
     await api.post('/auth/logout').catch(() => undefined);

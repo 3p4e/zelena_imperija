@@ -34,7 +34,7 @@ Honest list for Phase 1. "cto.new" refers to what its site and docs describe as 
 - Sandbox files persist in a Docker volume; there is no backup or export.
 - Shared project edit access can run commands in the owner's sandbox, billed to the owner's limits.
 - Interactive terminal sessions are logged by metadata only (bytes are stored as output chunks; keystrokes are not).
-- Invite/reset links are shown to the admin when SMTP is unset; there is no email verification beyond that.
+- Users are created by the admin with a generated one-time password (username = email) that must be replaced at first sign-in; the admin copies the invite text and sends it by hand. No email is sent and there is no email verification. The older token-link invite endpoints still exist in the API but are not used by the UI.
 
 ## Decisions taken without your answer to the open questions
 Single VM behind Caddy; runc default; egress allowed with host/LAN blocked; path-prefix previews; admin-visible reset

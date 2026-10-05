@@ -24,6 +24,8 @@ declare module 'fastify' {
   interface FastifyContextConfig {
     /** Marks a route as reachable without a session. Everything else requires one. */
     public?: boolean;
+    /** Reachable while the user still has to replace a one-time password. */
+    allowPasswordChange?: boolean;
   }
   interface FastifyInstance {
     /** Every registered route with its auth requirement; used by the security test suite. */

@@ -24,6 +24,8 @@ export const users = pgTable(
     id: id(),
     email: text('email').notNull(),
     passwordHash: text('password_hash'),
+    /** Set when an admin issued a temporary password; cleared when the user chooses their own. */
+    mustChangePassword: boolean('must_change_password').notNull().default(false),
     displayName: text('display_name').notNull(),
     role: userRoleEnum('role').notNull().default('member'),
     status: userStatusEnum('status').notNull().default('active'),

@@ -22,7 +22,7 @@ import {
 } from '../../db/schema/index.js';
 import { currentUser } from '../../auth/plugin.js';
 import { hashPassword } from '../../auth/password.js';
-import { hashToken, newToken } from '../../lib/crypto.js';
+import { generateTemporaryPassword, hashToken, newToken } from '../../lib/crypto.js';
 import { AppError, notFound } from '../../lib/errors.js';
 import { parseBody, requireUuid } from '../../lib/validate.js';
 import { iso } from '../dto.js';
@@ -51,6 +51,7 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
       role: u.role,
       status: u.status,
       createdAt: u.createdAt.toISOString(),
+      mustChangePassword: u.mustChangePassword,
       suspendedAt: iso(u.suspendedAt),
       lastSeenAt: iso(u.lastSeenAt),
       limits: l
@@ -70,21 +71,28 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
     const body = parseBody(createUserRequestSchema, req.body);
     const exists = await db.query.users.findFirst({ where: eq(users.email, body.email) });
     if (exists) throw new AppError('conflict', 'A user with this email already exists.');
+    // No password supplied: issue a one-time password the user must replace at first login.
+    const temporaryPassword = body.password ? null : generateTemporaryPassword();
     const [user] = await db
       .insert(users)
       .values({
         email: body.email,
         displayName: body.displayName,
         role: body.role,
-        passwordHash: body.password ? await hashPassword(body.password) : null,
+        passwordHash: await hashPassword(body.password ?? temporaryPassword ?? ''),
+        mustChangePassword: temporaryPassword !== null,
         createdByUserId: admin.id,
       })
       .returning();
     if (!user) throw new AppError('internal', 'Could not create the user.');
     await deps.audit(admin.id, 'admin.user_create', 'user', user.id, req.ip);
-    // Without a password, return a one-time link the admin can hand over to set it.
-    const setPasswordUrl = body.password ? null : await issueResetLink(user.id, 72);
-    return reply.code(201).send({ id: user.id, email: user.email, role: user.role, setPasswordUrl });
+    return reply.code(201).send({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      temporaryPassword,
+      loginUrl: `${deps.config.PUBLIC_URL}/login`,
+    });
   });
 
   app.patch('/admin/users/:id/status', async (req) => {
@@ -115,6 +123,21 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
     }
     await deps.audit(admin.id, `admin.user_${body.status}`, 'user', id, req.ip);
     return { ok: true };
+  });
+
+  app.post('/admin/users/:id/reset-password', async (req) => {
+    const admin = currentUser(req);
+    const id = requireUuid((req.params as { id: string }).id);
+    const user = await db.query.users.findFirst({ where: eq(users.id, id) });
+    if (!user) throw notFound('User');
+    const temporaryPassword = generateTemporaryPassword();
+    await db
+      .update(users)
+      .set({ passwordHash: await hashPassword(temporaryPassword), mustChangePassword: true })
+      .where(eq(users.id, id));
+    await deps.sessions.destroyAllForUser(id);
+    await deps.audit(admin.id, 'admin.reset_password', 'user', id, req.ip);
+    return { email: user.email, temporaryPassword, loginUrl: `${deps.config.PUBLIC_URL}/login` };
   });
 
   app.post('/admin/users/:id/reset-link', async (req) => {

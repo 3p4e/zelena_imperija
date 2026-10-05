@@ -35,6 +35,10 @@ export const authPlugin = fp<{ deps: AppDeps }>((app, { deps }, done) => {
 export async function requireAuth(req: FastifyRequest, _reply: FastifyReply): Promise<void> {
   if (!req.user) throw unauthenticated();
   if (req.user.status === 'suspended') throw new AppError('forbidden', 'This account is suspended.');
+  // A one-time password only buys access to the password change itself.
+  if (req.user.mustChangePassword && req.routeOptions.config.allowPasswordChange !== true) {
+    throw new AppError('forbidden', 'You must change your one-time password before continuing.');
+  }
 }
 
 export async function requireAdmin(req: FastifyRequest, reply: FastifyReply): Promise<void> {

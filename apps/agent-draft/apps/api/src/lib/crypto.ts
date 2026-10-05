@@ -1,4 +1,11 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  randomInt,
+  timingSafeEqual,
+} from 'node:crypto';
 
 const ALGO = 'aes-256-gcm';
 const NONCE_BYTES = 12;
@@ -53,4 +60,13 @@ export function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);
   const bb = Buffer.from(b);
   return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
+
+const PASSWORD_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+
+/** Readable one-time password (no look-alike characters), ~93 bits. */
+export function generateTemporaryPassword(length = 16): string {
+  let out = '';
+  for (let i = 0; i < length; i += 1) out += PASSWORD_ALPHABET.charAt(randomInt(PASSWORD_ALPHABET.length));
+  return out;
 }
