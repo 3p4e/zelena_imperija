@@ -76,10 +76,11 @@ export const SEED_PROVIDERS: SeedProvider[] = [
     kind: 'openai_compatible',
     slug: 'deepseek',
     displayName: 'DeepSeek',
-    baseUrl: 'https://api.deepseek.com/v1',
+    baseUrl: 'https://api.deepseek.com',
+    // Defaults only; saving a key refreshes this from DeepSeek's live model list.
     models: [
-      m('deepseek-chat', 'DeepSeek-V3 (chat)', 64_000, 8_000, 0.27, 1.1, 0.07),
-      m('deepseek-reasoner', 'DeepSeek-R1 (reasoner)', 64_000, 8_000, 0.55, 2.19, 0.14, {
+      m('deepseek-chat', 'DeepSeek (chat)', 128_000, 8_000, 0.27, 1.1, 0.07),
+      m('deepseek-reasoner', 'DeepSeek (reasoner)', 128_000, 8_000, 0.55, 2.19, 0.14, {
         reasoning: true,
       }),
     ],

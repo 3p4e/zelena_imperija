@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq } from 'drizzle-orm';
 import { createUserKeySchema, type KeyTestResult, type UserKey } from '@agent/shared';
+import { ProviderError } from '@agent/providers';
 import type { AppDeps } from '../../deps.js';
-import { providers, userKeys } from '../../db/schema/index.js';
+import { models, providers, userKeys } from '../../db/schema/index.js';
 import { currentUser } from '../../auth/plugin.js';
 import { KEY_PURPOSE } from '../../credentials/resolver.js';
 import { last4 } from '../../credentials/vault.js';
@@ -99,26 +100,62 @@ export function registerKeyRoutes(app: FastifyInstance, deps: AppDeps): void {
       baseUrl: provider.baseUrl ?? undefined,
       timeoutMs: 20_000,
     });
-    const result = await instance.validateCredential();
-    await db
-      .update(userKeys)
-      .set({ status: result.ok ? 'active' : 'invalid', lastValidatedAt: new Date() })
-      .where(eq(userKeys.id, key.id));
 
-    // A working key lets us pull the provider's live model list so the chat picker shows
-    // every model it actually offers, not just the seeded defaults. Best-effort: never fail
-    // the test over it, and never retire seeded models on an automatic sync.
-    let modelsSeen = result.modelsSeen;
-    if (result.ok) {
+    // Prefer listing the provider's live models: it both verifies the key and gives us the
+    // real catalogue to put in the picker. Not every provider exposes a /models endpoint
+    // (e.g. Perplexity), so if listing fails for a reason other than a rejected key, fall
+    // back to a one-token chat against a known model to confirm the key still works.
+    const verify = async (): Promise<{ ok: boolean; message: string; imported: number }> => {
       try {
         const listed = await instance.listModels();
         const synced = await syncProviderModels(db, provider.id, listed, { retire: false });
-        modelsSeen = synced.total || modelsSeen;
-      } catch (err) {
-        req.log.warn({ err, provider: provider.slug }, 'model refresh after key test failed');
+        return {
+          ok: true,
+          message: `Credential accepted; ${listed.length} models available.`,
+          imported: synced.total,
+        };
+      } catch (listErr) {
+        if (listErr instanceof ProviderError && listErr.code === 'auth') {
+          return { ok: false, message: listErr.message, imported: 0 };
+        }
+        // The listing endpoint is missing or unsupported; verify the key with a tiny call.
+        const probe = await db.query.models.findFirst({
+          where: and(eq(models.providerId, provider.id), eq(models.available, true)),
+        });
+        if (!probe) {
+          return {
+            ok: false,
+            message: 'Could not list models and no model is configured to test the key against.',
+            imported: 0,
+          };
+        }
+        try {
+          await instance.chat({
+            model: probe.modelId,
+            messages: [{ role: 'user', content: [{ type: 'text', text: 'ping' }] }],
+            maxOutputTokens: 1,
+          });
+          return {
+            ok: true,
+            message: 'Credential accepted (this provider does not publish a model list).',
+            imported: 0,
+          };
+        } catch (chatErr) {
+          return {
+            ok: false,
+            message: chatErr instanceof Error ? chatErr.message : 'The key could not be verified.',
+            imported: 0,
+          };
+        }
       }
-    }
-    return { ...result, modelsSeen };
+    };
+
+    const { ok, message, imported } = await verify();
+    await db
+      .update(userKeys)
+      .set({ status: ok ? 'active' : 'invalid', lastValidatedAt: new Date() })
+      .where(eq(userKeys.id, key.id));
+    return { ok, message, modelsSeen: ok ? imported : null };
   });
 
   /** Revoke: the ciphertext is destroyed; the row stays so usage history keeps its reference. */

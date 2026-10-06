@@ -111,7 +111,7 @@ describe('K. major providers are seeded and reachable with the user’s own key'
     expect(h.factory.calls.at(-1)).toMatchObject({
       kind: 'openai_compatible',
       apiKey: key,
-      baseUrl: 'https://api.deepseek.com/v1',
+      baseUrl: 'https://api.deepseek.com',
     });
   });
 });
