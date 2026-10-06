@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AdminUserRow, MemberLimits, ToolCatalogEntry } from '@agent/shared';
 import { api, errorMessage } from '../lib/api';
+import { useMe } from '../lib/queries';
 import { relativeTime } from '../lib/format';
 import { Badge, Button, Card, ErrorText, Field, Input, Modal, Select } from '../components/ui';
 
@@ -9,6 +10,7 @@ const usersKey = ['admin', 'users'];
 
 export function UsersTab() {
   const qc = useQueryClient();
+  const me = useMe();
   const users = useQuery({ queryKey: usersKey, queryFn: () => api.get<AdminUserRow[]>('/admin/users') });
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<InviteInfo | null>(null);
@@ -72,21 +74,23 @@ export function UsersTab() {
                         </Button>
                       </>
                     )}
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        void act(async () => {
-                          const r = await api.post<{
-                            email: string;
-                            temporaryPassword: string;
-                            loginUrl: string;
-                          }>(`/admin/users/${u.id}/reset-password`);
-                          setInvite({ ...r, title: `New one-time password for ${r.email}` });
-                        })
-                      }
-                    >
-                      New one-time password
-                    </Button>
+                    {u.id !== me.data?.user.id && (
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          void act(async () => {
+                            const r = await api.post<{
+                              email: string;
+                              temporaryPassword: string;
+                              loginUrl: string;
+                            }>(`/admin/users/${u.id}/reset-password`);
+                            setInvite({ ...r, title: `New one-time password for ${r.email}` });
+                          })
+                        }
+                      >
+                        New one-time password
+                      </Button>
+                    )}
                     {u.role === 'member' && (
                       <Button
                         size="sm"

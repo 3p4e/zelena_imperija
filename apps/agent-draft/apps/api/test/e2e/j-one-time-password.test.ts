@@ -90,6 +90,12 @@ describe('J. admin-issued one-time password: username is the email, change force
     expect((await again.get('/api/projects')).status).toBe(403);
   });
 
+  it('an admin cannot reset their own password this way (it would lock them out)', async () => {
+    const me = await admin.get<{ user: { id: string } }>('/api/auth/me');
+    expect((await admin.post(`/api/admin/users/${me.body.user.id}/reset-password`)).status).toBe(400);
+    expect((await admin.get('/api/admin/users')).status).toBe(200);
+  });
+
   it('members cannot create users or issue one-time passwords', async () => {
     const mem = new Client(h.baseUrl);
     await mem.login(

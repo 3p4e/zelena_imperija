@@ -128,6 +128,9 @@ export function registerAdminUserRoutes(app: FastifyInstance, deps: AppDeps): vo
   app.post('/admin/users/:id/reset-password', async (req) => {
     const admin = currentUser(req);
     const id = requireUuid((req.params as { id: string }).id);
+    if (id === admin.id) {
+      throw new AppError('validation_failed', 'Change your own password under Settings → Password.');
+    }
     const user = await db.query.users.findFirst({ where: eq(users.id, id) });
     if (!user) throw notFound('User');
     const temporaryPassword = generateTemporaryPassword();
