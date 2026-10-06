@@ -6,7 +6,7 @@ import {
   type ProviderConfig,
   type ProviderFactory,
 } from '@agent/providers';
-import { MockProvider, type MockTurn } from '@agent/providers/testing';
+import { MockProvider, type MockScript, type MockTurn } from '@agent/providers/testing';
 
 export interface FactoryCall {
   kind: ProviderKind;
@@ -34,10 +34,16 @@ export class ScriptedFactory {
   private turns: MockTurn[] = [{ kind: 'text', text: 'ok' }];
   private cursor = 0;
   chunkDelayMs = 2;
+  /** The model list a provider's listModels() returns; lets a test simulate a vendor catalog. */
+  models: MockScript['models'];
 
   script(turns: MockTurn[]): void {
     this.turns = turns;
     this.cursor = 0;
+  }
+
+  setModels(models: MockScript['models']): void {
+    this.models = models;
   }
 
   private nextTurn(): MockTurn {
@@ -49,7 +55,10 @@ export class ScriptedFactory {
 
   readonly create: ProviderFactory = (kind: ProviderKind, config: ProviderConfig): AIProvider => {
     this.calls.push({ kind, apiKey: config.apiKey, baseUrl: config.baseUrl });
-    const listing = new MockProvider({ turns: [{ kind: 'text', text: '' }] });
+    const listing = new MockProvider({
+      turns: [{ kind: 'text', text: '' }],
+      ...(this.models ? { models: this.models } : {}),
+    });
     if (config.apiKey.startsWith('invalid-')) return new RejectingProvider(kind);
     const next = (): MockTurn => this.nextTurn();
     const record = (req: ChatRequest): void => {

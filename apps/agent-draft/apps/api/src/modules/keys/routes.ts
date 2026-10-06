@@ -9,6 +9,7 @@ import { last4 } from '../../credentials/vault.js';
 import { AppError, notFound } from '../../lib/errors.js';
 import { parseBody, requireUuid } from '../../lib/validate.js';
 import { iso } from '../dto.js';
+import { syncProviderModels } from '../providers/model-sync.js';
 
 /**
  * BYOK management. Keys are write-only: after saving, only metadata (label,
@@ -93,14 +94,31 @@ export function registerKeyRoutes(app: FastifyInstance, deps: AppDeps): void {
       ciphertext: key.ciphertext,
       nonce: key.nonce,
     });
-    const result = await deps
-      .providerFactory(provider.kind, { apiKey, baseUrl: provider.baseUrl ?? undefined, timeoutMs: 20_000 })
-      .validateCredential();
+    const instance = deps.providerFactory(provider.kind, {
+      apiKey,
+      baseUrl: provider.baseUrl ?? undefined,
+      timeoutMs: 20_000,
+    });
+    const result = await instance.validateCredential();
     await db
       .update(userKeys)
       .set({ status: result.ok ? 'active' : 'invalid', lastValidatedAt: new Date() })
       .where(eq(userKeys.id, key.id));
-    return result;
+
+    // A working key lets us pull the provider's live model list so the chat picker shows
+    // every model it actually offers, not just the seeded defaults. Best-effort: never fail
+    // the test over it, and never retire seeded models on an automatic sync.
+    let modelsSeen = result.modelsSeen;
+    if (result.ok) {
+      try {
+        const listed = await instance.listModels();
+        const synced = await syncProviderModels(db, provider.id, listed, { retire: false });
+        modelsSeen = synced.total || modelsSeen;
+      } catch (err) {
+        req.log.warn({ err, provider: provider.slug }, 'model refresh after key test failed');
+      }
+    }
+    return { ...result, modelsSeen };
   });
 
   /** Revoke: the ciphertext is destroyed; the row stays so usage history keeps its reference. */

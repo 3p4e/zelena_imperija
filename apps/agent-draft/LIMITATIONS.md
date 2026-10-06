@@ -7,8 +7,9 @@ Honest list for Phase 1. "cto.new" refers to what its site and docs describe as 
   Nothing was run against live endpoints. Use the checklist in `docs/MANUAL-CHECKS.md`.
 - **Seeded provider list & prices.** The registry ships the major providers (Anthropic, OpenAI, Gemini, OpenRouter, and the
   OpenAI-compatible DeepSeek, xAI, Mistral, Groq, Perplexity, Together, Fireworks). Seed model ids and prices are a starting
-  point — vendors rename models and change prices often. In **Admin → Models**, use *Refresh models* to pull each provider's
-  live list, and edit prices; prices only affect cost display and shared-key quotas, not BYOK calls.
+  point — vendors rename models and change prices often. Saving and testing a provider key automatically pulls that
+  provider's live model list into the picker; **Admin → Models → Refresh models** does the same on demand and also retires
+  models the vendor no longer returns. Prices only affect cost display and shared-key quotas, not BYOK calls.
 - **Subscription CLIs with a login.** The runner, parsers and failure paths are tested with the unmodified binaries and no login.
   A logged-in run needs your account. Parsers follow the vendors' documented JSON formats; vendors can change them.
 - **`docker compose up` end to end.** The compose file and Caddyfile validate, but the full stack was not booted here

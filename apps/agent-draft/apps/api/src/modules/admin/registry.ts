@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, asc, eq, inArray, notInArray } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { kindRequiresApiKey } from '@agent/providers';
 import {
   createProviderSchema,
@@ -11,6 +11,7 @@ import {
   type McpServer,
 } from '@agent/shared';
 import type { AppDeps } from '../../deps.js';
+import { syncProviderModels } from '../providers/model-sync.js';
 import {
   agentDefinitionTools,
   agentDefinitions,
@@ -105,65 +106,7 @@ export function registerAdminRegistryRoutes(app: FastifyInstance, deps: AppDeps)
     const listed = await deps
       .providerFactory(provider.kind, { apiKey: cred.apiKey, baseUrl: cred.baseUrl, timeoutMs: 30_000 })
       .listModels();
-    let added = 0;
-    let updated = 0;
-    for (const m of listed) {
-      const existing = await db.query.models.findFirst({
-        where: and(eq(models.providerId, id), eq(models.modelId, m.modelId)),
-      });
-      if (!existing) {
-        await db.insert(models).values({
-          providerId: id,
-          modelId: m.modelId,
-          displayName: m.displayName,
-          contextWindow: m.contextWindow ?? 128_000,
-          maxOutput: m.maxOutput,
-          inputPricePerMtok: priceStr(m.inputPricePerMtok) ?? null,
-          outputPricePerMtok: priceStr(m.outputPricePerMtok) ?? null,
-          cachedInputPricePerMtok: priceStr(m.cachedInputPricePerMtok) ?? null,
-          supportsVision: m.supportsVision ?? false,
-          supportsTools: m.supportsTools ?? true,
-          supportsReasoning: m.supportsReasoning ?? false,
-          available: true,
-          source: 'fetched',
-          lastFetchedAt: new Date(),
-        });
-        added++;
-      } else {
-        await db
-          .update(models)
-          .set({
-            available: true,
-            lastFetchedAt: new Date(),
-            ...(m.contextWindow ? { contextWindow: m.contextWindow } : {}),
-            ...(m.maxOutput ? { maxOutput: m.maxOutput } : {}),
-            ...(m.inputPricePerMtok !== null ? { inputPricePerMtok: String(m.inputPricePerMtok) } : {}),
-            ...(m.outputPricePerMtok !== null ? { outputPricePerMtok: String(m.outputPricePerMtok) } : {}),
-            ...(m.cachedInputPricePerMtok !== null
-              ? { cachedInputPricePerMtok: String(m.cachedInputPricePerMtok) }
-              : {}),
-          })
-          .where(eq(models.id, existing.id));
-        updated++;
-      }
-    }
-    const ids = listed.map((m) => m.modelId);
-    let retired = 0;
-    if (ids.length > 0) {
-      const r = await db
-        .update(models)
-        .set({ available: false })
-        .where(
-          and(
-            eq(models.providerId, id),
-            notInArray(models.modelId, ids),
-            inArray(models.source, ['seed', 'fetched']),
-          ),
-        )
-        .returning({ id: models.id });
-      retired = r.length;
-    }
-    return { added, updated, retired, total: listed.length };
+    return syncProviderModels(db, id, listed, { retire: true });
   });
 
   app.get('/admin/models', async () => {

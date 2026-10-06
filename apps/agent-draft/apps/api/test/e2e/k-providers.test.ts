@@ -59,6 +59,44 @@ describe('K. major providers are seeded and reachable with the user’s own key'
     });
     expect(saved.status).toBe(201);
 
+    // Testing a working key pulls the provider's live catalogue, so the picker shows every
+    // model the provider actually offers — not just the seeded defaults.
+    h.factory.setModels([
+      {
+        modelId: 'deepseek-chat',
+        displayName: 'DeepSeek-V3',
+        contextWindow: 64_000,
+        maxOutput: 8_000,
+        inputPricePerMtok: null,
+        outputPricePerMtok: null,
+        cachedInputPricePerMtok: null,
+        supportsVision: false,
+        supportsTools: true,
+        supportsReasoning: false,
+      },
+      {
+        modelId: 'deepseek-coder-v2',
+        displayName: 'DeepSeek Coder V2',
+        contextWindow: 128_000,
+        maxOutput: 8_000,
+        inputPricePerMtok: null,
+        outputPricePerMtok: null,
+        cachedInputPricePerMtok: null,
+        supportsVision: false,
+        supportsTools: true,
+        supportsReasoning: false,
+      },
+    ]);
+    const test = await admin.post<{ ok: boolean; modelsSeen: number | null }>(
+      `/api/keys/${saved.body.id}/test`,
+    );
+    expect(test.body.ok).toBe(true);
+    const catalogue = await admin.get<{ providerSlug: string; modelId: string }[]>('/api/admin/models');
+    const deepseekIds = catalogue.body.filter((x) => x.providerSlug === 'deepseek').map((x) => x.modelId);
+    expect(deepseekIds).toContain('deepseek-coder-v2'); // newly fetched from the provider
+    expect(deepseekIds).toContain('deepseek-reasoner'); // seeded models are not retired by an auto-sync
+    h.factory.setModels(undefined);
+
     const after = await admin.get<{ model: { id: string }; credentialModes: string[] }[]>('/api/models');
     expect(after.body.find((o) => o.model.id === deepseek)?.credentialModes).toEqual(['byok']);
 

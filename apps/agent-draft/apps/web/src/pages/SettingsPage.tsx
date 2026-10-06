@@ -130,6 +130,9 @@ function KeysCard() {
               <div className="text-xs text-zinc-500">
                 tested {relativeTime(k.lastValidatedAt)}
                 {testResults[k.id] && ` · ${testResults[k.id]?.message ?? ''}`}
+                {testResults[k.id]?.ok && typeof testResults[k.id]?.modelsSeen === 'number'
+                  ? ` · ${testResults[k.id]?.modelsSeen} models available`
+                  : ''}
               </div>
             </div>
             <Badge tone={k.status === 'active' ? 'good' : k.status === 'invalid' ? 'bad' : 'neutral'}>
