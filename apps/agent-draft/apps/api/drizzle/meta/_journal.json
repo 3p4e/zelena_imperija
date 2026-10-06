@@ -15,6 +15,13 @@
       "when": 1791133195630,
       "tag": "0001_must_change_password",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791133196630,
+      "tag": "0002_provider_requires_key",
+      "breakpoints": true
     }
   ]
 }

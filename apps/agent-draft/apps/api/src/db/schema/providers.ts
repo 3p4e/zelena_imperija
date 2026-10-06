@@ -45,6 +45,8 @@ export const providers = pgTable(
     slug: text('slug').notNull(),
     displayName: text('display_name').notNull(),
     baseUrl: text('base_url'),
+    // Hosted providers need an API key; a local server (e.g. Ollama) does not.
+    requiresKey: boolean('requires_key').notNull().default(true),
     enabled: boolean('enabled').notNull().default(true),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

@@ -6,7 +6,6 @@ import {
   type CliKind,
   type CredentialMode,
 } from '@agent/shared';
-import { kindRequiresApiKey } from '@agent/providers';
 import type { AppDeps } from '../../deps.js';
 import {
   cliProviders,
@@ -93,8 +92,7 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
     const out: AvailableModelOption[] = [];
     for (const { m, p } of rows) {
       const modes: CredentialMode[] = [];
-      if (ownProviders.has(p.id) || (user.role === 'admin' && !kindRequiresApiKey(p.kind)))
-        modes.push('byok');
+      if (ownProviders.has(p.id) || (user.role === 'admin' && !p.requiresKey)) modes.push('byok');
       const s = sharedModels.get(p.id);
       const priced = m.inputPricePerMtok !== null && m.outputPricePerMtok !== null;
       if (priced && (s === 'all' || s?.has(m.id))) modes.push('shared');

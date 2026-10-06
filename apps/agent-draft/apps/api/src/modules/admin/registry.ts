@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { and, asc, eq, inArray, notInArray } from 'drizzle-orm';
+import { kindRequiresApiKey } from '@agent/providers';
 import {
   createProviderSchema,
   updateProviderSchema,
@@ -46,6 +47,7 @@ export function registerAdminRegistryRoutes(app: FastifyInstance, deps: AppDeps)
         slug: body.slug,
         displayName: body.displayName,
         baseUrl: body.baseUrl ?? null,
+        requiresKey: body.requiresKey ?? kindRequiresApiKey(body.kind),
         enabled: body.enabled,
       })
       .onConflictDoNothing()
@@ -93,6 +95,7 @@ export function registerAdminRegistryRoutes(app: FastifyInstance, deps: AppDeps)
         providerSlug: provider.slug,
         providerKind: provider.kind,
         baseUrl: provider.baseUrl,
+        requiresKey: provider.requiresKey,
         available: true,
         supportsTools: true,
         pricing: { inputPricePerMtok: null, outputPricePerMtok: null, cachedInputPricePerMtok: null },

@@ -1,6 +1,5 @@
 import { and, desc, eq } from 'drizzle-orm';
 import type { CredentialMode, ProviderKind } from '@agent/shared';
-import { kindRequiresApiKey } from '@agent/providers';
 import type { Db } from '../db/client.js';
 import {
   models,
@@ -23,6 +22,7 @@ export interface ResolvedModel {
   providerSlug: string;
   providerKind: ProviderKind;
   baseUrl: string | null;
+  requiresKey: boolean;
   available: boolean;
   supportsTools: boolean;
   pricing: {
@@ -55,6 +55,7 @@ export async function loadModel(db: Db, modelRef: string): Promise<ResolvedModel
       providerSlug: providers.slug,
       providerKind: providers.kind,
       baseUrl: providers.baseUrl,
+      requiresKey: providers.requiresKey,
       providerEnabled: providers.enabled,
     })
     .from(models)
@@ -72,6 +73,7 @@ export async function loadModel(db: Db, modelRef: string): Promise<ResolvedModel
     providerSlug: row.providerSlug,
     providerKind: row.providerKind,
     baseUrl: row.baseUrl,
+    requiresKey: row.requiresKey,
     available: row.available,
     supportsTools: row.supportsTools,
     pricing: {
@@ -126,7 +128,7 @@ export async function resolveCredential(
       });
       return { mode: 'byok', apiKey, baseUrl, userKeyId: own.id, sharedKeyGrantId: null };
     }
-    if (actor.role === 'admin' && !kindRequiresApiKey(model.providerKind)) {
+    if (actor.role === 'admin' && !model.requiresKey) {
       return { mode: 'byok', apiKey: '', baseUrl, userKeyId: null, sharedKeyGrantId: null };
     }
     if (requested === 'byok' || actor.role === 'admin') {

@@ -4,13 +4,21 @@ export interface SeedProvider {
   kind: ProviderKind;
   slug: string;
   displayName: string;
+  /** Required for `openai_compatible` providers; the vendor's OpenAI-style endpoint. */
+  baseUrl?: string;
+  /** False only for keyless local servers (e.g. Ollama). Hosted providers need a key. */
+  requiresKey?: boolean;
   models: UpsertModel[];
 }
 
 /**
- * Seed registry. Prices are USD per million tokens and are only a starting
- * point: the admin can edit any row, and `refresh` adds newly published model
- * ids (with null prices where the vendor API does not publish them).
+ * Seed registry of the major providers. Prices are USD per million tokens and
+ * are only a starting point: the admin can edit any row, and `refresh` pulls the
+ * vendor's live model list (with null prices where the API does not publish them).
+ *
+ * Most vendors expose an OpenAI-compatible endpoint, so they share one adapter
+ * (`openai_compatible`) and differ only by `baseUrl`. Each still needs the user's
+ * own API key for that vendor (BYOK) or an admin-shared key.
  */
 export const SEED_PROVIDERS: SeedProvider[] = [
   {
@@ -61,7 +69,76 @@ export const SEED_PROVIDERS: SeedProvider[] = [
     kind: 'openrouter',
     slug: 'openrouter',
     displayName: 'OpenRouter',
-    // OpenRouter publishes exact pricing; the list is populated on first refresh.
+    // OpenRouter is a gateway to every model; its list is populated on first refresh.
+    models: [],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'deepseek',
+    displayName: 'DeepSeek',
+    baseUrl: 'https://api.deepseek.com/v1',
+    models: [
+      m('deepseek-chat', 'DeepSeek-V3 (chat)', 64_000, 8_000, 0.27, 1.1, 0.07),
+      m('deepseek-reasoner', 'DeepSeek-R1 (reasoner)', 64_000, 8_000, 0.55, 2.19, 0.14, {
+        reasoning: true,
+      }),
+    ],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'xai',
+    displayName: 'xAI (Grok)',
+    baseUrl: 'https://api.x.ai/v1',
+    models: [
+      m('grok-2-latest', 'Grok 2', 131_072, 32_768, 2, 10, null),
+      m('grok-2-vision-latest', 'Grok 2 Vision', 32_768, 8_192, 2, 10, null, { vision: true }),
+    ],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'mistral',
+    displayName: 'Mistral',
+    baseUrl: 'https://api.mistral.ai/v1',
+    models: [
+      m('mistral-large-latest', 'Mistral Large', 131_072, 32_768, 2, 6, null),
+      m('mistral-small-latest', 'Mistral Small', 131_072, 32_768, 0.2, 0.6, null),
+      m('codestral-latest', 'Codestral', 262_144, 32_768, 0.3, 0.9, null),
+    ],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'groq',
+    displayName: 'Groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    models: [
+      m('llama-3.3-70b-versatile', 'Llama 3.3 70B', 131_072, 32_768, 0.59, 0.79, null),
+      m('llama-3.1-8b-instant', 'Llama 3.1 8B', 131_072, 8_192, 0.05, 0.08, null),
+    ],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'perplexity',
+    displayName: 'Perplexity',
+    baseUrl: 'https://api.perplexity.ai',
+    models: [
+      m('sonar', 'Sonar', 127_072, 8_000, 1, 1, null),
+      m('sonar-pro', 'Sonar Pro', 200_000, 8_000, 3, 15, null),
+    ],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'together',
+    displayName: 'Together AI',
+    baseUrl: 'https://api.together.xyz/v1',
+    // Large open-model catalog; populated on first refresh.
+    models: [],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'fireworks',
+    displayName: 'Fireworks AI',
+    baseUrl: 'https://api.fireworks.ai/inference/v1',
+    // Large open-model catalog; populated on first refresh.
     models: [],
   },
 ];
@@ -71,8 +148,8 @@ function m(
   displayName: string,
   contextWindow: number,
   maxOutput: number,
-  input: number,
-  output: number,
+  input: number | null,
+  output: number | null,
   cached: number | null,
   caps: { vision?: boolean; reasoning?: boolean } = {},
 ): UpsertModel {

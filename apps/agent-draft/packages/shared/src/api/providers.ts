@@ -21,6 +21,7 @@ export const createProviderSchema = z.object({
     .regex(/^[a-z0-9-]+$/),
   displayName: z.string().trim().min(1).max(80),
   baseUrl: z.url().nullable().optional(),
+  requiresKey: z.boolean().optional(),
   enabled: z.boolean().default(true),
 });
 export const updateProviderSchema = createProviderSchema.omit({ kind: true, slug: true }).partial();

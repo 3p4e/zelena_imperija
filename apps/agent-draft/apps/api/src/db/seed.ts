@@ -39,7 +39,14 @@ export async function runSeed(
     if (!providerId) {
       const [row] = await db
         .insert(providers)
-        .values({ kind: sp.kind, slug: sp.slug, displayName: sp.displayName, enabled: true })
+        .values({
+          kind: sp.kind,
+          slug: sp.slug,
+          displayName: sp.displayName,
+          baseUrl: sp.baseUrl ?? null,
+          requiresKey: sp.requiresKey ?? true,
+          enabled: true,
+        })
         .returning({ id: providers.id });
       if (!row) throw new Error('failed to insert provider');
       providerId = row.id;
