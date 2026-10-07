@@ -49,6 +49,7 @@ export function registerAdminRegistryRoutes(app: FastifyInstance, deps: AppDeps)
         displayName: body.displayName,
         baseUrl: body.baseUrl ?? null,
         requiresKey: body.requiresKey ?? kindRequiresApiKey(body.kind),
+        category: body.category,
         enabled: body.enabled,
       })
       .onConflictDoNothing()
@@ -172,6 +173,8 @@ export function registerAdminRegistryRoutes(app: FastifyInstance, deps: AppDeps)
           ? { supportsStructuredOutput: body.supportsStructuredOutput }
           : {}),
         ...(body.available !== undefined ? { available: body.available } : {}),
+        ...(body.hidden !== undefined ? { hidden: body.hidden } : {}),
+        ...(body.favorite !== undefined ? { favorite: body.favorite } : {}),
       })
       .where(eq(models.id, id))
       .returning();

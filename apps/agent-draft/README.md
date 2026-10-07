@@ -63,7 +63,7 @@ Env for tests: `TEST_DATABASE_ADMIN_URL` (default `postgres://postgres:postgres@
 ```
 browser ── Caddy (TLS, static web, /api, /preview) ── api (Fastify)
                                                        ├─ Postgres (Drizzle migrations)
-                                                       ├─ providers: Anthropic, OpenAI, Gemini, OpenRouter, DeepSeek, xAI, Mistral, Groq, Perplexity, Together, Fireworks, + any OpenAI-compatible
+                                                       ├─ providers (Featured/Cloud/Local): Anthropic, OpenAI, Gemini, OpenRouter, DeepSeek, xAI, Mistral, Groq, Perplexity, Together, Fireworks, Cerebras, Moonshot, Z.ai, NVIDIA NIM, Alibaba, Ollama, LM Studio, LocalAI, + any OpenAI-compatible
                                                        ├─ agent runtime + tool registry (built-in + MCP)
                                                        ├─ docker-socket-proxy ── Docker ── sandbox per project (own volume,
                                                        │                                      per-user network, no host mounts)

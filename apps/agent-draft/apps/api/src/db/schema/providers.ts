@@ -47,6 +47,7 @@ export const providers = pgTable(
     baseUrl: text('base_url'),
     // Hosted providers need an API key; a local server (e.g. Ollama) does not.
     requiresKey: boolean('requires_key').notNull().default(true),
+    category: text('category').notNull().default('cloud'),
     enabled: boolean('enabled').notNull().default(true),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -73,6 +74,9 @@ export const models = pgTable(
     supportsReasoning: boolean('supports_reasoning').notNull().default(false),
     supportsStructuredOutput: boolean('supports_structured_output').notNull().default(true),
     available: boolean('available').notNull().default(true),
+    // Admin curation for the chat picker: hidden drops a model from the list, favorite pins it on top.
+    hidden: boolean('hidden').notNull().default(false),
+    favorite: boolean('favorite').notNull().default(false),
     source: modelSourceEnum('source').notNull().default('seed'),
     lastFetchedAt: timestamp('last_fetched_at', { withTimezone: true }),
     createdAt: createdAt(),

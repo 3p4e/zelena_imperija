@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import {
   userDefaultsSchema,
   type AvailableModelOption,
@@ -39,6 +39,7 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
       displayName: p.displayName,
       // Base URLs can point at private hosts (local Ollama); only the admin needs to see them.
       baseUrl: user.role === 'admin' ? p.baseUrl : null,
+      category: p.category,
       enabled: p.enabled,
     }));
   });
@@ -50,8 +51,8 @@ export function registerProviderRoutes(app: FastifyInstance, deps: AppDeps): voi
       .select({ m: models, p: providers })
       .from(models)
       .innerJoin(providers, eq(providers.id, models.providerId))
-      .where(and(eq(providers.enabled, true), eq(models.available, true)))
-      .orderBy(asc(providers.displayName), asc(models.displayName));
+      .where(and(eq(providers.enabled, true), eq(models.available, true), eq(models.hidden, false)))
+      .orderBy(asc(providers.displayName), desc(models.favorite), asc(models.displayName));
 
     const ownKeys = await db
       .select({ providerId: userKeys.providerId })

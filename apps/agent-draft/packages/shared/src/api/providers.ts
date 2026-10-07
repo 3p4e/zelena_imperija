@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { CREDENTIAL_MODES, KEY_STATUSES, MODEL_SOURCES, PROVIDER_KINDS } from '../enums.js';
+import {
+  CREDENTIAL_MODES,
+  KEY_STATUSES,
+  MODEL_SOURCES,
+  PROVIDER_CATEGORIES,
+  PROVIDER_KINDS,
+} from '../enums.js';
 
 export const providerSchema = z.object({
   id: z.uuid(),
@@ -7,6 +13,7 @@ export const providerSchema = z.object({
   slug: z.string(),
   displayName: z.string(),
   baseUrl: z.string().nullable(),
+  category: z.enum(PROVIDER_CATEGORIES),
   enabled: z.boolean(),
 });
 export type Provider = z.infer<typeof providerSchema>;
@@ -22,6 +29,7 @@ export const createProviderSchema = z.object({
   displayName: z.string().trim().min(1).max(80),
   baseUrl: z.url().nullable().optional(),
   requiresKey: z.boolean().optional(),
+  category: z.enum(PROVIDER_CATEGORIES).default('cloud'),
   enabled: z.boolean().default(true),
 });
 export const updateProviderSchema = createProviderSchema.omit({ kind: true, slug: true }).partial();
@@ -43,6 +51,8 @@ export const modelSchema = z.object({
   supportsReasoning: z.boolean(),
   supportsStructuredOutput: z.boolean(),
   available: z.boolean(),
+  hidden: z.boolean(),
+  favorite: z.boolean(),
   source: z.enum(MODEL_SOURCES),
   lastFetchedAt: z.iso.datetime().nullable(),
 });
@@ -61,6 +71,8 @@ export const upsertModelSchema = z.object({
   supportsReasoning: z.boolean().default(false),
   supportsStructuredOutput: z.boolean().default(true),
   available: z.boolean().default(true),
+  hidden: z.boolean().optional(),
+  favorite: z.boolean().optional(),
 });
 export type UpsertModel = z.infer<typeof upsertModelSchema>;
 

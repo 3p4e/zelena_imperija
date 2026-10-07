@@ -7,6 +7,9 @@ export type UserStatus = (typeof USER_STATUSES)[number];
 export const PROVIDER_KINDS = ['anthropic', 'openai', 'gemini', 'openrouter', 'openai_compatible'] as const;
 export type ProviderKind = (typeof PROVIDER_KINDS)[number];
 
+export const PROVIDER_CATEGORIES = ['featured', 'cloud', 'local'] as const;
+export type ProviderCategory = (typeof PROVIDER_CATEGORIES)[number];
+
 export const CREDENTIAL_MODES = ['byok', 'shared', 'subscription_cli'] as const;
 export type CredentialMode = (typeof CREDENTIAL_MODES)[number];
 

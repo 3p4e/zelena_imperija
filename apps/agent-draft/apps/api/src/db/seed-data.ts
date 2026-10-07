@@ -1,4 +1,4 @@
-import type { ProviderKind, UpsertModel } from '@agent/shared';
+import type { ProviderCategory, ProviderKind, UpsertModel } from '@agent/shared';
 
 export interface SeedProvider {
   kind: ProviderKind;
@@ -8,6 +8,8 @@ export interface SeedProvider {
   baseUrl?: string;
   /** False only for keyless local servers (e.g. Ollama). Hosted providers need a key. */
   requiresKey?: boolean;
+  /** Grouping in the UI: featured, cloud or local. */
+  category?: ProviderCategory;
   models: UpsertModel[];
 }
 
@@ -24,6 +26,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'anthropic',
     slug: 'anthropic',
+    category: 'featured',
     displayName: 'Anthropic',
     models: [
       m('claude-sonnet-4-5', 'Claude Sonnet 4.5', 200_000, 64_000, 3, 15, 0.3, {
@@ -43,6 +46,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openai',
     slug: 'openai',
+    category: 'featured',
     displayName: 'OpenAI',
     models: [
       m('gpt-5', 'GPT-5', 400_000, 128_000, 1.25, 10, 0.125, { vision: true, reasoning: true }),
@@ -53,6 +57,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'gemini',
     slug: 'gemini',
+    category: 'featured',
     displayName: 'Google Gemini',
     models: [
       m('gemini-2.5-pro', 'Gemini 2.5 Pro', 1_048_576, 65_536, 1.25, 10, 0.31, {
@@ -68,6 +73,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openrouter',
     slug: 'openrouter',
+    category: 'featured',
     displayName: 'OpenRouter',
     // OpenRouter is a gateway to every model; its list is populated on first refresh.
     models: [],
@@ -75,6 +81,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openai_compatible',
     slug: 'deepseek',
+    category: 'cloud',
     displayName: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com',
     // Defaults only; saving a key refreshes this from DeepSeek's live model list.
@@ -88,6 +95,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openai_compatible',
     slug: 'xai',
+    category: 'cloud',
     displayName: 'xAI (Grok)',
     baseUrl: 'https://api.x.ai/v1',
     models: [
@@ -98,6 +106,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openai_compatible',
     slug: 'mistral',
+    category: 'cloud',
     displayName: 'Mistral',
     baseUrl: 'https://api.mistral.ai/v1',
     models: [
@@ -109,6 +118,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openai_compatible',
     slug: 'groq',
+    category: 'cloud',
     displayName: 'Groq',
     baseUrl: 'https://api.groq.com/openai/v1',
     models: [
@@ -119,6 +129,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openai_compatible',
     slug: 'perplexity',
+    category: 'cloud',
     displayName: 'Perplexity',
     baseUrl: 'https://api.perplexity.ai',
     models: [
@@ -129,6 +140,7 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openai_compatible',
     slug: 'together',
+    category: 'cloud',
     displayName: 'Together AI',
     baseUrl: 'https://api.together.xyz/v1',
     // Large open-model catalog; populated on first refresh.
@@ -137,9 +149,85 @@ export const SEED_PROVIDERS: SeedProvider[] = [
   {
     kind: 'openai_compatible',
     slug: 'fireworks',
+    category: 'cloud',
     displayName: 'Fireworks AI',
     baseUrl: 'https://api.fireworks.ai/inference/v1',
     // Large open-model catalog; populated on first refresh.
+    models: [],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'cerebras',
+    category: 'cloud',
+    displayName: 'Cerebras',
+    baseUrl: 'https://api.cerebras.ai/v1',
+    models: [
+      m('llama-3.3-70b', 'Llama 3.3 70B', 128_000, 8_000, null, null, null),
+      m('qwen-3-235b-a22b-instruct-2507', 'Qwen3 235B', 128_000, 32_000, null, null, null),
+    ],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'moonshot',
+    category: 'cloud',
+    displayName: 'Moonshot AI (Kimi)',
+    baseUrl: 'https://api.moonshot.ai/v1',
+    models: [m('kimi-k2-0905-preview', 'Kimi K2', 256_000, 32_000, null, null, null)],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'zai',
+    category: 'cloud',
+    displayName: 'Z.ai (GLM)',
+    baseUrl: 'https://api.z.ai/api/paas/v4',
+    models: [m('glm-4.6', 'GLM-4.6', 200_000, 32_000, null, null, null, { reasoning: true })],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'nvidia',
+    category: 'cloud',
+    displayName: 'NVIDIA NIM',
+    baseUrl: 'https://integrate.api.nvidia.com/v1',
+    // Free hosted catalogue (Nemotron, GPT-OSS, DeepSeek, …); populated on first refresh.
+    models: [],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'alibaba',
+    category: 'cloud',
+    displayName: 'Alibaba Cloud (Qwen)',
+    baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+    models: [
+      m('qwen-max', 'Qwen Max', 32_000, 8_000, null, null, null),
+      m('qwen-plus', 'Qwen Plus', 131_000, 8_000, null, null, null),
+    ],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'ollama',
+    category: 'local',
+    displayName: 'Ollama',
+    requiresKey: false,
+    // Local server; the admin sets the reachable base URL (e.g. http://host.docker.internal:11434/v1).
+    baseUrl: 'http://localhost:11434/v1',
+    models: [],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'lmstudio',
+    category: 'local',
+    displayName: 'LM Studio',
+    requiresKey: false,
+    baseUrl: 'http://localhost:1234/v1',
+    models: [],
+  },
+  {
+    kind: 'openai_compatible',
+    slug: 'localai',
+    category: 'local',
+    displayName: 'LocalAI',
+    requiresKey: false,
+    baseUrl: 'http://localhost:8080/v1',
     models: [],
   },
 ];

@@ -25,7 +25,8 @@ describe('K. major providers are seeded and reachable with the user’s own key'
   afterAll(async () => h.close());
 
   it('seeds every major provider and lists them in Settings', async () => {
-    const provs = await admin.get<{ slug: string; displayName: string }[]>('/api/providers');
+    const provs =
+      await admin.get<{ slug: string; displayName: string; category: string }[]>('/api/providers');
     const slugs = provs.body.map((p) => p.slug);
     for (const s of [
       'anthropic',
@@ -39,9 +40,41 @@ describe('K. major providers are seeded and reachable with the user’s own key'
       'perplexity',
       'together',
       'fireworks',
+      'cerebras',
+      'moonshot',
+      'zai',
+      'nvidia',
+      'alibaba',
+      'ollama',
+      'lmstudio',
+      'localai',
     ]) {
       expect(slugs, s).toContain(s);
     }
+    // Providers are grouped for the UI, local servers are keyless.
+    const byCat = Object.fromEntries(provs.body.map((p) => [p.slug, p.category]));
+    expect(byCat.anthropic).toBe('featured');
+    expect(byCat.deepseek).toBe('cloud');
+    expect(byCat.ollama).toBe('local');
+  });
+
+  it('admin curates the picker: hidden models drop out, favourites sort to the top', async () => {
+    const all = await admin.get<{ id: string; providerSlug: string; modelId: string }[]>('/api/admin/models');
+    const anthropic = all.body.filter((m) => m.providerSlug === 'anthropic');
+    const [hide, fav] = anthropic;
+    if (!hide || !fav) throw new Error('expected at least two seeded Anthropic models');
+
+    expect((await admin.patch(`/api/admin/models/${hide.id}`, { hidden: true })).status).toBe(200);
+    expect((await admin.patch(`/api/admin/models/${fav.id}`, { favorite: true })).status).toBe(200);
+
+    const picker = await admin.get<{ model: { id: string }; credentialModes: string[] }[]>('/api/models');
+    const ids = picker.body.map((o) => o.model.id);
+    expect(ids).not.toContain(hide.id); // hidden → gone from the picker
+    // The favourited Anthropic model is listed before the non-favourited ones of its provider.
+    const favPos = ids.indexOf(fav.id);
+    const others = anthropic.filter((m) => m.id !== fav.id && m.id !== hide.id).map((m) => ids.indexOf(m.id));
+    expect(favPos).toBeGreaterThanOrEqual(0);
+    for (const pos of others) if (pos >= 0) expect(favPos).toBeLessThan(pos);
   });
 
   it('a hosted compatible provider needs a key: no key → not offered, with key → BYOK through its base URL', async () => {

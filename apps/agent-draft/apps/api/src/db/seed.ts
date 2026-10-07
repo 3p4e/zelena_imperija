@@ -45,12 +45,20 @@ export async function runSeed(
           displayName: sp.displayName,
           baseUrl: sp.baseUrl ?? null,
           requiresKey: sp.requiresKey ?? true,
+          category: sp.category ?? 'cloud',
           enabled: true,
         })
         .returning({ id: providers.id });
       if (!row) throw new Error('failed to insert provider');
       providerId = row.id;
       providersInserted++;
+    } else if (existing && existing.category !== (sp.category ?? 'cloud')) {
+      // Keep the UI grouping in sync for providers seeded before `category` existed. Only this
+      // field is synced; admin edits to base URL, key policy, etc. are left untouched.
+      await db
+        .update(providers)
+        .set({ category: sp.category ?? 'cloud' })
+        .where(eq(providers.id, providerId));
     }
     for (const sm of sp.models) {
       const inserted = await db

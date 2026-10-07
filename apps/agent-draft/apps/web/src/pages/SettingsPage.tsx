@@ -93,11 +93,19 @@ function KeysCard() {
         <Field label="Provider">
           <Select required value={providerId} onChange={(e) => setProviderId(e.target.value)}>
             <option value="">Choose…</option>
-            {providers.data?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.displayName}
-              </option>
-            ))}
+            {(['featured', 'cloud', 'local'] as const).map((cat) => {
+              const inCat = (providers.data ?? []).filter((p) => p.category === cat);
+              if (inCat.length === 0) return null;
+              return (
+                <optgroup key={cat} label={{ featured: 'Featured', cloud: 'Cloud', local: 'Local' }[cat]}>
+                  {inCat.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.displayName}
+                    </option>
+                  ))}
+                </optgroup>
+              );
+            })}
           </Select>
         </Field>
         <Field label="Label">

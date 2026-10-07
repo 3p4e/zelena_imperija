@@ -78,12 +78,14 @@ export function ModelPicker({
             o.credentialModes.length <= 1
               ? [
                   <option key={o.model.id} value={`api:${o.model.id}:auto`}>
+                    {o.model.favorite ? '★ ' : ''}
                     {o.model.displayName}
                     {o.credentialModes[0] === 'shared' ? ' (shared key)' : ''}
                   </option>,
                 ]
               : o.credentialModes.map((m) => (
                   <option key={`${o.model.id}:${m}`} value={`api:${o.model.id}:${m}`}>
+                    {o.model.favorite ? '★ ' : ''}
                     {o.model.displayName} ({MODE_LABEL[m] ?? m})
                   </option>
                 )),

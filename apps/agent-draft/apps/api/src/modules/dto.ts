@@ -97,6 +97,8 @@ export function modelDto(
     supportsReasoning: m.supportsReasoning,
     supportsStructuredOutput: m.supportsStructuredOutput,
     available: m.available,
+    hidden: m.hidden,
+    favorite: m.favorite,
     source: m.source,
     lastFetchedAt: iso(m.lastFetchedAt),
   };

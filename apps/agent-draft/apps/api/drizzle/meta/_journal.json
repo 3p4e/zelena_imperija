@@ -22,6 +22,13 @@
       "when": 1791133196630,
       "tag": "0002_provider_requires_key",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791133197630,
+      "tag": "0003_provider_category_model_curation",
+      "breakpoints": true
     }
   ]
 }

@@ -53,49 +53,62 @@ export function ModelsTab() {
       >
         <ErrorText error={error} />
         {info && <p className="mb-2 text-xs text-emerald-400">{info}</p>}
-        <ul className="divide-y divide-zinc-800 text-sm">
-          {providers.data?.map((p) => (
-            <li key={p.id} className="flex items-center gap-3 py-2">
-              <div className="flex-1">
-                <div>
-                  {p.displayName} <span className="text-xs text-zinc-500">({p.kind})</span>
-                </div>
-                {p.baseUrl && <div className="font-mono text-xs text-zinc-500">{p.baseUrl}</div>}
+        {(['featured', 'cloud', 'local'] as const).map((cat) => {
+          const inCat = (providers.data ?? []).filter((p) => p.category === cat);
+          if (inCat.length === 0) return null;
+          return (
+            <div key={cat} className="mb-2">
+              <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                {cat}
               </div>
-              <Badge tone={p.enabled ? 'good' : 'neutral'}>{p.enabled ? 'enabled' : 'disabled'}</Badge>
-              <Button
-                size="sm"
-                loading={busy === p.id}
-                onClick={() =>
-                  void act(p.id, async () => {
-                    const r = await api.post<{
-                      added: number;
-                      updated: number;
-                      retired: number;
-                      total: number;
-                    }>(`/admin/providers/${p.id}/refresh-models`);
-                    setInfo(
-                      `${p.displayName}: ${r.total} models listed · ${r.added} added · ${r.retired} marked unavailable.`,
-                    );
-                  })
-                }
-              >
-                Refresh models
-              </Button>
-              <Button size="sm" onClick={() => setEditModel({ providerId: p.id })}>
-                Add model
-              </Button>
-              <Button
-                size="sm"
-                onClick={() =>
-                  void act(`t${p.id}`, () => api.patch(`/admin/providers/${p.id}`, { enabled: !p.enabled }))
-                }
-              >
-                {p.enabled ? 'Disable' : 'Enable'}
-              </Button>
-            </li>
-          ))}
-        </ul>
+              <ul className="divide-y divide-zinc-800 text-sm">
+                {inCat.map((p) => (
+                  <li key={p.id} className="flex items-center gap-3 py-2">
+                    <div className="flex-1">
+                      <div>
+                        {p.displayName} <span className="text-xs text-zinc-500">({p.kind})</span>
+                      </div>
+                      {p.baseUrl && <div className="font-mono text-xs text-zinc-500">{p.baseUrl}</div>}
+                    </div>
+                    <Badge tone={p.enabled ? 'good' : 'neutral'}>{p.enabled ? 'enabled' : 'disabled'}</Badge>
+                    <Button
+                      size="sm"
+                      loading={busy === p.id}
+                      onClick={() =>
+                        void act(p.id, async () => {
+                          const r = await api.post<{
+                            added: number;
+                            updated: number;
+                            retired: number;
+                            total: number;
+                          }>(`/admin/providers/${p.id}/refresh-models`);
+                          setInfo(
+                            `${p.displayName}: ${r.total} models listed · ${r.added} added · ${r.retired} marked unavailable.`,
+                          );
+                        })
+                      }
+                    >
+                      Refresh models
+                    </Button>
+                    <Button size="sm" onClick={() => setEditModel({ providerId: p.id })}>
+                      Add model
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        void act(`t${p.id}`, () =>
+                          api.patch(`/admin/providers/${p.id}`, { enabled: !p.enabled }),
+                        )
+                      }
+                    >
+                      {p.enabled ? 'Disable' : 'Enable'}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
         <p className="mt-2 text-xs text-zinc-500">
           Refreshing uses your own key for that provider. Only OpenRouter publishes prices through its API;
           set others by hand.
@@ -134,9 +147,12 @@ export function ModelsTab() {
                     .includes(filter.toLowerCase()),
               )
               .map((m) => (
-                <tr key={m.id} className={m.available ? '' : 'opacity-50'}>
+                <tr key={m.id} className={!m.available || m.hidden ? 'opacity-50' : ''}>
                   <td className="py-1.5">
-                    <div>{m.displayName}</div>
+                    <div>
+                      {m.favorite && <span title="Favourite">★ </span>}
+                      {m.displayName}
+                    </div>
                     <div className="font-mono text-zinc-500">
                       {m.providerSlug}/{m.modelId}
                     </div>
@@ -154,7 +170,27 @@ export function ModelsTab() {
                     {m.source}
                     {m.lastFetchedAt && <div className="text-zinc-500">{relativeTime(m.lastFetchedAt)}</div>}
                   </td>
-                  <td className="text-right">
+                  <td className="space-x-1 text-right whitespace-nowrap">
+                    <Button
+                      size="sm"
+                      title={m.favorite ? 'Unfavourite' : 'Favourite (pin to top of picker)'}
+                      onClick={() =>
+                        void act(`f${m.id}`, () =>
+                          api.patch(`/admin/models/${m.id}`, { favorite: !m.favorite }),
+                        )
+                      }
+                    >
+                      {m.favorite ? '★' : '☆'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      title={m.hidden ? 'Show in chat picker' : 'Hide from chat picker'}
+                      onClick={() =>
+                        void act(`h${m.id}`, () => api.patch(`/admin/models/${m.id}`, { hidden: !m.hidden }))
+                      }
+                    >
+                      {m.hidden ? 'Hidden' : 'Shown'}
+                    </Button>
                     <Button size="sm" onClick={() => setEditModel(m)}>
                       Edit
                     </Button>
