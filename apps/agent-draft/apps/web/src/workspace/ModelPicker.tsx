@@ -50,8 +50,11 @@ export function ModelPicker({
 }) {
   const models = useModels();
   const cli = useCliOptions();
+  // Only list models you can actually run — i.e. from a provider that is set up with a
+  // usable key (own or shared). Providers with no key contribute nothing to the picker.
   const byProvider = new Map<string, NonNullable<typeof models.data>>();
   for (const opt of models.data ?? []) {
+    if (opt.credentialModes.length === 0) continue;
     const list = byProvider.get(opt.model.providerSlug) ?? [];
     list.push(opt);
     byProvider.set(opt.model.providerSlug, list);

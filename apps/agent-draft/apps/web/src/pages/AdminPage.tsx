@@ -3,7 +3,6 @@ import { useMe } from '../lib/queries';
 import { Tabs } from '../components/ui';
 import { UsersTab } from '../admin/UsersTab';
 import { SharedKeysTab } from '../admin/SharedKeysTab';
-import { ModelsTab } from '../admin/ModelsTab';
 import { AgentsTab } from '../admin/AgentsTab';
 import { CliTab } from '../admin/CliTab';
 import { SettingsTab } from '../admin/SettingsTab';
@@ -13,7 +12,6 @@ import { ToolsTab } from '../admin/ToolsTab';
 const TABS = [
   { id: 'users', label: 'Users' },
   { id: 'shared', label: 'Shared keys' },
-  { id: 'models', label: 'Providers & models' },
   { id: 'agents', label: 'Agents' },
   { id: 'tools', label: 'Tools' },
   { id: 'cli', label: 'Subscriptions' },
@@ -35,7 +33,6 @@ export function AdminPage() {
         <div className="mx-auto max-w-5xl p-6">
           {tab === 'users' && <UsersTab />}
           {tab === 'shared' && <SharedKeysTab />}
-          {tab === 'models' && <ModelsTab />}
           {tab === 'agents' && <AgentsTab />}
           {tab === 'tools' && <ToolsTab />}
           {tab === 'cli' && <CliTab />}
